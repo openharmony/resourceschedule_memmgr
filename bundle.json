@@ -1,0 +1,40 @@
+{
+    "name": "@openharmony/memmgr",
+    "version": "3.1.0",
+    "description": "memory management",
+    "publishAs": "source",
+    "scripts": {},
+    "author": {},
+    "repository": "",
+    "license": "Apache License 2.0",
+    "component": {
+      "name": "plugins/memmgr",
+      "subsystem": "resourceschedule",
+      "adapted_system_type": [ "standard" ],
+      "deps": {
+        "components": [
+          "libhilog",
+          "ipc_core",
+          "softbus_client",
+          "system_ability_fwk",
+          "samgr_proxy",
+          "utils_base",
+          "libhisysevent",
+          "libaccountkits",
+          "cesfwk_core",
+          "cesfwk_innerkits",
+          "want"
+        ],
+        "third_party": []
+      },
+      "build": {
+        "sub_component": [
+            "//foundation/resourceschedule/plugins/memmgr/sa_profile:memmgr_sa_profile",
+            "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice",
+            "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice_init"
+        ],
+        "inner_kits": [],
+        "test": [],
+      }
+    }
+  }
