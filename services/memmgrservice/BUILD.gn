@@ -99,8 +99,3 @@ ohos_shared_library("memmgrservice") {
   part_name = "${memmgr_part_name}"
   subsystem_name = "${memmgr_subsystem_name}"
 }
-
-group("unittest") {
-  testonly = true
-  deps = [ "test:unittest" ]
-}

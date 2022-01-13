@@ -34,7 +34,7 @@
             "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice_init"
         ],
         "inner_kits": [],
-        "test": [],
+        "test": []
       }
     }
   }
