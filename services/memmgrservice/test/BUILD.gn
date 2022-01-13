@@ -1,0 +1,55 @@
+# Copyright (c) 2021 XXXX.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.-
+
+import("//build/ohos.gni")
+import("//build/ohos_var.gni")
+import("//build/test.gni")
+import("//foundation/resourceschedule/plugins/memmgr/memmgr.gni")
+
+module_output_path = "unittest/memmgrtest"
+memmgr_service_configs = [ "${memmgr_service_path}:memory_memmgr_config" ]
+
+
+memmgr_deps = [
+  "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+  "//utils/native/base:utils",
+  "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice",
+  "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
+]
+
+memmgr_external_deps = [
+  "hiviewdfx_hilog_native:libhilog",
+  "ipc:ipc_core",
+]
+
+memmgr_public_deps = [ "//third_party/googletest:gtest_main" ]
+
+ohos_unittest("memmgr_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+  sources = [ "unittest/memmgr_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "${memmgr_part_name}"
+  subsystem_name = "${memmgr_subsystem_name}"
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":memmgr_test" ]
+}
