@@ -30,20 +30,20 @@ OsAccountPriorityInfo::OsAccountPriorityInfo(int accountId, bool isCurrent):id_(
     priorityShift_ = OS_ACCOUNT_PRIORITY_SHIFT_DEFAULT;
 }
 
-bool OsAccountPriorityInfo::BundleExist(int bundleUId)
+bool OsAccountPriorityInfo::HasBundle(int bundleUid)
 {
-    if (bundleIdInfoMapping_.count(bundleUId) == 0) {
+    if (bundleIdInfoMapping_.count(bundleUid) == 0) {
         return false;
     }
     return true;
 }
 
-BundlePriorityInfo* OsAccountPriorityInfo::FindBundleInfoById(int bundleUId)
+BundlePriorityInfo* OsAccountPriorityInfo::FindBundleById(int bundleUid)
 {
-    return bundleIdInfoMapping_.at(bundleUId);
+    return bundleIdInfoMapping_.at(bundleUid);
 }
 
-void OsAccountPriorityInfo::AddBundleToUser(BundlePriorityInfo* bundle)
+void OsAccountPriorityInfo::AddBundleToOsAccount(BundlePriorityInfo* bundle)
 {
     bundleIdInfoMapping_.insert(std::make_pair(bundle->uid_, bundle));
 }
@@ -53,7 +53,7 @@ void OsAccountPriorityInfo::RemoveBundleById(int bundleUid)
     bundleIdInfoMapping_.erase(bundleUid);
 }
 
-int OsAccountPriorityInfo::BundleCount()
+int OsAccountPriorityInfo::GetBundlesCount()
 {
     return bundleIdInfoMapping_.size();
 }
@@ -71,14 +71,11 @@ void OsAccountPriorityInfo::ReduceAllBundlePriority(int shift)
 void OsAccountPriorityInfo::AdjustAllBundlePriority(int shift)
 {
     for (auto i = bundleIdInfoMapping_.begin(); i != bundleIdInfoMapping_.end(); ++i) {
-        BundlePriorityInfo *bundleInfo = i->second;
-        int targetPriority = bundleInfo->priority_ + shift;
-        bundleInfo->SetPriority(targetPriority);
+        BundlePriorityInfo *bundle = i->second;
+        int targetPriority = bundle->priority_ + shift;
+        bundle->SetPriority(targetPriority);
         
     }
 }
-
-
-
 } // namespace Memory
 } // namespace OHOS

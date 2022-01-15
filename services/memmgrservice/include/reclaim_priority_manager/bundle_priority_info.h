@@ -36,15 +36,16 @@ public:
     }
     std::string name_;
     int uid_;
-    ProcessesInfoMap processes_;
+    ProcessesInfoMap procs_;
     int priority_;
+    int accountId_;
 
-    bool ProcessExistInBundle(pid_t pid);
-    void AddProcess(ProcessPriorityInfo &newProcess);
-    void RemoveProcessById(pid_t pid);
-    ProcessPriorityInfo& FindProcessInfoById(pid_t pid);
-    int GetProcessCount();
-    int GetMinProcessPriority();
+    bool HasProc(pid_t pid);
+    void AddProc(ProcessPriorityInfo &newProcess);
+    void RemoveProcByPid(pid_t pid);
+    ProcessPriorityInfo& FindProcByPid(pid_t pid);
+    int GetProcsCount();
+    int GetMinProcPriority();
     void SetPriority(int targetPriority);
     void UpdatePriority();
 };

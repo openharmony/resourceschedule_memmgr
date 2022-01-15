@@ -25,11 +25,13 @@ const std::string TAG = "BundlePriorityInfo";
 BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid):name_(name), uid_(bundleUid)
 {
     this->priority_ = RECLAIM_PRIORITY_UNKNOWN;
+    this->accountId_ = bundleUid / USER_ID_SHIFT;
 }
 
 BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority):name_(name),
     uid_(bundleUid), priority_(priority)
 {
+    this->accountId_ = bundleUid / USER_ID_SHIFT;
 }
 
 BundlePriorityInfo::~BundlePriorityInfo()
@@ -37,38 +39,38 @@ BundlePriorityInfo::~BundlePriorityInfo()
     delete this;
 }
 
-bool BundlePriorityInfo::ProcessExistInBundle(pid_t pid)
+bool BundlePriorityInfo::HasProc(pid_t pid)
 {
-    if (processes_.count(pid) == 0) {
+    if (procs_.count(pid) == 0) {
         return false;
     }
     return true;
 }
 
-void BundlePriorityInfo::AddProcess(ProcessPriorityInfo &newProcess)
+void BundlePriorityInfo::AddProc(ProcessPriorityInfo &newProcess)
 {
-    processes_.insert(std::make_pair(newProcess.pid_, newProcess));
+    procs_.insert(std::make_pair(newProcess.pid_, newProcess));
 }
 
-void BundlePriorityInfo::RemoveProcessById(pid_t pid)
+void BundlePriorityInfo::RemoveProcByPid(pid_t pid)
 {
-    processes_.erase(pid);
+    procs_.erase(pid);
 }
 
-int BundlePriorityInfo::GetProcessCount()
+int BundlePriorityInfo::GetProcsCount()
 {
-    return processes_.size();
+    return procs_.size();
 }
 
-ProcessPriorityInfo& BundlePriorityInfo::FindProcessInfoById(pid_t pid)
+ProcessPriorityInfo& BundlePriorityInfo::FindProcByPid(pid_t pid)
 {
-    return processes_.at(pid);
+    return procs_.at(pid);
 }
 
-int BundlePriorityInfo::GetMinProcessPriority()
+int BundlePriorityInfo::GetMinProcPriority()
 {
     int min_priority = RECLAIM_PRIORITY_UNKNOWN;
-    for (auto i = processes_.begin(); i != processes_.end(); ++i) {
+    for (auto i = procs_.begin(); i != procs_.end(); ++i) {
         if (i->second.priority_ < min_priority) {
             min_priority = i->second.priority_;
         }
@@ -83,7 +85,7 @@ void BundlePriorityInfo::SetPriority(int targetPriority)
 
 void BundlePriorityInfo::UpdatePriority()
 {
-    int targetPriority = GetMinProcessPriority();
+    int targetPriority = GetMinProcPriority();
     SetPriority(targetPriority);
     HILOGI("bundleName=%{public}s, priority=%{public}d", name_.c_str(), priority_);
 }

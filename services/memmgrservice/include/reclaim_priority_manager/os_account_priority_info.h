@@ -33,12 +33,11 @@ public:
     int priorityShift_;
 
     explicit OsAccountPriorityInfo(int accountId, bool isCurrent);
-    bool BundleExist(int bundleId);
-    BundlePriorityInfo* FindBundleInfoById(int bundleId);
-    void AddBundleToUser(BundlePriorityInfo* bundle);
+    bool HasBundle(int bundleId);
+    BundlePriorityInfo* FindBundleById(int bundleId);
+    void AddBundleToOsAccount(BundlePriorityInfo* bundle);
     void RemoveBundleById(int bundleUid);
-    int BundleCount();
-    void setProcessPriority(int targetPriority);
+    int GetBundlesCount();
     void PromoteAllBundlePriority(int shift);
     void ReduceAllBundlePriority(int shift);
 private:

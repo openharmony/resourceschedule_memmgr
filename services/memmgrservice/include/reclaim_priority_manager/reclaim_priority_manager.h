@@ -53,11 +53,11 @@ public:
     bool CurrentOsAccountChanged(int curAccountId);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
-    void AddBundleInfoToSet(BundlePriorityInfo* bundleInfo);
-    void UpdateBundlePriority(BundlePriorityInfo* bundleInfo);
-    void DeleteBundleInfoFromSet(BundlePriorityInfo* bundleInfo);
+    void AddBundleInfoToSet(BundlePriorityInfo* bundle);
+    void UpdateBundlePriority(BundlePriorityInfo* bundle);
+    void DeleteBundleInfoFromSet(BundlePriorityInfo* bundle);
 
-    inline bool Initailized() 
+inline bool Initailized() 
     {
         return initialized_;
     };
@@ -85,17 +85,17 @@ private:
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, std::string bundleName,
             AppStateUpdateReason priorityReason);
     bool CurrentOsAccountChangedInner(int curAccountId);
-    bool ApplyReclaimPriority(BundlePriorityInfo *bundleInfo, ProcessPriorityInfo &processInfo);
-    bool IsProcessExist(pid_t pid, int bundleUid, int accountId);
-    bool IsUserExist(int accountId);
+    bool ApplyReclaimPriority(BundlePriorityInfo *bundle);
+    bool IsProcExist(pid_t pid, int bundleUid, int accountId);
+    bool IsOsAccountExist(int accountId);
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
-    void HandleTerminateProcess(ProcessPriorityInfo &processInfo, BundlePriorityInfo *bundleInfo,
-            OsAccountPriorityInfo *osAccountInfo);
-    int GetBundleMinPriority(BundlePriorityInfo *bInfo);
-    OsAccountPriorityInfo* FindUserInfoById(int accountId);
-    void RemoveUserInfoById(int accountId);
+    void HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
+            OsAccountPriorityInfo *account);
+    int GetBundleMinPriority(BundlePriorityInfo *bundle);
+    OsAccountPriorityInfo* FindOsAccountById(int accountId);
+    void RemoveOsAccountById(int accountId);
     void AddOsAccountInfo(OsAccountPriorityInfo account);
-    bool IsSystemApp(BundlePriorityInfo &bundleInfo);
+    bool IsSystemApp(BundlePriorityInfo &bundle);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
