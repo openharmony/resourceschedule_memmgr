@@ -50,10 +50,12 @@ private:
     void RegisterAccountObserver();
     void RegisterMemPsiMonitor();
 
-    std::unique_ptr<AppStateCallbackMemHost> appStateCallback_;
+    std::function<void()> registerEventListenerFunc_;
+    int retryTimes_ = 0;
+    std::shared_ptr<AppStateCallbackMemHost> appStateCallback_;
     std::unique_ptr<MemMgrEventObserver> sysEvtOberserver_;
     std::unique_ptr<AccountObserver> accountOberserver_;
-    std::unique_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 } // namespace Memory
 } // namespace OHOS

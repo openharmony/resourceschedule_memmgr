@@ -17,6 +17,7 @@
 #define OHOS_MEMORY_MEMMGR_ACCOUNT_OBSERVER_H
 
 #include "account_subscriber.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Memory {
@@ -31,6 +32,11 @@ public:
     void OnAccountsChanged(const int &id);
 protected:
 private:
+    bool GetEventHandler();
+    void Register();
+
+    int retryTimes_ = 0;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
     std::shared_ptr<AccountSubscriber> subscriber_;
     AccountCallback callback_;
 };
