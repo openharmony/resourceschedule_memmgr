@@ -28,12 +28,38 @@ const std::string TAG = "AccountObserver";
 AccountObserver::AccountObserver(const AccountCallback &callback) : callback_(callback)
 {
     HILOGI("called");
+    if (!GetEventHandler()) {
+        return;
+    }
+    Register();
+}
 
-    AccountSA::OsAccountInfo osAccountInfo;
-    AccountSA::OsAccountManager::QueryCurrentOsAccount(osAccountInfo);
-    HILOGI("curOsAccount: id=%{public}d, name=%{public}s", osAccountInfo.GetLocalId(), osAccountInfo.GetLocalName().c_str());
-    // the account has been changed before
-    OnAccountsChanged(osAccountInfo.GetLocalId());
+bool AccountObserver::GetEventHandler()
+{
+    if (!handler_) {
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
+        if (handler_ == nullptr) {
+            HILOGI("failed to create event handler");
+            return false;
+        }
+    }
+    return true;
+}
+
+void AccountObserver::Register()
+{
+    retryTimes_++;
+    
+    std::vector<AccountSA::OsAccountInfo> osAccountInfos;
+    ErrCode errCode = AccountSA::OsAccountManager::QueryAllCreatedOsAccounts(osAccountInfos);
+    if (errCode == ERR_OK) {
+        HILOGI("--------------------");
+        for (size_t i = 0; i < osAccountInfos.size(); ++i) {
+            AccountSA::OsAccountInfo &osAccountInfo = osAccountInfos[i];
+            HILOGI("OsAccount: id=%{public}d, name=%{public}s, toString=%{public}s", osAccountInfo.GetLocalId(), osAccountInfo.GetLocalName().c_str(), osAccountInfo.ToString().c_str());
+        }
+        HILOGI("--------------------");
+    }
 
     AccountSA::OsAccountSubscribeInfo  osAccountSubscribeInfo;
     osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
@@ -41,8 +67,17 @@ AccountObserver::AccountObserver(const AccountCallback &callback) : callback_(ca
 
     subscriber_ = std::make_shared<AccountSubscriber>(osAccountSubscribeInfo,
                     std::bind(&AccountObserver::OnAccountsChanged, this, std::placeholders::_1));
-    ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(subscriber_);
-    HILOGI("SubscribeOsAccount errCode=%{public}d", errCode);
+    ErrCode errCode2 = AccountSA::OsAccountManager::SubscribeOsAccount(subscriber_);
+    HILOGI("SubscribeOsAccount errCode=%{public}d", errCode2);
+
+    if (errCode2 == ERR_OK)
+        return;
+
+    if (retryTimes_ < 10) {
+        std::function<void()> RegisterEventListenerFunc = std::bind(&AccountObserver::Register, this);
+        HILOGE("failed to SubscribeOsAccount, try again after 3s!, retryTimes=%{public}d/10", retryTimes_);
+        handler_->PostTask(RegisterEventListenerFunc, 3000, AppExecFwk::EventQueue::Priority::LOW); // 3000 means 3s
+    }
 }
 
 AccountObserver::~AccountObserver()
