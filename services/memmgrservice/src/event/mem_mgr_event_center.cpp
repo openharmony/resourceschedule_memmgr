@@ -29,13 +29,13 @@ const std::string TAG = "MemMgrEventCenter";
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
 
-MemMgrEventCenter::MemMgrEventCenter() : appStateCallback_(std::make_unique<AppStateCallbackMemHost>())
+MemMgrEventCenter::MemMgrEventCenter() : appStateCallback_(std::make_shared<AppStateCallbackMemHost>())
 {
+    registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
 }
 
 MemMgrEventCenter::~MemMgrEventCenter()
 {
-    appStateCallback_ = nullptr;
 }
 
 bool MemMgrEventCenter::Init()
@@ -50,7 +50,7 @@ bool MemMgrEventCenter::Init()
 bool MemMgrEventCenter::GetEventHandler()
 {
     if (!handler_) {
-        handler_ = std::make_unique<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
         if (handler_ == nullptr) {
             HILOGI("failed to create event handler");
             return false;
@@ -62,13 +62,13 @@ bool MemMgrEventCenter::GetEventHandler()
 bool MemMgrEventCenter::RegisterEventListener()
 {
     HILOGI("called");
-    //RegisterAppStateCallback();
+    RegisterAppStateCallback();
 
-    //RegisterSystemEventObserver();
+    RegisterAccountObserver();
 
-    //RegisterAccountObserver();
+    RegisterSystemEventObserver();
 
-    //RegisterMemPsiMonitor();
+    RegisterMemPsiMonitor();
 
     return true;
 }
@@ -76,20 +76,20 @@ bool MemMgrEventCenter::RegisterEventListener()
 void MemMgrEventCenter::RegisterAppStateCallback()
 {
     HILOGI("called");
-    if (!appStateCallback_->ConnectAppMgrService()) {
-        HILOGE("failed to ConnectAppMgrService, try again after 1s!");
-        std::function<void()> RegisterEventListenerFunc = std::bind(
-            &MemMgrEventCenter::RegisterAppStateCallback, this);
-        handler_->PostTask(RegisterEventListenerFunc, 1000, AppExecFwk::EventQueue::Priority::LOW); // 1000 means 1s
+    retryTimes_++;
+    if (!appStateCallback_->ConnectAppMgrService() && retryTimes_ < 10) { // 10 : max retry times
+        HILOGE("failed to ConnectAppMgrService, try again after 3s!, retryTimes=%{public}d/10", retryTimes_);
+        handler_->PostTask(registerEventListenerFunc_, 3000, AppExecFwk::EventQueue::Priority::HIGH); // 3000 means 3s
         return;
     }
-    HILOGI("success to ConnectAppMgrService");
-
-    if (!appStateCallback_->Register()) {
-        HILOGE("failed to RegisterAppStateCallback");
-        return;
+    if (appStateCallback_->Connected()) {
+        HILOGE("success to ConnectAppMgrService");
+        if (!appStateCallback_->Register()) {
+            HILOGE("failed to RegisterAppStateCallback");
+            return;
+        }
+        HILOGI("success to RegisterAppStateCallback");
     }
-    HILOGI("success to RegisterAppStateCallback");
 }
 
 void MemMgrEventCenter::RegisterSystemEventObserver()
@@ -98,6 +98,7 @@ void MemMgrEventCenter::RegisterSystemEventObserver()
         std::bind(&MemMgrEventCenter::OnReceiveCaredEvent, this, std::placeholders::_1),
     };
     sysEvtOberserver_ = std::make_unique<MemMgrEventObserver>(callback);
+    
     HILOGI("success to register cared event callback");
 }
 

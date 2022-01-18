@@ -37,7 +37,13 @@ bool AppStateCallbackMemHost::ConnectAppMgrService()
         return false;
     }
     int result = static_cast<int>(appMgrClient_->ConnectAppMgrService());
-    return result == ERR_OK;
+    connected_ = result == ERR_OK;
+    return connected_;
+}
+
+bool AppStateCallbackMemHost::Connected()
+{
+     return connected_;
 }
 
 bool AppStateCallbackMemHost::Register()
@@ -49,31 +55,37 @@ bool AppStateCallbackMemHost::Register()
 void AppStateCallbackMemHost::OnAppStateChanged(const AppExecFwk::AppProcessData &appData)
 {
     std::string appName = appData.appName;
-    HILOGI("called appName=<%{public}s>", appName.c_str());
+
     switch (appData.appState) {
         case AppExecFwk::ApplicationState::APP_STATE_CREATE:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::CREATE_PROCESS);
+            HILOGI("called appName=<%{public}s> CREATE_PROCESS", appName.c_str());
             break;
         case AppExecFwk::ApplicationState::APP_STATE_READY:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::PROCESS_READY);
+            HILOGI("called appName=<%{public}s> APP_STATE_READY", appName.c_str());
             break;
         case AppExecFwk::ApplicationState::APP_STATE_FOREGROUND:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::FOREGROUND);
+            HILOGI("called appName=<%{public}s> FOREGROUND", appName.c_str());
             break;
         case AppExecFwk::ApplicationState::APP_STATE_BACKGROUND:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::BACKGROUND);
+            HILOGI("called appName=<%{public}s> BACKGROUND", appName.c_str());
             break;
         case AppExecFwk::ApplicationState::APP_STATE_SUSPENDED:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::PROCESS_SUSPEND);
+            HILOGI("called appName=<%{public}s> PROCESS_SUSPEND", appName.c_str());
             break;
         case AppExecFwk::ApplicationState::APP_STATE_TERMINATED:
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
                 appData.appName, AppStateUpdateReason::PROCESS_TERMINATED);
+            HILOGI("called appName=<%{public}s> APP_STATE_TERMINATED", appName.c_str());
             break;
         default:
             break;
