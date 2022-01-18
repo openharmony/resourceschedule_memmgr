@@ -29,7 +29,6 @@ public:
     using ProcessesInfoMap = std::map<pid_t, ProcessPriorityInfo>;
     explicit BundlePriorityInfo(std::string name, int bundleUid);
     explicit BundlePriorityInfo(std::string name, int bundleUid, int priority);
-    ~BundlePriorityInfo();
     inline bool operator<(const BundlePriorityInfo &tmp) const
     {
         return priority_ < tmp.priority_;
