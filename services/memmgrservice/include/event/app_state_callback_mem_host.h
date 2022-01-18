@@ -31,10 +31,12 @@ public:
     AppStateCallbackMemHost();
     ~AppStateCallbackMemHost();
     bool ConnectAppMgrService();
+    bool Connected();
     bool Register();
 protected:
     virtual void OnAppStateChanged(const AppExecFwk::AppProcessData &) override;
 private:
+    bool connected_;
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
 };
 } // namespace Memory
