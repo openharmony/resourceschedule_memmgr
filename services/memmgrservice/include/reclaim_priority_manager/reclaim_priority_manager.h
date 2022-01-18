@@ -91,11 +91,10 @@ private:
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
     void HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
             OsAccountPriorityInfo *account);
-    int GetBundleMinPriority(BundlePriorityInfo *bundle);
     OsAccountPriorityInfo* FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
     void AddOsAccountInfo(OsAccountPriorityInfo account);
-    bool IsSystemApp(BundlePriorityInfo &bundle);
+    bool IsSystemApp(BundlePriorityInfo* bundle);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
