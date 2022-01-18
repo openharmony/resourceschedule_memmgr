@@ -34,11 +34,6 @@ BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int prio
     this->accountId_ = bundleUid / USER_ID_SHIFT;
 }
 
-BundlePriorityInfo::~BundlePriorityInfo()
-{
-    delete this;
-}
-
 bool BundlePriorityInfo::HasProc(pid_t pid)
 {
     if (procs_.count(pid) == 0) {

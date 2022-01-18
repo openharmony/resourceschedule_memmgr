@@ -136,10 +136,11 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid,
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
-bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo &bundle)
+bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo* bundle)
 {
     // special case: launcher and system ui bundle
-    if (bundle.name_ == LAUNCHER_BUNDLE_NAME || bundle.name_ == SYSTEM_UI_BUNDLE_NAME) {
+    if (bundle != nullptr && (bundle->name_.compare(LAUNCHER_BUNDLE_NAME) == 0 ||
+            bundle->name_.compare(SYSTEM_UI_BUNDLE_NAME) == 0)) {
         return true;
     }
     return false;
@@ -169,7 +170,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(int pid, int bundleUid, std::st
         AddBundleInfoToSet(bundle);
     }
     ProcessPriorityInfo *proc;
-    if (IsSystemApp(*bundle)) {
+    if (IsSystemApp(bundle)) {
         proc = new ProcessPriorityInfo(pid, bundleUid, RECLAIM_PRIORITY_SYSTEM);
     } else {
         proc = new ProcessPriorityInfo(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
@@ -312,6 +313,10 @@ bool ReclaimPriorityManager::CurrentOsAccountChanged(int curAccountId)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
+        return false;
+    }
+    if (curAccountId < 0) {
+        HILOGE("invalid account id!");
         return false;
     }
     std::function<bool()> currentOsAccountChangedInnerFunc =
