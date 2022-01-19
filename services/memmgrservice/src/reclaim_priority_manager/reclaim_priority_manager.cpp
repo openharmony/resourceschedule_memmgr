@@ -71,6 +71,11 @@ bool ReclaimPriorityManager::GetEventHandler()
     return true;
 }
 
+const ReclaimPriorityManager::BundlePrioSet ReclaimPriorityManager::GetBundlePrioSet()
+{
+    return totalBundlePrioSet_;
+}
+
 bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 {
     if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
