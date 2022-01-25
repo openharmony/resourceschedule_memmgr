@@ -62,9 +62,8 @@
                 <filteritem type="filepath" name="target/.*" desc="Compile output files"/>
                 <filteritem type="filepath" name="out/.*" desc="Compile output files"/>
                 <filteritem type="filepath" name="log/.*" desc="log files"/>
-                <filteritem type="filepath" name=".idea/.*" desc="IDE temp files"/>
-                <filteritem type="filepath" name="projectroot/[a-zA-Z0-9]{20,}.sh" desc="Temp files"/>
-                <filteritem type="filepath" name="src/test/.*" desc="Test files"/>
+		<filteritem type="filepath" name=".idea/.*" desc="IDE temp files"/>
+		<filteritem type="filepath" name="figures/.*" desc="figures of readme"/>
             </filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
                 <filteritem type="filepath" name="src/main/java/ohos/oat/analysis/headermatcher/.*" desc="License matcher rules, not license header"/>
