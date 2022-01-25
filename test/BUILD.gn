@@ -52,7 +52,26 @@ ohos_unittest("reclaim_priority_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("kernel_interface_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/kernel_interface_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 group("memmgr_unittest") {
   testonly = true
-  deps = [ ":reclaim_priority_manager_test" ]
+  deps = [
+    ":reclaim_priority_manager_test",
+    ":kernel_interface_test"
+  ]
 }
