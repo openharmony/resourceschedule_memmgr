@@ -103,8 +103,6 @@
 
 ` "resourceschedule:plugins/memmgr":{} `
 
-"resourceschedule:plugins/memmgr":{}
-
 ## 相关仓<a name="section_projects"></a>
 
 全局资源调度子系统
