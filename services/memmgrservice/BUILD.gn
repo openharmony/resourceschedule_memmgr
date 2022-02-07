@@ -37,7 +37,6 @@ config("memory_memmgr_config") {
     "include/reclaim_priority_manager/",
     "include/kill_strategy_manager/",
     "include/reclaim_strategy_manager/",
-    "include/config/",
   ]
 
   defines = []
@@ -47,6 +46,7 @@ ohos_shared_library("memmgrservice") {
   install_enable = true
   sources = [
     "${memmgr_common_path}/src/kernel_interface.cpp",
+    "${memmgr_common_path}/src/memmgr_config_manager.cpp",
     "src/event/account_observer.cpp",
     "src/event/account_subscriber.cpp",
     "src/event/app_state_callback_mem_host.cpp",
@@ -62,6 +62,7 @@ ohos_shared_library("memmgrservice") {
     "src/reclaim_priority_manager/os_account_priority_info.cpp",
     "src/reclaim_priority_manager/process_priority_info.cpp",
     "src/reclaim_priority_manager/reclaim_priority_manager.cpp",
+    "src/reclaim_strategy_manager/avail_buffer_manager.cpp",
     "src/reclaim_strategy_manager/memcg.cpp",
     "src/reclaim_strategy_manager/reclaim_strategy_manager.cpp",
   ]
