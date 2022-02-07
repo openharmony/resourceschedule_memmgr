@@ -56,7 +56,8 @@ void AccountObserver::Register()
         HILOGI("--------------------");
         for (size_t i = 0; i < osAccountInfos.size(); ++i) {
             AccountSA::OsAccountInfo &osAccountInfo = osAccountInfos[i];
-            HILOGI("OsAccount: id=%{public}d, name=%{public}s, toString=%{public}s", osAccountInfo.GetLocalId(), osAccountInfo.GetLocalName().c_str(), osAccountInfo.ToString().c_str());
+            HILOGI("OsAccount: id=%{public}d, name=%{public}s, toString=%{public}s",
+                osAccountInfo.GetLocalId(), osAccountInfo.GetLocalName().c_str(), osAccountInfo.ToString().c_str());
         }
         HILOGI("--------------------");
     }

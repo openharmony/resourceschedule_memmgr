@@ -20,7 +20,6 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "ProcessPriorityInfo";
-
 } // namespace
 
 ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
