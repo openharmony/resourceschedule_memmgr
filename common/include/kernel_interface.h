@@ -55,7 +55,6 @@ public:
     std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
 
     static const std::string MEMCG_BASE_PATH;
-private:
     static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
     static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
     static constexpr mode_t FILE_MODE_660 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
