@@ -40,48 +40,45 @@ config("memory_memmgr_config") {
     "include/config/",
   ]
 
-  defines = [
-  ]
+  defines = []
 }
 
 ohos_shared_library("memmgrservice") {
   install_enable = true
   sources = [
-    "src/mem_mgr_service.cpp",
-    "src/event/mem_mgr_event_center.cpp",
-    "src/event/app_state_callback_mem_host.cpp",
-    "src/event/app_state_observer.cpp",
-    "src/event/mem_mgr_event_subscriber.cpp",
-    "src/event/mem_mgr_event_observer.cpp",
+    "${memmgr_common_path}/src/kernel_interface.cpp",
     "src/event/account_observer.cpp",
     "src/event/account_subscriber.cpp",
-    "src/reclaim_priority_manager/reclaim_priority_manager.cpp",
-    "src/reclaim_priority_manager/process_priority_info.cpp",
+    "src/event/app_state_callback_mem_host.cpp",
+    "src/event/app_state_observer.cpp",
+    "src/event/mem_mgr_event_center.cpp",
+    "src/event/mem_mgr_event_observer.cpp",
+    "src/event/mem_mgr_event_subscriber.cpp",
+    "src/mem_mgr_service.cpp",
     "src/reclaim_priority_manager/bundle_priority_info.cpp",
     "src/reclaim_priority_manager/os_account_priority_info.cpp",
-    "${memmgr_common_path}/src/kernel_interface.cpp",
+    "src/reclaim_priority_manager/process_priority_info.cpp",
+    "src/reclaim_priority_manager/reclaim_priority_manager.cpp",
   ]
 
   configs = [ ":memory_memmgr_config" ]
 
-  deps = [
-    "//utils/native/base:utils",
-  ]
+  deps = [ "//utils/native/base:utils" ]
 
   external_deps = [
-    "ipc:ipc_core",
-    "hiviewdfx_hilog_native:libhilog",
-    "eventhandler:libeventhandler",
-    "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
     "ability_runtime:app_manager",
-    "bundle_framework:appexecfwk_base",
     "ability_runtime:want",
+    "bundle_framework:appexecfwk_base",
     "ces_standard:cesfwk_core",
     "ces_standard:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
     "os_account_standard:libaccountkits",
-    "os_account_standard:os_account_innerkits"
+    "os_account_standard:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
   ]
 
   part_name = "${memmgr_part_name}"
