@@ -42,7 +42,7 @@ void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppState
         appStateData.uid, appStateData.bundleName.c_str(), appStateData.state);
     if (appStateData.state == static_cast<int32_t>(AppExecFwk::ApplicationState::APP_STATE_SUSPENDED)) {
         ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-            IGNORE_PID, appStateData.uid, appStateData.bundleName, AppStateUpdateReason::PROCESS_SUSPEND);
+            IGNORE_PID, appStateData.uid, appStateData.bundleName, AppStateUpdateReason::APPLICATION_SUSPEND);
     }
 }
 

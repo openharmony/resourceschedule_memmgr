@@ -91,6 +91,7 @@ private:
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
     void HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
             OsAccountPriorityInfo *account);
+    bool HandleApplicationSuspend(BundlePriorityInfo *bundle);
     OsAccountPriorityInfo* FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
     void AddOsAccountInfo(OsAccountPriorityInfo account);
