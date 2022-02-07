@@ -1,5 +1,5 @@
 {
-    "name": "@openharmony/memmgr",
+    "name": "@ohos/memmgr",
     "version": "3.1.0",
     "description": "memory management",
     "publishAs": "source",
@@ -8,34 +8,37 @@
     "repository": "",
     "license": "Apache License 2.0",
     "component": {
-      "name": "plugins/memmgr",
+      "name": "memmgr",
       "subsystem": "resourceschedule",
       "adapted_system_type": [ "standard" ],
       "deps": {
         "components": [
-          "libhilog",
+          "utils_base",
           "ipc_core",
-          "softbus_client",
+          "libhilog",
+          "libeventhandler",
           "system_ability_fwk",
           "samgr_proxy",
-          "utils_base",
-          "libhisysevent",
-          "libaccountkits",
+          "app_manager",
+          "appexecfwk_base",
+          "want",
           "cesfwk_core",
           "cesfwk_innerkits",
-          "want"
+          "libhisysevent",
+          "libaccountkits",
+          "os_account_innerkits"
         ],
         "third_party": []
       },
       "build": {
         "sub_component": [
-            "//foundation/resourceschedule/plugins/memmgr/sa_profile:memmgr_sa_profile",
-            "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice",
-            "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice_init"
+            "//foundation/resourceschedule/memmgr/sa_profile:memmgr_sa_profile",
+            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
+            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init"
         ],
         "inner_kits": [],
         "test": [
-            "//foundation/resourceschedule/plugins/memmgr/test:memmgr_unittest"
+            "//foundation/resourceschedule/memmgr/test:memmgr_unittest"
         ]
       }
     }

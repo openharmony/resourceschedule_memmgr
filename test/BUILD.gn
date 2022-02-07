@@ -17,7 +17,7 @@ import("//build/test.gni")
 
 module_output_path = "memmgrtest/"
 
-memmgr_path = "//foundation/resourceschedule/plugins/memmgr"
+memmgr_path = "//foundation/resourceschedule/memmgr"
 memmgr_service = "${memmgr_path}/services/memmgrservice"
 memmgr_service_configs = [ "${memmgr_service}:memory_memmgr_config" ]
 
@@ -25,7 +25,7 @@ memmgr_service_configs = [ "${memmgr_service}:memory_memmgr_config" ]
 memmgr_deps = [
   "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
   "//utils/native/base:utils",
-  "//foundation/resourceschedule/plugins/memmgr/services/memmgrservice:memmgrservice",
+  "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
   "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
 ]
 
