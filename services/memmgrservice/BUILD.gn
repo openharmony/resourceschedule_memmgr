@@ -16,7 +16,7 @@ import("//build/ohos_var.gni")
 
 import("//foundation/resourceschedule/memmgr/memmgr.gni")
 
-## Install memmgrservice.rc to /system/etc/init/memmgrservice.rc {{{
+## Install .rc or .cfg file to /system/etc/init/
 ohos_prebuilt_etc("memmgrservice_init") {
   if (use_musl) {
     source = "memmgrservice.cfg"
@@ -27,7 +27,6 @@ ohos_prebuilt_etc("memmgrservice_init") {
   part_name = "${memmgr_part_name}"
   subsystem_name = "${memmgr_subsystem_name}"
 }
-## Install memmgrservice.rc to /system/etc/init/memmgrservice.rc }}}
 
 config("memory_memmgr_config") {
   visibility = [ ":*" ]
@@ -66,29 +65,21 @@ ohos_shared_library("memmgrservice") {
   configs = [ ":memory_memmgr_config" ]
 
   deps = [
-    # base deps
     "//utils/native/base:utils",
   ]
 
   external_deps = [
-    # base deps
     "ipc:ipc_core",
-    # deps for hilog
     "hiviewdfx_hilog_native:libhilog",
-    # deps for handler
     "eventhandler:libeventhandler",
-    # deps for system ability access
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    # deps for appliation state observer
     "ability_runtime:app_manager",
     "bundle_framework:appexecfwk_base",
     "ability_runtime:want",
-    # deps for sys_event observer
     "ces_standard:cesfwk_core",
     "ces_standard:cesfwk_innerkits",
     "hisysevent_native:libhisysevent",
-    # deps for os_account observer
     "os_account_standard:libaccountkits",
     "os_account_standard:os_account_innerkits"
   ]
