@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos/sa_profile/sa_profile.gni")
-import("//foundation/resourceschedule/plugins/memmgr/memmgr.gni")
+import("//foundation/resourceschedule/memmgr/memmgr.gni")
 
 ohos_sa_profile("memmgr_sa_profile") {
   sources = [ "1909.xml" ]

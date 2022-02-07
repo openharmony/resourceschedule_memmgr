@@ -48,6 +48,8 @@ constexpr std::string_view LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 const int USER_ID_SHIFT = 100000;
 
+const int IGNORE_PID = -1;
+
 enum class AppStateUpdateReason {
     CREATE_PROCESS = 0,
     PROCESS_READY,
