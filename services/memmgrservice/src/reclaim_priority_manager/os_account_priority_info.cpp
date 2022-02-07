@@ -74,7 +74,6 @@ void OsAccountPriorityInfo::AdjustAllBundlePriority(int shift)
         BundlePriorityInfo *bundle = i->second;
         int targetPriority = bundle->priority_ + shift;
         bundle->SetPriority(targetPriority);
-        
     }
 }
 } // namespace Memory

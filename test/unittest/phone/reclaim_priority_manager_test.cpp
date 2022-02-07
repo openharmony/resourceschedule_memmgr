@@ -456,5 +456,22 @@ HWTEST_F(MemMgrTest, GetBundlePrioSet, TestSize.Level1)
     bool isEmpty = bundleSet.size() == 0;
     EXPECT_EQ(isEmpty, false);
 }
+
+HWTEST_F(MemMgrTest, UpdateReclaimPriorityApplicationSuspend, TestSize.Level1)
+{
+    int pid = 1016;
+    int uid = 117;
+    int priority;
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
+                "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(IGNORE_PID, uid,
+                "com.ohos.reclaim_test", AppStateUpdateReason::APPLICATION_SUSPEND);
+
+    int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
+    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    BundlePriorityInfo* bundle = account->FindBundleById(uid);
+    priority = bundle->priority_;
+    EXPECT_EQ(priority, RECLAIM_PRIORITY_SUSPEND);
+}
 }
 }
