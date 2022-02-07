@@ -16,28 +16,27 @@
 #ifndef OHOS_MEMORY_MEMMGR_EVENT_MEM_HOST_H
 #define OHOS_MEMORY_MEMMGR_EVENT_MEM_HOST_H
 
-#include "single_instance.h"
-#include "memmgr_log.h"
-#include <string>
-
-#include "app_state_callback_host.h"
 #include "app_process_data.h"
 #include "app_mgr_client.h"
+#include "app_state_observer.h"
+
+#include <string>
+#include "single_instance.h"
+#include "memmgr_log.h"
 
 namespace OHOS {
 namespace Memory {
-class AppStateCallbackMemHost : public AppExecFwk::AppStateCallbackHost {
+class AppStateCallbackMemHost {
 public:
     AppStateCallbackMemHost();
     ~AppStateCallbackMemHost();
     bool ConnectAppMgrService();
     bool Connected();
     bool Register();
-protected:
-    virtual void OnAppStateChanged(const AppExecFwk::AppProcessData &) override;
 private:
     bool connected_;
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
+    sptr<AppStateObserver> appStateObserver_;
 };
 } // namespace Memory
 } // namespace OHOS

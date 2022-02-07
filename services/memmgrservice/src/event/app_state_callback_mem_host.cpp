@@ -17,6 +17,10 @@
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
 
+#include "app_mgr_interface.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -25,10 +29,15 @@ const std::string TAG = "AppStateCallbackMemHost";
 
 AppStateCallbackMemHost::AppStateCallbackMemHost() : appMgrClient_(std::make_unique<AppExecFwk::AppMgrClient>())
 {
+    appStateObserver_ = new AppStateObserver();
 }
 
 AppStateCallbackMemHost::~AppStateCallbackMemHost()
 {
+    if (appStateObserver_ != nullptr) {
+        delete appStateObserver_;
+        appStateObserver_ = nullptr;
+    }
 }
 
 bool AppStateCallbackMemHost::ConnectAppMgrService()
@@ -43,56 +52,20 @@ bool AppStateCallbackMemHost::ConnectAppMgrService()
 
 bool AppStateCallbackMemHost::Connected()
 {
-     return connected_;
+    return connected_;
+}
+
+sptr<AppExecFwk::IAppMgr> GetAppManangerInstance()
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto appObject = systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID);
+    return iface_cast<AppExecFwk::IAppMgr>(appObject);
 }
 
 bool AppStateCallbackMemHost::Register()
 {
-    int result = static_cast<int>(appMgrClient_->RegisterAppStateCallback(sptr<AppStateCallbackMemHost>(this)));
+    int result = GetAppManangerInstance()->RegisterApplicationStateObserver(appStateObserver_);
     return result == ERR_OK;
-}
-
-void AppStateCallbackMemHost::OnAppStateChanged(const AppExecFwk::AppProcessData &appData)
-{
-    std::string appName = appData.appName;
-
-    switch (appData.appState) {
-        case AppExecFwk::ApplicationState::APP_STATE_CREATE:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::CREATE_PROCESS);
-            HILOGI("called appName=<%{public}s> CREATE_PROCESS", appName.c_str());
-            break;
-        case AppExecFwk::ApplicationState::APP_STATE_READY:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::PROCESS_READY);
-            HILOGI("called appName=<%{public}s> APP_STATE_READY", appName.c_str());
-            break;
-        case AppExecFwk::ApplicationState::APP_STATE_FOREGROUND:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::FOREGROUND);
-            HILOGI("called appName=<%{public}s> FOREGROUND", appName.c_str());
-            break;
-        case AppExecFwk::ApplicationState::APP_STATE_BACKGROUND:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::BACKGROUND);
-            HILOGI("called appName=<%{public}s> BACKGROUND", appName.c_str());
-            break;
-        case AppExecFwk::ApplicationState::APP_STATE_SUSPENDED:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::PROCESS_SUSPEND);
-            HILOGI("called appName=<%{public}s> PROCESS_SUSPEND", appName.c_str());
-            break;
-        case AppExecFwk::ApplicationState::APP_STATE_TERMINATED:
-            ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(appData.pid, appData.uid,
-                appData.appName, AppStateUpdateReason::PROCESS_TERMINATED);
-            HILOGI("called appName=<%{public}s> APP_STATE_TERMINATED", appName.c_str());
-            break;
-        default:
-            break;
-    }
-    // notify kill stratagy manager
-
-    // notify reclaim stratagy manager
 }
 } // namespace Memory
 } // namespace OHOS
