@@ -84,7 +84,5 @@ void BundlePriorityInfo::UpdatePriority()
     SetPriority(targetPriority);
     HILOGI("bundleName=%{public}s, priority=%{public}d", name_.c_str(), priority_);
 }
-
-
 } // namespace Memory
 } // namespace OHOS

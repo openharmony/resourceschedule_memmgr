@@ -113,6 +113,9 @@ void ReclaimPriorityManager::AddOsAccountInfo(OsAccountPriorityInfo account)
 
 bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId)
 {
+    if (pid == IGNORE_PID) {
+        return true;
+    }
     if (!IsOsAccountExist(accountId)) {
         return false;
     }
@@ -145,7 +148,7 @@ bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo* bundle)
 {
     // special case: launcher and system ui bundle
     if (bundle != nullptr && (bundle->name_.compare(LAUNCHER_BUNDLE_NAME) == 0 ||
-            bundle->name_.compare(SYSTEM_UI_BUNDLE_NAME) == 0)) {
+        bundle->name_.compare(SYSTEM_UI_BUNDLE_NAME) == 0)) {
         return true;
     }
     return false;
@@ -211,6 +214,16 @@ void ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
     }
 }
 
+bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle)
+{
+    for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
+        i->second.priority_ = RECLAIM_PRIORITY_SUSPEND;
+    }
+    UpdateBundlePriority(bundle);
+    bool ret = ApplyReclaimPriority(bundle);
+    return ret;
+}
+
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, 
     std::string bundleName, AppStateUpdateReason reason)
 {
@@ -227,14 +240,18 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     }
 
     OsAccountPriorityInfo* account = FindOsAccountById(accountId);
-    BundlePriorityInfo *bundle =  account->FindBundleById(bundleUid);
+    BundlePriorityInfo *bundle = account->FindBundleById(bundleUid);
     if (bundle->priority_ == RECLAIM_PRIORITY_SYSTEM) {
         HILOGI("%{public}s is system app, skip!", bundleName.c_str());
         return true;
     }
 
-    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
+    if (reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
+        bool ret = HandleApplicationSuspend(bundle);
+        return ret;
+    }
 
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
     bool ret = true;
     switch (reason) {
         case AppStateUpdateReason::CREATE_PROCESS: {
@@ -252,11 +269,6 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         }
         case AppStateUpdateReason::BACKGROUND: {
             proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
-            UpdateBundlePriority(bundle);
-            break;
-        }
-        case AppStateUpdateReason::PROCESS_SUSPEND: {
-            proc.SetPriority(RECLAIM_PRIORITY_SUSPEND);
             UpdateBundlePriority(bundle);
             break;
         }
