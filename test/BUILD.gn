@@ -21,12 +21,11 @@ memmgr_path = "//foundation/resourceschedule/memmgr"
 memmgr_service = "${memmgr_path}/services/memmgrservice"
 memmgr_service_configs = [ "${memmgr_service}:memory_memmgr_config" ]
 
-
 memmgr_deps = [
   "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-  "//utils/native/base:utils",
-  "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
   "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
+  "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
+  "//utils/native/base:utils",
 ]
 
 memmgr_external_deps = [
@@ -71,7 +70,7 @@ ohos_unittest("kernel_interface_test") {
 group("memmgr_unittest") {
   testonly = true
   deps = [
+    ":kernel_interface_test",
     ":reclaim_priority_manager_test",
-    ":kernel_interface_test"
   ]
 }
