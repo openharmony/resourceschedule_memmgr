@@ -13,7 +13,7 @@
 
 memmgr_subsystem_name = "resourceschedule"
 
-memmgr_part_name = "plugins/memmgr"
+memmgr_part_name = "memmgr"
 
 memmgr_root_path = "//foundation/resourceschedule/${memmgr_part_name}"
 
