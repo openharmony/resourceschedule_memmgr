@@ -42,7 +42,8 @@ void MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
 {
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
     if (accountInfo == nullptr) {
-        AddAccountPriorityInfo(std::make_shared<AccountPriorityInfo>(accountId, accountName, accountType, isActived));
+        accountInfo = std::make_shared<AccountPriorityInfo>(accountId, accountName, accountType, isActived);
+        AddAccountPriorityInfo(accountInfo);
     } else {
         accountInfo->SetName(accountName);
         accountInfo->SetType(accountType);
