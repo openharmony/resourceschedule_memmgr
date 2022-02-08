@@ -20,6 +20,7 @@ namespace Memory {
 AccountPriorityInfo::AccountPriorityInfo(int id, std::string name, AccountType type, bool isActived)
     : id_(id), name_(name), type_(type), isActived_(isActived)
 {
+    priority_ = -1;
 }
 
 int AccountPriorityInfo::GetId()
