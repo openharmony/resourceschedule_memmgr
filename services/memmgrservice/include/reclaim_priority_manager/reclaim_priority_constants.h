@@ -65,7 +65,7 @@ enum class AppStateUpdateReason {
     DATA_ABILITY_END,
     APPLICATION_SUSPEND,
     PROCESS_TERMINATED,
-    OS_ACCOUNT_HOT_SWITCH,
+    OS_ACCOUNT_CHANGED,
 };
 } // namespace Memory
 } // namespace OHOS

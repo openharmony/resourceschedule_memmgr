@@ -22,6 +22,7 @@
 #include "process_priority_info.h"
 #include "bundle_priority_info.h"
 #include "os_account_priority_info.h"
+#include "reclaim_param.h"
 
 #include <map>
 #include <string>
@@ -49,8 +50,7 @@ public:
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
     bool Init();
     bool UpdateReclaimPriority(pid_t pid, int bundleUid, std::string bundleName, AppStateUpdateReason priorityReason);
-    bool UpdateAllReclaimPriority(AppStateUpdateReason priorityReason);
-    bool CurrentOsAccountChanged(int curAccountId);
+    bool OsAccountChanged(int accountId);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
     void AddBundleInfoToSet(BundlePriorityInfo* bundle);
@@ -68,8 +68,6 @@ protected:
 
 private:
     bool initialized_ = false;
-    int preOsAccountId_ = 0;
-    int curOsAccountId_ = 0;
 
     // map <accountId, accountInfo>
     std::map<int, OsAccountPriorityInfo> osAccountsInfoMap_;
@@ -84,12 +82,13 @@ private:
     bool GetEventHandler();
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, std::string bundleName,
             AppStateUpdateReason priorityReason);
-    bool CurrentOsAccountChangedInner(int curAccountId);
-    bool ApplyReclaimPriority(BundlePriorityInfo *bundle);
+    bool OsAccountChangedInner(int accountId);
+    bool UpdateAllPrioForOsAccountChanged(int accountId);
+    bool ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
-    void HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
+    bool HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
             OsAccountPriorityInfo *account);
     bool HandleApplicationSuspend(BundlePriorityInfo *bundle);
     OsAccountPriorityInfo* FindOsAccountById(int accountId);
