@@ -21,13 +21,10 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "OsAccountPriorityInfo";
-const int OS_ACCOUNT_PRIORITY_SHIFT_DEFAULT = 50;
 } // namespace
 
-OsAccountPriorityInfo::OsAccountPriorityInfo(int accountId, bool isCurrent):id_(accountId), isCurOsAccount_(isCurrent)
+OsAccountPriorityInfo::OsAccountPriorityInfo(int accountId):id_(accountId)
 {
-    isPreOsAccount_ = false;
-    priorityShift_ = OS_ACCOUNT_PRIORITY_SHIFT_DEFAULT;
 }
 
 bool OsAccountPriorityInfo::HasBundle(int bundleUid)
@@ -56,25 +53,6 @@ void OsAccountPriorityInfo::RemoveBundleById(int bundleUid)
 int OsAccountPriorityInfo::GetBundlesCount()
 {
     return bundleIdInfoMapping_.size();
-}
-
-void OsAccountPriorityInfo::PromoteAllBundlePriority(int shift)
-{
-    AdjustAllBundlePriority(-shift);
-}
-
-void OsAccountPriorityInfo::ReduceAllBundlePriority(int shift)
-{
-    AdjustAllBundlePriority(shift);
-}
-
-void OsAccountPriorityInfo::AdjustAllBundlePriority(int shift)
-{
-    for (auto i = bundleIdInfoMapping_.begin(); i != bundleIdInfoMapping_.end(); ++i) {
-        BundlePriorityInfo *bundle = i->second;
-        int targetPriority = bundle->priority_ + shift;
-        bundle->SetPriority(targetPriority);
-    }
 }
 } // namespace Memory
 } // namespace OHOS
