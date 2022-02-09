@@ -16,8 +16,13 @@
 #ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_KERNEL_INTERFACE_H
 #define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_KERNEL_INTERFACE_H
 
-#include "single_instance.h"
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include <string>
+#include <vector>
+
+#include "single_instance.h"
 
 namespace OHOS {
 namespace Memory {
@@ -26,6 +31,38 @@ class KernelInterface {
 
 public:
     bool EchoToPath(const char* path, const char* content);
+
+    // file operations
+    bool IsFileExists(const std::string& path);
+    bool CreateFile(const std::string& path);
+    bool CreateFile(const std::string& path, const mode_t& mode);
+    bool RemoveFile(const std::string& path);
+    bool WriteToFile(const std::string& path, const std::string& content, bool truncated = true);
+    bool WriteLinesToFile(const std::string& path, const std::vector<std::string>& lines, bool truncated = true);
+    bool ReadFromFile(const std::string& path, std::string& content);
+    bool ReadLinesFromFile(const std::string& path, std::vector<std::string>& lines);
+    // dir operations
+    bool IsDirExists(const std::string& path);
+    bool IsExists(const std::string& path);
+    bool IsEmptyDir(const std::string& path);
+    bool CreateDir(const std::string& path); // create dir recursively
+    bool CreateDir(const std::string& path, const mode_t& mode); // create dir recursively with mode
+    bool RemoveDirRecursively(const std::string& path);
+    bool RemoveItemsInDir(const std::string& dirPath);
+    std::string AddDelimiter(const std::string& path); // IncludeTrailingPathDelimiter
+    std::string RmDelimiter(const std::string& path); // ExcludeTrailingPathDelimiter
+    std::string JoinPath(const std::string& prefixPath, const std::string& subPath);
+    std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
+
+    static const std::string MEMCG_BASE_PATH;
+private:
+    static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
+    static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
+    static constexpr mode_t FILE_MODE_660 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+    static constexpr mode_t FILE_MODE_755 = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    static constexpr mode_t FILE_MODE_775 = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+    static constexpr mode_t FILE_MODE_770 = S_IRWXU | S_IRWXG;
+    static constexpr mode_t FILE_MODE_700 = S_IRWXU;
 };
 } // namespace Memory
 } // namespace OHOS
