@@ -28,24 +28,17 @@ namespace Memory {
 class OsAccountPriorityInfo {
 public:
     int id_;
-    bool isCurOsAccount_;
-    bool isPreOsAccount_;
-    int priorityShift_;
 
-    explicit OsAccountPriorityInfo(int accountId, bool isCurrent);
+    explicit OsAccountPriorityInfo(int accountId);
     bool HasBundle(int bundleId);
     BundlePriorityInfo* FindBundleById(int bundleId);
     void AddBundleToOsAccount(BundlePriorityInfo* bundle);
     void RemoveBundleById(int bundleUid);
     int GetBundlesCount();
-    void PromoteAllBundlePriority(int shift);
-    void ReduceAllBundlePriority(int shift);
 private:
     // map <bundleUid, BundlePriorityInfo*>
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
     BundlePrioMap bundleIdInfoMapping_;
-
-    void AdjustAllBundlePriority(int shift);
 };
 } // namespace Memory
 } // namespace OHOS
