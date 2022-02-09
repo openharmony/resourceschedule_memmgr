@@ -36,7 +36,7 @@ bool WriteOomScoreAdjToKernel(const BundlePriorityInfo *bundle)
     char content[contentSize];
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         int priority = i->second.priority_;
-        int pid = i->second.pid_;
+        pid_t pid = i->second.pid_;
         snprintf(path, pathSize, "/proc/%d/oom_score_adj", pid);
         snprintf(content, contentSize, "%d", priority);
         KernelInterface::GetInstance().EchoToPath(path, content);
@@ -85,12 +85,12 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
     return true;
 }
 
-void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo* bundle)
+void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
 {
     totalBundlePrioSet_.insert(bundle);
 }
 
-void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo* bundle)
+void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo *bundle)
 {
     totalBundlePrioSet_.erase(bundle);
 }
@@ -124,7 +124,7 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
         HILOGE("bundle name not exist");
         return false;
     }
-    BundlePriorityInfo* bundle = account->FindBundleById(bundleUid);
+    BundlePriorityInfo *bundle = account->FindBundleById(bundleUid);
     if (!bundle->HasProc(pid)) {
         HILOGE("pid not exist");
         return false;
@@ -144,7 +144,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid,
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
-bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo* bundle)
+bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo *bundle)
 {
     // special case: launcher and system ui bundle
     if (bundle != nullptr && (bundle->name_.compare(LAUNCHER_BUNDLE_NAME) == 0 ||
@@ -161,21 +161,24 @@ void ReclaimPriorityManager::UpdateBundlePriority(BundlePriorityInfo *bundle)
     AddBundleInfoToSet(bundle);
 }
 
-bool ReclaimPriorityManager::HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId)
+bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::string bundleName, int accountId)
 {
     if (!IsOsAccountExist(accountId)) {
-        OsAccountPriorityInfo newAccount(accountId, true);
+        OsAccountPriorityInfo newAccount(accountId);
         AddOsAccountInfo(newAccount);
     }
     OsAccountPriorityInfo* account = FindOsAccountById(accountId);
     BundlePriorityInfo *bundle;
+    AppAction action;
     if (account->HasBundle(bundleUid)) {
         // insert new ProcessInfo and update new priority
-        bundle =  account->FindBundleById(bundleUid);
+        bundle = account->FindBundleById(bundleUid);
+        action = AppAction::CREATE_PROCESS_ONLY;
     } else {
         // need to new BundleInfo ,add to list and map
         bundle = new BundlePriorityInfo(bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
         AddBundleInfoToSet(bundle);
+        action = AppAction::CREATE_PROCESS_AND_APP;
     }
     ProcessPriorityInfo *proc;
     if (IsSystemApp(bundle)) {
@@ -186,20 +189,22 @@ bool ReclaimPriorityManager::HandleCreateProcess(int pid, int bundleUid, std::st
     bundle->AddProc(*proc);
     UpdateBundlePriority(bundle);
     account->AddBundleToOsAccount(bundle);
-    bool ret = ApplyReclaimPriority(bundle);
+    bool ret = ApplyReclaimPriority(bundle, pid, action);
     HILOGI("create: bundleName=%{public}s, prio=%{public}d", bundleName.c_str(), bundle->priority_);
     return ret;
 }
 
-void ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
+bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
     BundlePriorityInfo *bundle, OsAccountPriorityInfo *account)
 {
     // clear proc and bundle if needed, delete the object
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
     int removedProcessPrio = proc.priority_;
     bundle->RemoveProcByPid(proc.pid_);
+    bool ret = true;
 
     if (bundle->GetProcsCount() == 0) {
+        ret = ApplyReclaimPriority(bundle, proc.pid_, AppAction::APP_DIED);
         account->RemoveBundleById(bundle->uid_);
         DeleteBundleInfoFromSet(bundle);
         delete bundle;
@@ -212,15 +217,20 @@ void ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
     if (account->GetBundlesCount() == 0) {
         RemoveOsAccountById(account->id_);
     }
+    return ret;
 }
 
 bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle)
 {
+    if (bundle == nullptr) {
+        return false;
+    }
+    HILOGI("application suspend: bundleName=%{public}s", bundle->name_.c_str());
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         i->second.priority_ = RECLAIM_PRIORITY_SUSPEND;
     }
     UpdateBundlePriority(bundle);
-    bool ret = ApplyReclaimPriority(bundle);
+    bool ret = ApplyReclaimPriority(bundle, IGNORE_PID, AppAction::OTHERS);
     return ret;
 }
 
@@ -239,7 +249,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         return false;
     }
 
-    OsAccountPriorityInfo* account = FindOsAccountById(accountId);
+    OsAccountPriorityInfo *account = FindOsAccountById(accountId);
     BundlePriorityInfo *bundle = account->FindBundleById(bundleUid);
     if (bundle->priority_ == RECLAIM_PRIORITY_SYSTEM) {
         HILOGI("%{public}s is system app, skip!", bundleName.c_str());
@@ -253,23 +263,22 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
 
     ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
     bool ret = true;
+    AppAction action = AppAction::OTHERS;
     switch (reason) {
-        case AppStateUpdateReason::CREATE_PROCESS: {
-            HILOGE("not supposed to reach here!");
-            return false;
-        }
         case AppStateUpdateReason::PROCESS_TERMINATED: {
-            HandleTerminateProcess(proc, bundle, account);
-            break;
+            ret = HandleTerminateProcess(proc, bundle, account);
+            return ret;
         }
         case AppStateUpdateReason::FOREGROUND: {
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
             UpdateBundlePriority(bundle);
+            action = AppAction::APP_FOREGROUND;
             break;
         }
         case AppStateUpdateReason::BACKGROUND: {
             proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
             UpdateBundlePriority(bundle);
+            action = AppAction::APP_BACKGROUND;
             break;
         }
         case AppStateUpdateReason::SUSPEND_DELAY_START:
@@ -317,63 +326,45 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
         UpdateBundlePriority(bundle);
     }
-    ret = ApplyReclaimPriority(bundle);
+    ret = ApplyReclaimPriority(bundle, pid, action);
     return ret;
 }
 
-bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle)
+bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action)
 {
+    if (bundle == nullptr) {
+        return false;
+    }
     return WriteOomScoreAdjToKernel(bundle);
 }
 
-bool ReclaimPriorityManager::CurrentOsAccountChanged(int curAccountId)
+bool ReclaimPriorityManager::OsAccountChanged(int accountId)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
-    if (curAccountId < 0) {
+    if (accountId < 0) {
         HILOGE("invalid account id!");
         return false;
     }
-    std::function<bool()> currentOsAccountChangedInnerFunc =
-        std::bind(&ReclaimPriorityManager::CurrentOsAccountChangedInner, this, curAccountId);
-    return handler_->PostImmediateTask(currentOsAccountChangedInnerFunc);
+    std::function<bool()> osAccountChangedInnerFunc =
+        std::bind(&ReclaimPriorityManager::OsAccountChangedInner, this, accountId);
+    return handler_->PostImmediateTask(osAccountChangedInnerFunc);
 }
 
-bool ReclaimPriorityManager::CurrentOsAccountChangedInner(int curAccountId)
+bool ReclaimPriorityManager::OsAccountChangedInner(int accountId)
 {
-    preOsAccountId_ = curOsAccountId_;
-    curOsAccountId_ = curAccountId;
-    for (auto i = osAccountsInfoMap_.begin(); i != osAccountsInfoMap_.end(); ++i) {
-        i->second.isCurOsAccount_ = (i->first == curOsAccountId_) ? true : false;
-        i->second.isPreOsAccount_ = (i->first == preOsAccountId_) ? true : false;
-    }
-    return UpdateAllReclaimPriority(AppStateUpdateReason::OS_ACCOUNT_HOT_SWITCH);
+    return UpdateAllPrioForOsAccountChanged(accountId);
 }
 
-bool ReclaimPriorityManager::UpdateAllReclaimPriority(AppStateUpdateReason reason)
+bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
-    switch (reason) {
-        case AppStateUpdateReason::OS_ACCOUNT_HOT_SWITCH: {
-            if (curOsAccountId_ == preOsAccountId_) { // now there is only one user
-                HILOGI("now there is only one user<%{public}d>, do nothing", curOsAccountId_);
-            } else {
-                OsAccountPriorityInfo* curOsAccount = FindOsAccountById(curOsAccountId_);
-                curOsAccount->PromoteAllBundlePriority(curOsAccount->priorityShift_);
-                OsAccountPriorityInfo* preOsAccount = FindOsAccountById(preOsAccountId_);
-                preOsAccount->ReduceAllBundlePriority(curOsAccount->priorityShift_);
-            }
-            break;
-        }
-        default:
-            break;
-    }
-    HILOGI("UpdateReclaimPriority for all apps");
+    HILOGI("UpdateReclaimPriority for all apps because of os account changed ");
     return true;
 }
 } // namespace Memory

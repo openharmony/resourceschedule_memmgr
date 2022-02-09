@@ -52,29 +52,10 @@ void MemMgrTest::TearDown()
 {
 }
 
-
-HWTEST_F(MemMgrTest, ReclaimPriorityManagerInit, TestSize.Level1)
-{
-    bool ret = ReclaimPriorityManager::GetInstance().Init();
-    EXPECT_EQ(ret, true);
-}
-
-HWTEST_F(MemMgrTest, ChangeOsAccountIdToValid, TestSize.Level1)
-{
-    ReclaimPriorityManager::GetInstance().CurrentOsAccountChanged(0);
-    EXPECT_EQ(ReclaimPriorityManager::GetInstance().curOsAccountId_, 0);
-}
-
-HWTEST_F(MemMgrTest, ChangeOsAccountIdToInValid, TestSize.Level1)
-{
-    bool ret = ReclaimPriorityManager::GetInstance().CurrentOsAccountChanged(-1);
-    EXPECT_EQ(ret, false);
-}
-
 HWTEST_F(MemMgrTest, AddOsAccountInfo, TestSize.Level1)
 {
     int account_id = 0;
-    OsAccountPriorityInfo account(account_id, true);
+    OsAccountPriorityInfo account(account_id);
     ReclaimPriorityManager::GetInstance().AddOsAccountInfo(account);
 
     bool isAccountExist = ReclaimPriorityManager::GetInstance().IsOsAccountExist(account_id);
@@ -84,7 +65,7 @@ HWTEST_F(MemMgrTest, AddOsAccountInfo, TestSize.Level1)
 HWTEST_F(MemMgrTest, RemoveOsAccountById, TestSize.Level1)
 {
     int account_id = 0;
-    OsAccountPriorityInfo account(account_id, true);
+    OsAccountPriorityInfo account(account_id);
     ReclaimPriorityManager::GetInstance().AddOsAccountInfo(account);
 
     bool isAccountExist = ReclaimPriorityManager::GetInstance().IsOsAccountExist(account_id);
