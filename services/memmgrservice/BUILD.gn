@@ -62,6 +62,8 @@ ohos_shared_library("memmgrservice") {
     "src/reclaim_priority_manager/os_account_priority_info.cpp",
     "src/reclaim_priority_manager/process_priority_info.cpp",
     "src/reclaim_priority_manager/reclaim_priority_manager.cpp",
+    "src/reclaim_strategy_manager/memcg.cpp",
+    "src/reclaim_strategy_manager/reclaim_strategy_manager.cpp",
   ]
 
   configs = [ ":memory_memmgr_config" ]
