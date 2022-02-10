@@ -23,6 +23,7 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "AccountObserver";
+const int MAX_RETRY_TIMES = 10;
 }
 
 AccountObserver::AccountObserver(const AccountCallback &callback) : callback_(callback)
@@ -74,7 +75,7 @@ void AccountObserver::Register()
     if (errCode2 == ERR_OK)
         return;
 
-    if (retryTimes_ < 10) {
+    if (retryTimes_ < MAX_RETRY_TIMES) {
         std::function<void()> RegisterEventListenerFunc = std::bind(&AccountObserver::Register, this);
         HILOGE("failed to SubscribeOsAccount, try again after 3s!, retryTimes=%{public}d/10", retryTimes_);
         handler_->PostTask(RegisterEventListenerFunc, 3000, AppExecFwk::EventQueue::Priority::LOW); // 3000 means 3s
