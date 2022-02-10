@@ -57,12 +57,11 @@ public:
     void UpdateBundlePriority(BundlePriorityInfo* bundle);
     void DeleteBundleInfoFromSet(BundlePriorityInfo* bundle);
 
-inline bool Initailized() 
+    inline bool Initailized()
     {
         return initialized_;
     };
 
-protected:
     // for lmkd and memory reclaim
     const BundlePrioSet GetBundlePrioSet();
 

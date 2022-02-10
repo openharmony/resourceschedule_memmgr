@@ -81,6 +81,11 @@ void BundlePriorityInfo::SetPriority(int targetPriority)
 void BundlePriorityInfo::UpdatePriority()
 {
     int targetPriority = GetMinProcPriority();
+    if (targetPriority >= RECLAIM_PRIORITY_MAX) {
+        targetPriority = RECLAIM_PRIORITY_MAX;
+    } else if (targetPriority <= RECLAIM_PRIORITY_MIN) {
+        targetPriority = RECLAIM_PRIORITY_MIN;
+    }
     SetPriority(targetPriority);
     HILOGI("bundleName=%{public}s, priority=%{public}d", name_.c_str(), priority_);
 }

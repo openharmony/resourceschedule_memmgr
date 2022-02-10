@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <set>
+#include <sys/types.h>
 
 namespace OHOS {
 namespace Memory {
@@ -42,6 +43,9 @@ constexpr int RECLAIM_PRIORITY_FROZEN = 600;
 constexpr int RECLAIM_PRIORITY_EMPTY = 900;
 // unknown process priority
 constexpr int RECLAIM_PRIORITY_UNKNOWN = 1000;
+
+constexpr int RECLAIM_PRIORITY_MIN = -1000;
+constexpr int RECLAIM_PRIORITY_MAX = 1000;
 
 constexpr std::string_view SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr std::string_view LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";

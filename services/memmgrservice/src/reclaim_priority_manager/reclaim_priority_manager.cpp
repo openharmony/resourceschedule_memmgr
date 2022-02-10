@@ -18,6 +18,8 @@
 #include "memmgr_log.h"
 #include "kernel_interface.h"
 
+#include <sstream>
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -30,16 +32,14 @@ bool WriteOomScoreAdjToKernel(const BundlePriorityInfo *bundle)
     if (bundle == nullptr) {
         return false;
     }
-    int pathSize = 30;
-    int contentSize = 10;
-    char path[pathSize];
-    char content[contentSize];
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         int priority = i->second.priority_;
         pid_t pid = i->second.pid_;
-        snprintf(path, pathSize, "/proc/%d/oom_score_adj", pid);
-        snprintf(content, contentSize, "%d", priority);
-        KernelInterface::GetInstance().EchoToPath(path, content);
+        std::stringstream ss;
+        ss << "/proc/" << pid << "/oom_score_adj";
+        std::string path = ss.str();
+        std::string content = std::to_string(priority);
+        KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
     }
     return true;
 }
@@ -234,7 +234,7 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle
     return ret;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, 
+bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid,
     std::string bundleName, AppStateUpdateReason reason)
 {
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
