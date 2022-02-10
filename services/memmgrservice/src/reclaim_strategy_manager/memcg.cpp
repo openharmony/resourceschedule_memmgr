@@ -17,6 +17,7 @@
 
 #include "memmgr_log.h"
 #include "kernel_interface.h"
+#include "reclaim_strategy_constants.h"
 #include "memcg.h"
 
 namespace OHOS {
@@ -45,7 +46,7 @@ SwapInfo::SwapInfo(unsigned int swapOutCount, unsigned int swapOutSize, unsigned
       swapSizeCurr(swapSizeCurr),
       swapSizeMax(swapSizeMax) {}
 
-inline std::string SwapInfo::ToString()
+inline std::string SwapInfo::ToString() const
 {
     std::string ret = "swapOutCount:" + std::to_string(this->swapOutCount)
                     + " swapOutSize:" + std::to_string(this->swapOutSize)
@@ -69,7 +70,7 @@ MemInfo::MemInfo(unsigned int anonKiB, unsigned int zramKiB, unsigned int eswapK
       zramKiB(zramKiB),
       eswapKiB(eswapKiB) {}
 
-inline std::string MemInfo::ToString()
+inline std::string MemInfo::ToString() const
 {
     std::string ret = "anonKiB:" + std::to_string(this->anonKiB)
                     + " zramKiB:" + std::to_string(this->zramKiB)
@@ -79,23 +80,32 @@ inline std::string MemInfo::ToString()
 
 ReclaimRatios::ReclaimRatios()
 {
-    UpdateReclaimRatios(0, 0, 0);
+    SetRatios(MEMCG_MEM_2_ZRAM_RATIO, MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD);
 }
 
 ReclaimRatios::ReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault)
 {
-    UpdateReclaimRatios(reclaimRatio, eswapRatio, reclaimRefault);
+    SetRatios(reclaimRatio, eswapRatio, reclaimRefault);
 }
 
-void ReclaimRatios::UpdateReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio,
-                                        unsigned int reclaimRefault)
+void ReclaimRatios::SetRatios(unsigned int reclaimRatio, unsigned int eswapRatio,
+                              unsigned int reclaimRefault)
 {
     this->reclaimRatio = reclaimRatio;
     this->eswapRatio = eswapRatio;
     this->reclaimRefault = reclaimRefault;
 }
 
-inline std::string ReclaimRatios::NumsToString()
+bool ReclaimRatios::SetRatios(ReclaimRatios * const ratios)
+{
+    if (ratios == nullptr) {
+        return false;
+    }
+    SetRatios(ratios->reclaimRatio, ratios->eswapRatio, ratios->reclaimRefault);
+    return true;
+}
+
+inline std::string ReclaimRatios::NumsToString() const
 {
     std::string ret = std::to_string(this->reclaimRatio) + " "
                     + std::to_string(this->eswapRatio) + " "
@@ -103,7 +113,7 @@ inline std::string ReclaimRatios::NumsToString()
     return ret;
 }
 
-inline std::string ReclaimRatios::ToString()
+inline std::string ReclaimRatios::ToString() const
 {
     std::string ret = "reclaimRatio:" + std::to_string(this->reclaimRatio)
                     + " eswapRatio:" + std::to_string(this->eswapRatio)
@@ -182,18 +192,21 @@ bool Memcg::SetScoreToKernel(int score)
     return WriteToFile_(path, content);
 }
 
-bool Memcg::SetRatiosToKernel()
+void Memcg::SetReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault)
+{
+    this->reclaimRatios->SetRatios(reclaimRatio, eswapRatio, reclaimRefault);
+}
+
+bool Memcg::SetReclaimRatios(ReclaimRatios * const ratios)
+{
+    return this->reclaimRatios->SetRatios(ratios);
+}
+
+bool Memcg::SetReclaimRatiosToKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.zswapd_single_memcg_param");
     std::string content = this->reclaimRatios->NumsToString();
     return WriteToFile_(path, content);
-}
-
-bool Memcg::AddProc(pid_t pid)
-{
-    std::string fullPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "cgroup.procs");
-    std::string content = std::to_string(pid);
-    return WriteToFile_(fullPath, content, false);
 }
 
 inline std::string Memcg::GetMemcgPath_()
@@ -211,6 +224,50 @@ inline bool Memcg::WriteToFile_(const std::string& path, const std::string& cont
     }
     HILOGD("success. %{public}s %{public}s %{public}s", content.c_str(), op.c_str(), path.c_str());
     return true;
+}
+
+UserMemcg::UserMemcg(int userId) : userId(userId)
+{
+    HILOGI("init UserMemcg success");
+}
+
+UserMemcg::~UserMemcg()
+{
+    HILOGI("release UserMemcg success");
+}
+
+bool UserMemcg::CreateMemcgDir()
+{
+    std::string fullPath = GetMemcgPath_();
+    if (!KernelInterface::GetInstance().CreateDir(fullPath)) {
+        HILOGE("failed. %{public}s", fullPath.c_str());
+        return false;
+    }
+    HILOGD("success. %{public}s", fullPath.c_str());
+    return true;
+}
+
+bool UserMemcg::RemoveMemcgDir()
+{
+    std::string fullPath = GetMemcgPath_();
+    if (!KernelInterface::GetInstance().RemoveDirRecursively(fullPath)) {
+        HILOGE("failed. %{public}s", fullPath.c_str());
+        return false;
+    }
+    HILOGD("success. %{public}s", fullPath.c_str());
+    return true;
+}
+
+inline std::string UserMemcg::GetMemcgPath_()
+{
+    // memcg dir = /dev/memcg/${userId}
+    return KernelInterface::GetInstance().JoinPath(KernelInterface::MEMCG_BASE_PATH, std::to_string(this->userId));
+}
+
+bool UserMemcg::AddProc(const std::string& pid)
+{
+    std::string fullPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "cgroup.procs");
+    return WriteToFile_(fullPath, pid, false);
 }
 } // namespace Memory
 } // namespace OHOS
