@@ -18,6 +18,7 @@
 #include "system_ability_definition.h"
 #include "mem_mgr_event_center.h"
 #include "reclaim_priority_manager.h"
+#include "reclaim_strategy_manager.h"
 
 #include <unistd.h>
 
@@ -45,6 +46,10 @@ bool MemMgrService::Init()
     // init kill strategy manager
 
     // init reclaim strategy manager
+    if (!ReclaimStrategyManager::GetInstance().Init()) {
+        HILOGE("ReclaimStrategyManager init failed");
+        return false;
+    }
 
     // init event center, then managers above can work by event trigger
     if (!MemMgrEventCenter::GetInstance().Init()) {
