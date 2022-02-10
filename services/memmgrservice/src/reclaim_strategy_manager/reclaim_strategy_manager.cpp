@@ -14,14 +14,19 @@
  */
 
 
-#include "reclaim_strategy_manager.h"
-#include "memmgr_log.h"
+#include "avail_buffer_manager.h"
 #include "kernel_interface.h"
+#include "memmgr_config_manager.h"
+#include "memmgr_log.h"
+#include "reclaim_strategy_manager.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "ReclaimStrategyManager";
+const int DEFAULT_MEM2ZRAM_RATIO = 40; // default mem2zram ratio 40%
+const int DEFAULT_ZRAN2UFS_RATIO = 0; // default zran2ufs ratio 0%
+const int DEFAULT_REFAULT_THRESHOLD = 0; // default refault threshold 0%
 }
 
 IMPLEMENT_SINGLE_INSTANCE(ReclaimStrategyManager);
@@ -43,6 +48,8 @@ bool ReclaimStrategyManager::Init()
         HILOGE("init failed");
     }
 
+    MemmgrConfigManager::GetInstance().Init();
+    AvailBufferManager::GetInstance().Init();
     InitMemcgReclaimRatios();
     return initialized_;
 }
@@ -117,7 +124,18 @@ bool ReclaimStrategyManager::GetReclaimRatiosByAppScore(int score, ReclaimRatios
         return false;
     }
     HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
-    HILOGD("after get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
+    MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
+        MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
+    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
+        if ((*i)->minScore <= score && (*i)->maxScore >= score) {
+            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d ",
+                (*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
+            ratios->UpdateReclaimRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
+            return true;
+        }
+    }
+    HILOGW("can not get ratios from MemmgrConfigManager");
+    ratios->UpdateReclaimRatios(DEFAULT_MEM2ZRAM_RATIO, DEFAULT_ZRAN2UFS_RATIO, DEFAULT_REFAULT_THRESHOLD);
     return true;
 }
 
