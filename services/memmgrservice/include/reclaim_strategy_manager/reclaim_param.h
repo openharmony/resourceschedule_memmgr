@@ -31,23 +31,38 @@ enum class AppAction {
     OTHERS,
 };
 
-class ReclaimParam {
-public:
-    pid_t pid;
-    int bundleUid;
-    std::string bundleName;
-    int accountId;
-    int appScore;
-    AppAction action;
+struct ReclaimParam {
+    pid_t pid_;
+    int bundleUid_;
+    std::string bundleName_;
+    int accountId_;
+    int appScore_;
+    AppAction action_;
 
-    explicit ReclaimParam(pid_t pid, int bundleUid, std::string bundleName, int accountId,
-                          int appScore, AppAction action)
-        : pid(pid),
-          bundleUid(bundleUid),
-          bundleName(bundleName),
-          accountId(accountId),
-          appScore(appScore),
-          action(action) {}
+    ReclaimParam(pid_t pid, int bundleUid, std::string bundleName, int accountId, int appScore, AppAction action)
+        : pid_(pid),
+          bundleUid_(bundleUid),
+          bundleName_(bundleName),
+          accountId_(accountId),
+          appScore_(appScore),
+          action_(action) {}
+
+    inline std::string ToString() const
+    {
+        std::string ret = "pid:" + std::to_string(pid_)
+                        + " bundle:" + std::to_string(bundleUid_)
+                        + " " + bundleName_
+                        + " userId:" + std::to_string(accountId_)
+                        + " score:" + std::to_string(appScore_)
+                        + " action:" + std::to_string(static_cast<int32_t>(action_));
+        return ret;
+    }
+
+    ReclaimParam() = delete;
+    ReclaimParam(const ReclaimParam&) = delete;
+    ReclaimParam& operator=(const ReclaimParam&) = delete;
+    ReclaimParam(ReclaimParam&&) = delete;
+    ReclaimParam& operator=(ReclaimParam&&) = delete;
 }; // end class ReclaimParam
 } // namespace Memory
 } // namespace OHOS

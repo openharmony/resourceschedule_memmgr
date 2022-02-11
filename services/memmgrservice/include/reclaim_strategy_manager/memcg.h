@@ -20,80 +20,101 @@
 
 namespace OHOS {
 namespace Memory {
-class SwapInfo {
+class SwapInfo final {
 public:
-    unsigned int swapOutCount;
-    unsigned int swapOutSize;
-    unsigned int swapInCount;
-    unsigned int swapInSize;
-    unsigned int pageInCount;
-    unsigned int swapSizeCurr;
-    unsigned int swapSizeMax;
+    unsigned int swapOutCount_;
+    unsigned int swapOutSize_;
+    unsigned int swapInCount_;
+    unsigned int swapInSize_;
+    unsigned int pageInCount_;
+    unsigned int swapSizeCurr_;
+    unsigned int swapSizeMax_;
 
     SwapInfo();
     SwapInfo(unsigned int swapOutCount, unsigned int swapOutSize, unsigned int swapInCount,
         unsigned int swapInSize, unsigned int pageInCount, unsigned int swapSizeCurr, unsigned int swapSizeMax);
     std::string ToString() const;
+
+    SwapInfo(const SwapInfo&) = delete;
+    SwapInfo& operator=(const SwapInfo&) = delete;
+    SwapInfo(SwapInfo&&) = delete;
+    SwapInfo& operator=(SwapInfo&&) = delete;
 }; // end class SwapInfo
 
-class MemInfo {
+class MemInfo final {
 public:
-    unsigned int anonKiB;
-    unsigned int zramKiB;
-    unsigned int eswapKiB;
+    unsigned int anonKiB_;
+    unsigned int zramKiB_;
+    unsigned int eswapKiB_;
 
     MemInfo();
     MemInfo(unsigned int anonKiB, unsigned int zramKiB, unsigned int eswapKiB);
     std::string ToString() const;
+
+    MemInfo(const MemInfo&) = delete;
+    MemInfo& operator=(const MemInfo&) = delete;
+    MemInfo(MemInfo&&) = delete;
+    MemInfo& operator=(MemInfo&&) = delete;
 }; // end class MemInfo
 
-class ReclaimRatios {
+class ReclaimRatios final {
 public:
-    unsigned int reclaimRatio;
-    unsigned int eswapRatio;
-    unsigned int reclaimRefault;
+    unsigned int mem2zramRatio_;
+    unsigned int zram2ufsRatio_;
+    unsigned int refaultThreshold_;
 
     ReclaimRatios();
-    ReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
-    void SetRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
+    ReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
+    void SetRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
     bool SetRatios(ReclaimRatios * const ratios);
     std::string NumsToString() const; // only nums, not easy for reading
     std::string ToString() const; // easy for reading
+
+    ReclaimRatios(const ReclaimRatios&) = delete;
+    ReclaimRatios& operator=(const ReclaimRatios&) = delete;
+    ReclaimRatios(ReclaimRatios&&) = delete;
+    ReclaimRatios& operator=(ReclaimRatios&&) = delete;
 }; // end class ReclaimRatios
 
 class Memcg {
 public:
-    SwapInfo* swapInfo;
-    MemInfo* memInfo;
-    ReclaimRatios* reclaimRatios;
+    SwapInfo* swapInfo_;
+    MemInfo* memInfo_;
+    ReclaimRatios* reclaimRatios_;
 
     Memcg();
-    ~Memcg();
+    virtual ~Memcg();
+    Memcg(const Memcg&) = delete;
+    Memcg& operator=(const Memcg&) = delete;
+    Memcg(Memcg&&) = delete;
+    Memcg& operator=(Memcg&&) = delete;
 
     void UpdateSwapInfoFromKernel();
     void UpdateMemInfoFromKernel();
 
     bool SetScoreToKernel(int score);
-    void SetReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
+    void SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
     bool SetReclaimRatios(ReclaimRatios * const ratios);
     bool SetReclaimRatiosToKernel();
 protected:
-    std::string GetMemcgPath_();
+    virtual std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
 }; // end class Memcg
 
-class UserMemcg : public Memcg {
+class UserMemcg final : public Memcg {
 public:
-    int userId;
+    int userId_;
 
     explicit UserMemcg(int userId);
     ~UserMemcg();
+    UserMemcg(const UserMemcg&) = delete;
+    UserMemcg& operator=(const UserMemcg&) = delete;
 
     bool CreateMemcgDir();
     bool RemoveMemcgDir();
     bool AddProc(const std::string& pid);
 protected:
-    std::string GetMemcgPath_(); // overwrite
+    std::string GetMemcgPath_() final;
 }; // end class UserMemcg
 } // namespace Memory
 } // namespace OHOS

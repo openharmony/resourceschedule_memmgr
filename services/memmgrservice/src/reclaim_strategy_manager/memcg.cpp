@@ -27,73 +27,67 @@ const std::string TAG = "Memcg";
 } // namespace
 
 SwapInfo::SwapInfo()
-    : swapOutCount(0),
-      swapOutSize(0),
-      swapInCount(0),
-      swapInSize(0),
-      pageInCount(0),
-      swapSizeCurr(0),
-      swapSizeMax(0) {}
+    : swapOutCount_(0),
+      swapOutSize_(0),
+      swapInCount_(0),
+      swapInSize_(0),
+      pageInCount_(0),
+      swapSizeCurr_(0),
+      swapSizeMax_(0) {}
 
 SwapInfo::SwapInfo(unsigned int swapOutCount, unsigned int swapOutSize, unsigned int swapInCount,
                    unsigned int swapInSize, unsigned int pageInCount, unsigned int swapSizeCurr,
                    unsigned int swapSizeMax)
-    : swapOutCount(swapOutCount),
-      swapOutSize(swapOutSize),
-      swapInCount(swapInCount),
-      swapInSize(swapInSize),
-      pageInCount(pageInCount),
-      swapSizeCurr(swapSizeCurr),
-      swapSizeMax(swapSizeMax) {}
+    : swapOutCount_(swapOutCount),
+      swapOutSize_(swapOutSize),
+      swapInCount_(swapInCount),
+      swapInSize_(swapInSize),
+      pageInCount_(pageInCount),
+      swapSizeCurr_(swapSizeCurr),
+      swapSizeMax_(swapSizeMax) {}
 
 inline std::string SwapInfo::ToString() const
 {
-    std::string ret = "swapOutCount:" + std::to_string(this->swapOutCount)
-                    + " swapOutSize:" + std::to_string(this->swapOutSize)
-                    + " swapInCount:" + std::to_string(this->swapInCount)
-                    + " swapInSize:" + std::to_string(this->swapInSize)
-                    + " pageInCount:" + std::to_string(this->pageInCount)
-                    + " swapSizeCurr:" + std::to_string(this->swapSizeCurr)
-                    + " swapSizeMax:" + std::to_string(this->swapSizeMax);
+    std::string ret = "swapOutCount:" + std::to_string(swapOutCount_)
+                    + " swapOutSize:" + std::to_string(swapOutSize_)
+                    + " swapInCount:" + std::to_string(swapInCount_)
+                    + " swapInSize:" + std::to_string(swapInSize_)
+                    + " pageInCount:" + std::to_string(pageInCount_)
+                    + " swapSizeCurr:" + std::to_string(swapSizeCurr_)
+                    + " swapSizeMax:" + std::to_string(swapSizeMax_);
     return ret;
 }
 
-MemInfo::MemInfo()
-{
-    this->anonKiB = 0;
-    this->zramKiB = 0;
-    this->eswapKiB = 0;
-}
+MemInfo::MemInfo() : anonKiB_(0), zramKiB_(0), eswapKiB_(0) {}
 
 MemInfo::MemInfo(unsigned int anonKiB, unsigned int zramKiB, unsigned int eswapKiB)
-    : anonKiB(anonKiB),
-      zramKiB(zramKiB),
-      eswapKiB(eswapKiB) {}
+    : anonKiB_(anonKiB),
+      zramKiB_(zramKiB),
+      eswapKiB_(eswapKiB) {}
 
 inline std::string MemInfo::ToString() const
 {
-    std::string ret = "anonKiB:" + std::to_string(this->anonKiB)
-                    + " zramKiB:" + std::to_string(this->zramKiB)
-                    + " eswapKiB:" + std::to_string(this->eswapKiB);
+    std::string ret = "anonKiB:" + std::to_string(anonKiB_)
+                    + " zramKiB:" + std::to_string(zramKiB_)
+                    + " eswapKiB:" + std::to_string(eswapKiB_);
     return ret;
 }
 
 ReclaimRatios::ReclaimRatios()
-{
-    SetRatios(MEMCG_MEM_2_ZRAM_RATIO, MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD);
-}
+    : mem2zramRatio_(MEMCG_MEM_2_ZRAM_RATIO),
+      zram2ufsRatio_(MEMCG_ZRAM_2_UFS_RATIO),
+      refaultThreshold_(MEMCG_REFAULT_THRESHOLD) {}
 
-ReclaimRatios::ReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault)
-{
-    SetRatios(reclaimRatio, eswapRatio, reclaimRefault);
-}
+ReclaimRatios::ReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
+    : mem2zramRatio_(mem2zramRatio),
+      zram2ufsRatio_(zram2ufsRatio),
+      refaultThreshold_(refaultThreshold) {}
 
-void ReclaimRatios::SetRatios(unsigned int reclaimRatio, unsigned int eswapRatio,
-                              unsigned int reclaimRefault)
+void ReclaimRatios::SetRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
 {
-    this->reclaimRatio = reclaimRatio;
-    this->eswapRatio = eswapRatio;
-    this->reclaimRefault = reclaimRefault;
+    mem2zramRatio_ = mem2zramRatio;
+    zram2ufsRatio_ = zram2ufsRatio;
+    refaultThreshold_ = refaultThreshold;
 }
 
 bool ReclaimRatios::SetRatios(ReclaimRatios * const ratios)
@@ -101,39 +95,39 @@ bool ReclaimRatios::SetRatios(ReclaimRatios * const ratios)
     if (ratios == nullptr) {
         return false;
     }
-    SetRatios(ratios->reclaimRatio, ratios->eswapRatio, ratios->reclaimRefault);
+    SetRatios(ratios->mem2zramRatio_, ratios->zram2ufsRatio_, ratios->refaultThreshold_);
     return true;
 }
 
 inline std::string ReclaimRatios::NumsToString() const
 {
-    std::string ret = std::to_string(this->reclaimRatio) + " "
-                    + std::to_string(this->eswapRatio) + " "
-                    + std::to_string(this->reclaimRefault);
+    std::string ret = std::to_string(mem2zramRatio_) + " "
+                    + std::to_string(zram2ufsRatio_) + " "
+                    + std::to_string(refaultThreshold_);
     return ret;
 }
 
 inline std::string ReclaimRatios::ToString() const
 {
-    std::string ret = "reclaimRatio:" + std::to_string(this->reclaimRatio)
-                    + " eswapRatio:" + std::to_string(this->eswapRatio)
-                    + " reclaimRefault:" + std::to_string(this->reclaimRefault);
+    std::string ret = "mem2zramRatio:" + std::to_string(mem2zramRatio_)
+                    + " zram2ufsRatio:" + std::to_string(zram2ufsRatio_)
+                    + " refaultThreshold:" + std::to_string(refaultThreshold_);
     return ret;
 }
 
 Memcg::Memcg()
 {
-    this->swapInfo = new SwapInfo();
-    this->memInfo = new MemInfo();
-    this->reclaimRatios = new ReclaimRatios();
+    swapInfo_ = new SwapInfo();
+    memInfo_ = new MemInfo();
+    reclaimRatios_ = new ReclaimRatios();
     HILOGI("init memcg success");
 }
 
 Memcg::~Memcg()
 {
-    delete this->swapInfo;
-    delete this->memInfo;
-    delete this->reclaimRatios;
+    delete swapInfo_;
+    delete memInfo_;
+    delete reclaimRatios_;
     HILOGI("release memcg success");
 }
 
@@ -154,15 +148,15 @@ void Memcg::UpdateSwapInfoFromKernel()
                   "swapSizeMax:([[:d:]]*) MB[[:s:]]*");
     std::smatch res;
     if (std::regex_match(content, res, re)) {
-        this->swapInfo->swapOutCount = std::stoi(res.str(1)); // 1: swapOutCount index
-        this->swapInfo->swapOutSize = std::stoi(res.str(2)); // 2: swapOutSize index
-        this->swapInfo->swapInSize = std::stoi(res.str(3)); // 3: swapInSize index
-        this->swapInfo->swapInCount = std::stoi(res.str(4)); // 4: swapInCount index
-        this->swapInfo->pageInCount = std::stoi(res.str(5)); // 5: pageInCount index
-        this->swapInfo->swapSizeCurr = std::stoi(res.str(6)); // 6: swapSizeCurr index
-        this->swapInfo->swapSizeMax = std::stoi(res.str(7)); // 7: swapSizeMax index
+        swapInfo_->swapOutCount_ = std::stoi(res.str(1)); // 1: swapOutCount index
+        swapInfo_->swapOutSize_ = std::stoi(res.str(2)); // 2: swapOutSize index
+        swapInfo_->swapInSize_ = std::stoi(res.str(3)); // 3: swapInSize index
+        swapInfo_->swapInCount_ = std::stoi(res.str(4)); // 4: swapInCount index
+        swapInfo_->pageInCount_ = std::stoi(res.str(5)); // 5: pageInCount index
+        swapInfo_->swapSizeCurr_ = std::stoi(res.str(6)); // 6: swapSizeCurr index
+        swapInfo_->swapSizeMax_ = std::stoi(res.str(7)); // 7: swapSizeMax index
     }
-    HILOGD("success. %{public}s", this->swapInfo->ToString().c_str());
+    HILOGD("success. %{public}s", swapInfo_->ToString().c_str());
 }
 
 void Memcg::UpdateMemInfoFromKernel()
@@ -178,11 +172,11 @@ void Memcg::UpdateMemInfoFromKernel()
                   "Eswap:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
     std::smatch res;
     if (std::regex_match(content, res, re)) {
-        this->memInfo->anonKiB = std::stoi(res.str(1)); // 1: anonKiB index
-        this->memInfo->zramKiB = std::stoi(res.str(2)); // 2: zramKiB index
-        this->memInfo->eswapKiB = std::stoi(res.str(3)); // 3: eswapKiB index
+        memInfo_->anonKiB_ = std::stoi(res.str(1)); // 1: anonKiB index
+        memInfo_->zramKiB_ = std::stoi(res.str(2)); // 2: zramKiB index
+        memInfo_->eswapKiB_ = std::stoi(res.str(3)); // 3: eswapKiB index
     }
-    HILOGD("success. %{public}s", this->memInfo->ToString().c_str());
+    HILOGD("success. %{public}s", memInfo_->ToString().c_str());
 }
 
 bool Memcg::SetScoreToKernel(int score)
@@ -192,20 +186,20 @@ bool Memcg::SetScoreToKernel(int score)
     return WriteToFile_(path, content);
 }
 
-void Memcg::SetReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault)
+void Memcg::SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
 {
-    this->reclaimRatios->SetRatios(reclaimRatio, eswapRatio, reclaimRefault);
+    reclaimRatios_->SetRatios(mem2zramRatio, zram2ufsRatio, refaultThreshold);
 }
 
 bool Memcg::SetReclaimRatios(ReclaimRatios * const ratios)
 {
-    return this->reclaimRatios->SetRatios(ratios);
+    return reclaimRatios_->SetRatios(ratios);
 }
 
 bool Memcg::SetReclaimRatiosToKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.zswapd_single_memcg_param");
-    std::string content = this->reclaimRatios->NumsToString();
+    std::string content = reclaimRatios_->NumsToString();
     return WriteToFile_(path, content);
 }
 
@@ -226,7 +220,7 @@ inline bool Memcg::WriteToFile_(const std::string& path, const std::string& cont
     return true;
 }
 
-UserMemcg::UserMemcg(int userId) : userId(userId)
+UserMemcg::UserMemcg(int userId) : userId_(userId)
 {
     HILOGI("init UserMemcg success");
 }
@@ -261,7 +255,7 @@ bool UserMemcg::RemoveMemcgDir()
 inline std::string UserMemcg::GetMemcgPath_()
 {
     // memcg dir = /dev/memcg/${userId}
-    return KernelInterface::GetInstance().JoinPath(KernelInterface::MEMCG_BASE_PATH, std::to_string(this->userId));
+    return KernelInterface::GetInstance().JoinPath(KernelInterface::MEMCG_BASE_PATH, std::to_string(userId_));
 }
 
 bool UserMemcg::AddProc(const std::string& pid)
