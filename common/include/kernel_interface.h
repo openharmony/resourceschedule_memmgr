@@ -34,7 +34,7 @@ public:
 
     // file operations
     bool IsFileExists(const std::string& path);
-    bool CreateFile(const std::string& path);
+    bool CreateFile(const std::string& path); // default mode 644(-rw-r--r--)
     bool CreateFile(const std::string& path, const mode_t& mode);
     bool RemoveFile(const std::string& path);
     bool WriteToFile(const std::string& path, const std::string& content, bool truncated = true);
@@ -43,7 +43,7 @@ public:
     bool ReadLinesFromFile(const std::string& path, std::vector<std::string>& lines);
     // dir operations
     bool IsDirExists(const std::string& path);
-    bool IsExists(const std::string& path);
+    bool IsExists(const std::string& path); // file or dir
     bool IsEmptyDir(const std::string& path);
     bool CreateDir(const std::string& path); // create dir recursively
     bool CreateDir(const std::string& path, const mode_t& mode); // create dir recursively with mode
