@@ -25,6 +25,9 @@
 
 #include <fstream>
 
+#include <sstream>
+#include <signal.h>
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -34,10 +37,12 @@ const std::string TAG = "KernelInterface";
 IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
+const std::string KernelInterface::CURRENT_BUFFER_PATH = "/dev/memcg/memory.zswapd_pressure_show";
+
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
-    uint32_t fd = open(path, O_RDWR, 0666);
+    int fd = open(path, O_RDWR, 0666);
     if (fd == -1) {
         HILOGE("echo %{public}s > %{public}s failed: file is not open", content, path);
         return false;
@@ -253,5 +258,95 @@ std::string KernelInterface::JoinPath(const std::string& prefixPath, const std::
 {
     return JoinPath(JoinPath(prefixPath, midPath), subPath);
 }
+
+bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
+{
+    HILOGD("called!");
+
+    std::string statPath = JoinPath("/proc/", std::to_string(procInfo.pid), "/stat");
+    HILOGD("statPath=%{public}s", statPath.c_str());
+
+    // format like:
+    // 1 (init) S 0 0 0 0 -1 4210944 1 ...
+    std::string stat, statm, statPid, vss, rss;
+    if (!ReadFromFile(statPath, stat)) {
+        return false;
+    }
+    HILOGD("stat = [%{public}s]", stat.c_str());
+    std::istringstream isStat(stat);
+    isStat >> statPid >> procInfo.name >> procInfo.status;
+    HILOGD("pid=[%{public}d], name=[%{public}s], status=[%{public}s]",
+           procInfo.pid, procInfo.name.c_str(), procInfo.status.c_str());
+
+    if (statPid != std::to_string(procInfo.pid)) {
+        return false;
+    }
+
+    std::string statmPath = JoinPath("/proc/", std::to_string(procInfo.pid), "/statm");
+    HILOGD("statmPath=%{public}s", statmPath.c_str());
+    // format like:
+    // 640 472 369 38 0 115 0
+    if (!ReadFromFile(statmPath, statm)) {
+        return false;
+    }
+    HILOGD("statm = [%{public}s]", statm.c_str());
+    std::istringstream isStatm(statm);
+    isStatm >> vss >> rss; // pages
+    HILOGD("vss=[%{public}s], rss=[%{public}s]", vss.c_str(), rss.c_str());
+
+    procInfo.size = atoi(rss.c_str()) * 4;
+    HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d",
+           procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
+    return true;
+}
+
+int KernelInterface::GetCurrentBuffer()
+{
+    HILOGD("called!");
+    std::string content, buffer, size, buffer_;
+
+    if (!ReadFromFile(CURRENT_BUFFER_PATH, content)) {
+        HILOGE("read %{public}s failed, return max value", CURRENT_BUFFER_PATH.c_str());
+        return 300 * 1024;
+    }
+    HILOGI("read %{public}s success, content=[%{public}s]", CURRENT_BUFFER_PATH.c_str(), content.c_str());
+
+    std::istringstream is(content);
+    is >> buffer >> size >> buffer_;
+
+    HILOGI("GetCurrentBuffer success: %{public}s MB", buffer_.c_str());
+    return atoi(buffer_.c_str()) * 1024;
+}
+
+int KernelInterface::KillOneProcessByPid(int pid)
+{
+    HILOGD("called! pid=%{public}d", pid);
+    struct ProcInfo procInfo;
+    int freedBuffer = 0;
+    procInfo.pid = pid;
+
+    if (!GetPidProcInfo(procInfo)) {
+        HILOGE("GetPidProcInfo fail !!!");
+        goto out;
+    }
+
+    if (procInfo.status == "D") {
+        HILOGE("Task %{public}s is at D status!", procInfo.name.c_str());
+        goto out;
+    }
+
+    if (kill(pid, SIGKILL)) {
+        HILOGE("Kill %{public}s errno=%{public}d!", procInfo.name.c_str(), errno);
+    }
+    HILOGE("%{public}s has been Killed ! (pid=%{public}d, freedSize=%{public}d KB)",
+        procInfo.name.c_str(), procInfo.pid, procInfo.size);
+
+    freedBuffer = procInfo.size;
+out:
+    return freedBuffer;
+}
+
+
+
 } // namespace Memory
 } // namespace OHOS
