@@ -113,7 +113,7 @@ void MemMgrEventCenter::RegisterAccountObserver()
 
 void MemMgrEventCenter::RegisterMemPsiMonitor()
 {
-    HILOGI("success to register psi callback");
+    HILOGI("success to register MemPsiMonitor callback");
 }
 
 // callback list below
@@ -134,7 +134,7 @@ void MemMgrEventCenter::OnOsAccountsChanged(const int &id)
 
 void MemMgrEventCenter::OnMemPsiUploaded(const int &level)
 {
-    HILOGI("memory psi level=<%{public}d>", level);
+    HILOGI("OnMemPsiUploaded: level=<%{public}d>", level);
     // notify kill strategy manager
 }
 } // namespace Memory

@@ -16,11 +16,12 @@
 #ifndef OHOS_MEMORY_MEMMGR_BUNDLE_PRIORITY_INFO_H
 #define OHOS_MEMORY_MEMMGR_BUNDLE_PRIORITY_INFO_H
 
-#include "reclaim_priority_constants.h"
-#include "process_priority_info.h"
 #include <string>
 #include <list>
 #include <map>
+
+#include "reclaim_priority_constants.h"
+#include "process_priority_info.h"
 
 namespace OHOS {
 namespace Memory {
