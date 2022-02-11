@@ -40,8 +40,8 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    Memcg* rootMemcg;
-    std::map<int, UserMemcg*> userMemcgsMap; // map<userId, UserMemcg*>
+    Memcg* rootMemcg_;
+    std::map<int, UserMemcg*> userMemcgsMap_; // map<userId, UserMemcg*>
 
     ReclaimStrategyManager();
     ~ReclaimStrategyManager();
