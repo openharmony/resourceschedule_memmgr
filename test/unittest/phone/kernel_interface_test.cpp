@@ -65,7 +65,6 @@ HWTEST_F(MemMgrTest, GetPidProcInfoTest, TestSize.Level1)
     bool ret = KernelInterface::GetInstance().GetPidProcInfo(procInfo);
     printf("pid=[%d], name=[%s], status=[%s], size=[%d KB]\n",
            procInfo.pid, procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
-
     EXPECT_EQ(ret, true);
 }
 
@@ -90,6 +89,5 @@ HWTEST_F(MemMgrTest, KillOneProcessByPidTest, TestSize.Level1)
     printf("killedSize=%d", killedSize);
     EXPECT_EQ(killedSize, procInfo.size);
 }
-
 }
 }

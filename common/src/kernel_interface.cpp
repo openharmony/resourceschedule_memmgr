@@ -26,7 +26,7 @@
 #include <fstream>
 
 #include <sstream>
-#include <signal.h>
+#include <csignal>
 
 namespace OHOS {
 namespace Memory {
@@ -38,7 +38,6 @@ IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
 const std::string KernelInterface::CURRENT_BUFFER_PATH = "/dev/memcg/memory.zswapd_pressure_show";
-
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
@@ -294,7 +293,7 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     isStatm >> vss >> rss; // pages
     HILOGD("vss=[%{public}s], rss=[%{public}s]", vss.c_str(), rss.c_str());
 
-    procInfo.size = atoi(rss.c_str()) * 4;
+    procInfo.size = atoi(rss.c_str()) * PAGE_TO_KB;
     HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d",
            procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
     return true;
@@ -307,7 +306,7 @@ int KernelInterface::GetCurrentBuffer()
 
     if (!ReadFromFile(CURRENT_BUFFER_PATH, content)) {
         HILOGE("read %{public}s failed, return max value", CURRENT_BUFFER_PATH.c_str());
-        return 300 * 1024;
+        return MAX_BUFFER_KB;
     }
     HILOGI("read %{public}s success, content=[%{public}s]", CURRENT_BUFFER_PATH.c_str(), content.c_str());
 
@@ -315,7 +314,7 @@ int KernelInterface::GetCurrentBuffer()
     is >> buffer >> size >> buffer_;
 
     HILOGI("GetCurrentBuffer success: %{public}s MB", buffer_.c_str());
-    return atoi(buffer_.c_str()) * 1024;
+    return atoi(buffer_.c_str()) * KB_PER_MB;
 }
 
 int KernelInterface::KillOneProcessByPid(int pid)
@@ -345,8 +344,5 @@ int KernelInterface::KillOneProcessByPid(int pid)
 out:
     return freedBuffer;
 }
-
-
-
 } // namespace Memory
 } // namespace OHOS
