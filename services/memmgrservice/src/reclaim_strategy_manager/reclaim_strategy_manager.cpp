@@ -18,30 +18,36 @@
 #include "kernel_interface.h"
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
+#include "reclaim_strategy_constants.h"
 #include "reclaim_strategy_manager.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "ReclaimStrategyManager";
-const int DEFAULT_MEM2ZRAM_RATIO = 40; // default mem2zram ratio 40%
-const int DEFAULT_ZRAN2UFS_RATIO = 0; // default zran2ufs ratio 0%
-const int DEFAULT_REFAULT_THRESHOLD = 0; // default refault threshold 0%
 }
 
 IMPLEMENT_SINGLE_INSTANCE(ReclaimStrategyManager);
 
 ReclaimStrategyManager::ReclaimStrategyManager()
 {
+    this->rootMemcg = new Memcg();
 }
 
 ReclaimStrategyManager::~ReclaimStrategyManager()
 {
+    delete this->rootMemcg;
+    while (!this->userMemcgsMap.empty()) {
+        auto iter = this->userMemcgsMap.begin();
+        delete iter->second;
+        this->userMemcgsMap.erase(iter);
+    }
 }
 
 bool ReclaimStrategyManager::Init()
 {
     initialized_ = GetEventHandler();
+    initialized_ = initialized_ && SetRootMemcgPara();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -50,7 +56,6 @@ bool ReclaimStrategyManager::Init()
 
     MemmgrConfigManager::GetInstance().Init();
     AvailBufferManager::GetInstance().Init();
-    InitMemcgReclaimRatios();
     return initialized_;
 }
 
@@ -68,6 +73,10 @@ bool ReclaimStrategyManager::GetEventHandler()
 
 void ReclaimStrategyManager::NotifyAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara)
 {
+    if (!Initailized()) {
+        HILOGE("has not been initialized_, skiped!");
+        return;
+    }
     std::function<bool()> func = std::bind(
         &ReclaimStrategyManager::HandleAppStateChanged, this, reclaimPara);
     handler_->PostImmediateTask(func);
@@ -94,7 +103,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
         case AppAction::APP_FOREGROUND:
         case AppAction::APP_BACKGROUND:
         case AppAction::OTHERS:
-            HILOGI("OTHERS app action! %{public}d", reclaimPara->action);
+            HILOGD("OTHERS app action! %{public}d", reclaimPara->action);
             break;
         default:
             break;
@@ -113,11 +122,17 @@ bool ReclaimStrategyManager::HandleProcessCreate(std::shared_ptr<ReclaimParam> r
 {
     HILOGD("%{public}s pid=%{public}d uid=%{public}d userId=%{public}d",
            reclaimPara->bundleName.c_str(), reclaimPara->pid, reclaimPara->bundleUid, reclaimPara->accountId);
-    memcg.AddProc(reclaimPara->pid); // add pid to memcg
+
+    UserMemcg* memcg = UserMemcgsGet(reclaimPara->accountId);
+    if (memcg == nullptr) { // new user
+        memcg = UserMemcgsAdd(reclaimPara->accountId);
+        memcg->CreateMemcgDir();
+    }
+    memcg->AddProc(std::to_string(reclaimPara->pid)); // add pid to memcg
     return true;
 }
 
-bool ReclaimStrategyManager::GetReclaimRatiosByAppScore(int score, ReclaimRatios* ratios)
+bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios)
 {
     if (ratios == nullptr) {
         HILOGE("param ratios nullptr");
@@ -128,30 +143,110 @@ bool ReclaimStrategyManager::GetReclaimRatiosByAppScore(int score, ReclaimRatios
         MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
     for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
         if ((*i)->minScore <= score && (*i)->maxScore >= score) {
-            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d ",
+            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d",
                 (*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
-            ratios->UpdateReclaimRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
+            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
             return true;
         }
     }
     HILOGW("can not get ratios from MemmgrConfigManager");
-    ratios->UpdateReclaimRatios(DEFAULT_MEM2ZRAM_RATIO, DEFAULT_ZRAN2UFS_RATIO, DEFAULT_REFAULT_THRESHOLD);
     return true;
 }
 
-bool ReclaimStrategyManager::InitMemcgReclaimRatios()
+bool ReclaimStrategyManager::SetRootMemcgPara()
 {
-    memcg.SetScoreToKernel(300); // default score 300
-    if (GetReclaimRatiosByAppScore(300, memcg.reclaimRatios)) {
-        memcg.SetRatiosToKernel();
+    if (!this->rootMemcg || !this->rootMemcg->reclaimRatios) {
+        HILOGE("rootMemcg nullptr");
+        return false;
     }
-    HILOGD("Init reclaim retios success");
+    this->rootMemcg->SetScoreToKernel(APP_SCORE);
+    this->rootMemcg->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
+        ROOT_MEMCG_ZRAM_2_UFS_RATIO, ROOT_MEMCG_REFAULT_THRESHOLD);
+    this->rootMemcg->SetReclaimRatiosToKernel();
+    HILOGI("Init rootMemcg reclaim retios success");
     return true;
 }
 
 void ReclaimStrategyManager::UpdateMemcgReclaimInfo()
 {
-    memcg.UpdateSwapInfoFromKernel();
+    this->rootMemcg->UpdateSwapInfoFromKernel();
+}
+
+UserMemcg* ReclaimStrategyManager::UserMemcgsAdd(int userId)
+{
+    HILOGD("userId=%{public}d", userId);
+    UserMemcg* memcg = new UserMemcg(userId);
+    this->userMemcgsMap.insert(std::make_pair(userId, memcg));
+    return memcg;
+}
+
+UserMemcg* ReclaimStrategyManager::UserMemcgsRemove(int userId)
+{
+    HILOGD("userId=%{public}d", userId);
+    UserMemcg* memcg = UserMemcgsGet(userId);
+    this->userMemcgsMap.erase(userId);
+    return memcg;
+}
+
+UserMemcg* ReclaimStrategyManager::UserMemcgsGet(int userId)
+{
+    std::map<int, UserMemcg*>::iterator it = this->userMemcgsMap.find(userId);
+    if (it == this->userMemcgsMap.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+void ReclaimStrategyManager::NotifyAccountDied(int accountId)
+{
+    if (!Initailized()) {
+        HILOGE("has not been initialized_, skiped!");
+        return;
+    }
+    std::function<bool()> func = std::bind(
+        &ReclaimStrategyManager::HandleAccountDied, this, accountId);
+    handler_->PostImmediateTask(func);
+}
+
+void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int priority)
+{
+    if (!Initailized()) {
+        HILOGE("has not been initialized_, skiped!");
+        return;
+    }
+    std::function<bool()> func = std::bind(
+        &ReclaimStrategyManager::HandleAccountPriorityChanged, this, accountId, priority);
+    handler_->PostImmediateTask(func);
+}
+
+
+bool ReclaimStrategyManager::HandleAccountDied(int accountId)
+{
+    HILOGD("userId=%{public}d", accountId);
+    UserMemcg* memcg = UserMemcgsRemove(accountId);
+    if (memcg == nullptr) {
+        HILOGI("account %{public}d not exist. not need to remove", accountId);
+        return true;
+    }
+    memcg->RemoveMemcgDir();
+    delete memcg;
+    memcg = nullptr;
+    return true;
+}
+
+bool ReclaimStrategyManager::HandleAccountPriorityChanged(int accountId, int priority)
+{
+    UserMemcg* memcg = UserMemcgsGet(accountId);
+    if (memcg == nullptr) {
+        HILOGI("account %{public}d not exist. cannot update ratios", accountId);
+        return false;
+    }
+    HILOGI("update reclaim retios userId=%{public}d priority=%{public}d", accountId, priority);
+    memcg->SetScoreToKernel(priority);
+    if (GetReclaimRatiosByScore(priority, memcg->reclaimRatios)) {
+        memcg->SetReclaimRatiosToKernel();
+    }
+    return true;
 }
 } // namespace Memory
 } // namespace OHOS

@@ -14,11 +14,12 @@
  */
 
 
-#include "reclaim_priority_manager.h"
+#include <sstream>
+
 #include "memmgr_log.h"
 #include "kernel_interface.h"
-
-#include <sstream>
+#include "reclaim_strategy_manager.h"
+#include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -335,6 +336,9 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pi
     if (bundle == nullptr) {
         return false;
     }
+    std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, bundle->uid_, bundle->name_,
+        bundle->accountId_, bundle->priority_, action);
+    ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
     return WriteOomScoreAdjToKernel(bundle);
 }
 

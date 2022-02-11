@@ -29,6 +29,8 @@ class ReclaimStrategyManager {
 public:
     bool Init();
     void NotifyAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara);
+    void NotifyAccountDied(int accountId);
+    void NotifyAccountPriorityChanged(int accountId, int priority);
 
     inline bool Initailized()
     {
@@ -38,7 +40,8 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    Memcg memcg;
+    Memcg* rootMemcg;
+    std::map<int, UserMemcg*> userMemcgsMap; // map<userId, UserMemcg*>
 
     ReclaimStrategyManager();
     ~ReclaimStrategyManager();
@@ -46,9 +49,16 @@ private:
 
     bool HandleAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara);
     bool HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara);
-    bool GetReclaimRatiosByAppScore(int score, ReclaimRatios* ratios);
-    bool InitMemcgReclaimRatios();
+    bool GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios);
+    bool SetRootMemcgPara();
     void UpdateMemcgReclaimInfo();
+
+    UserMemcg* UserMemcgsAdd(int userId);
+    UserMemcg* UserMemcgsRemove(int userId);
+    UserMemcg* UserMemcgsGet(int userId);
+
+    bool HandleAccountDied(int accountId);
+    bool HandleAccountPriorityChanged(int accountId, int priority);
 };
 } // namespace Memory
 } // namespace OHOS
