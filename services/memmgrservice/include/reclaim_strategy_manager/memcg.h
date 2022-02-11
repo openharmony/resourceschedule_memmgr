@@ -16,7 +16,6 @@
 #ifndef OHOS_MEMORY_MEMMGR_RECLAIM_STRATEGY_MEMCG_H
 #define OHOS_MEMORY_MEMMGR_RECLAIM_STRATEGY_MEMCG_H
 
-#include <sys/types.h>
 #include <string>
 
 namespace OHOS {
@@ -34,7 +33,7 @@ public:
     SwapInfo();
     SwapInfo(unsigned int swapOutCount, unsigned int swapOutSize, unsigned int swapInCount,
         unsigned int swapInSize, unsigned int pageInCount, unsigned int swapSizeCurr, unsigned int swapSizeMax);
-    std::string ToString();
+    std::string ToString() const;
 }; // end class SwapInfo
 
 class MemInfo {
@@ -45,7 +44,7 @@ public:
 
     MemInfo();
     MemInfo(unsigned int anonKiB, unsigned int zramKiB, unsigned int eswapKiB);
-    std::string ToString();
+    std::string ToString() const;
 }; // end class MemInfo
 
 class ReclaimRatios {
@@ -56,9 +55,10 @@ public:
 
     ReclaimRatios();
     ReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
-    void UpdateReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
-    std::string NumsToString(); // only nums, not easy for reading
-    std::string ToString(); // easy for reading
+    void SetRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
+    bool SetRatios(ReclaimRatios * const ratios);
+    std::string NumsToString() const; // only nums, not easy for reading
+    std::string ToString() const; // easy for reading
 }; // end class ReclaimRatios
 
 class Memcg {
@@ -74,13 +74,27 @@ public:
     void UpdateMemInfoFromKernel();
 
     bool SetScoreToKernel(int score);
-    bool SetRatiosToKernel();
-    bool AddProc(pid_t pid);
-
-private:
+    void SetReclaimRatios(unsigned int reclaimRatio, unsigned int eswapRatio, unsigned int reclaimRefault);
+    bool SetReclaimRatios(ReclaimRatios * const ratios);
+    bool SetReclaimRatiosToKernel();
+protected:
     std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
 }; // end class Memcg
+
+class UserMemcg : public Memcg {
+public:
+    int userId;
+
+    explicit UserMemcg(int userId);
+    ~UserMemcg();
+
+    bool CreateMemcgDir();
+    bool RemoveMemcgDir();
+    bool AddProc(const std::string& pid);
+protected:
+    std::string GetMemcgPath_(); // overwrite
+}; // end class UserMemcg
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_RECLAIM_STRATEGY_MEMCG_H
