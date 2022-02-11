@@ -57,5 +57,39 @@ HWTEST_F(MemMgrTest, EchoToPath_InvalidPath, TestSize.Level1)
     bool ret = KernelInterface::GetInstance().EchoToPath("", "");
     EXPECT_EQ(ret, false);
 }
+
+HWTEST_F(MemMgrTest, GetPidProcInfoTest, TestSize.Level1)
+{
+    ProcInfo procInfo;
+    procInfo.pid = 1;
+    bool ret = KernelInterface::GetInstance().GetPidProcInfo(procInfo);
+    printf("pid=[%d], name=[%s], status=[%s], size=[%d KB]\n",
+           procInfo.pid, procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
+
+    EXPECT_EQ(ret, true);
+}
+
+HWTEST_F(MemMgrTest, GetCurrentBufferTest, TestSize.Level1)
+{
+    int buffer = KernelInterface::GetInstance().GetCurrentBuffer();
+    printf("buffer=%d", buffer);
+    EXPECT_GT(buffer, 0);
+}
+
+HWTEST_F(MemMgrTest, KillOneProcessByPidTest, TestSize.Level1)
+{
+    int pid = -1;
+    printf("please input pid to kill\n");
+    scanf("%d", &pid);
+    ProcInfo procInfo;
+    procInfo.pid = pid;
+    bool ret = KernelInterface::GetInstance().GetPidProcInfo(procInfo);
+    EXPECT_EQ(ret, true);
+
+    int killedSize = KernelInterface::GetInstance().KillOneProcessByPid(pid);
+    printf("killedSize=%d", killedSize);
+    EXPECT_EQ(killedSize, procInfo.size);
+}
+
 }
 }
