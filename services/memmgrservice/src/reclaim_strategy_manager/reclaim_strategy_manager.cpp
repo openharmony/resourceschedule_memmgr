@@ -31,16 +31,16 @@ IMPLEMENT_SINGLE_INSTANCE(ReclaimStrategyManager);
 
 ReclaimStrategyManager::ReclaimStrategyManager()
 {
-    this->rootMemcg = new Memcg();
+    rootMemcg_ = new Memcg();
 }
 
 ReclaimStrategyManager::~ReclaimStrategyManager()
 {
-    delete this->rootMemcg;
-    while (!this->userMemcgsMap.empty()) {
-        auto iter = this->userMemcgsMap.begin();
+    delete rootMemcg_;
+    while (!userMemcgsMap_.empty()) {
+        auto iter = userMemcgsMap_.begin();
         delete iter->second;
-        this->userMemcgsMap.erase(iter);
+        userMemcgsMap_.erase(iter);
     }
 }
 
@@ -88,12 +88,10 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
         HILOGE("reclaimPara nullptr");
         return false;
     }
-    HILOGD("%{public}s pid=%{public}d uid=%{public}d userId=%{public}d score=%{public}d",
-           reclaimPara->bundleName.c_str(), reclaimPara->pid, reclaimPara->bundleUid, reclaimPara->accountId,
-           reclaimPara->appScore);
+    HILOGD("%{public}s", reclaimPara->ToString().c_str());
     bool ret = false;
     bool (ReclaimStrategyManager::*funcPtr)(std::shared_ptr<ReclaimParam>) = nullptr;
-    switch (reclaimPara->action) {
+    switch (reclaimPara->action_) {
         case AppAction::CREATE_PROCESS_AND_APP:
         case AppAction::CREATE_PROCESS_ONLY: {
             funcPtr = &ReclaimStrategyManager::HandleProcessCreate;
@@ -102,9 +100,10 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
         case AppAction::APP_DIED:
         case AppAction::APP_FOREGROUND:
         case AppAction::APP_BACKGROUND:
-        case AppAction::OTHERS:
-            HILOGD("OTHERS app action! %{public}d", reclaimPara->action);
+        case AppAction::OTHERS: {
+            HILOGD("OTHERS app action! %{public}d", reclaimPara->action_);
             break;
+        }
         default:
             break;
     }
@@ -120,15 +119,13 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
 
 bool ReclaimStrategyManager::HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara)
 {
-    HILOGD("%{public}s pid=%{public}d uid=%{public}d userId=%{public}d",
-           reclaimPara->bundleName.c_str(), reclaimPara->pid, reclaimPara->bundleUid, reclaimPara->accountId);
-
-    UserMemcg* memcg = UserMemcgsGet(reclaimPara->accountId);
+    HILOGI("%{public}s", reclaimPara->ToString().c_str());
+    UserMemcg* memcg = UserMemcgsGet(reclaimPara->accountId_);
     if (memcg == nullptr) { // new user
-        memcg = UserMemcgsAdd(reclaimPara->accountId);
+        memcg = UserMemcgsAdd(reclaimPara->accountId_);
         memcg->CreateMemcgDir();
     }
-    memcg->AddProc(std::to_string(reclaimPara->pid)); // add pid to memcg
+    memcg->AddProc(std::to_string(reclaimPara->pid_)); // add pid to memcg
     return true;
 }
 
@@ -155,28 +152,28 @@ bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * 
 
 bool ReclaimStrategyManager::SetRootMemcgPara()
 {
-    if (!this->rootMemcg || !this->rootMemcg->reclaimRatios) {
+    if (!rootMemcg_ || !rootMemcg_->reclaimRatios_) {
         HILOGE("rootMemcg nullptr");
         return false;
     }
-    this->rootMemcg->SetScoreToKernel(APP_SCORE);
-    this->rootMemcg->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
+    rootMemcg_->SetScoreToKernel(APP_SCORE);
+    rootMemcg_->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
         ROOT_MEMCG_ZRAM_2_UFS_RATIO, ROOT_MEMCG_REFAULT_THRESHOLD);
-    this->rootMemcg->SetReclaimRatiosToKernel();
+    rootMemcg_->SetReclaimRatiosToKernel();
     HILOGI("Init rootMemcg reclaim retios success");
     return true;
 }
 
 void ReclaimStrategyManager::UpdateMemcgReclaimInfo()
 {
-    this->rootMemcg->UpdateSwapInfoFromKernel();
+    rootMemcg_->UpdateSwapInfoFromKernel();
 }
 
 UserMemcg* ReclaimStrategyManager::UserMemcgsAdd(int userId)
 {
     HILOGD("userId=%{public}d", userId);
     UserMemcg* memcg = new UserMemcg(userId);
-    this->userMemcgsMap.insert(std::make_pair(userId, memcg));
+    userMemcgsMap_.insert(std::make_pair(userId, memcg));
     return memcg;
 }
 
@@ -184,14 +181,14 @@ UserMemcg* ReclaimStrategyManager::UserMemcgsRemove(int userId)
 {
     HILOGD("userId=%{public}d", userId);
     UserMemcg* memcg = UserMemcgsGet(userId);
-    this->userMemcgsMap.erase(userId);
+    userMemcgsMap_.erase(userId);
     return memcg;
 }
 
 UserMemcg* ReclaimStrategyManager::UserMemcgsGet(int userId)
 {
-    std::map<int, UserMemcg*>::iterator it = this->userMemcgsMap.find(userId);
-    if (it == this->userMemcgsMap.end()) {
+    std::map<int, UserMemcg*>::iterator it = userMemcgsMap_.find(userId);
+    if (it == userMemcgsMap_.end()) {
         return nullptr;
     }
     return it->second;
@@ -243,7 +240,7 @@ bool ReclaimStrategyManager::HandleAccountPriorityChanged(int accountId, int pri
     }
     HILOGI("update reclaim retios userId=%{public}d priority=%{public}d", accountId, priority);
     memcg->SetScoreToKernel(priority);
-    if (GetReclaimRatiosByScore(priority, memcg->reclaimRatios)) {
+    if (GetReclaimRatiosByScore(priority, memcg->reclaimRatios_)) {
         memcg->SetReclaimRatiosToKernel();
     }
     return true;
