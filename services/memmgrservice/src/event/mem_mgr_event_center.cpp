@@ -62,14 +62,13 @@ bool MemMgrEventCenter::GetEventHandler()
 bool MemMgrEventCenter::RegisterEventListener()
 {
     HILOGI("called");
+    RegisterMemPressMonitor();
+
     RegisterAppStateCallback();
 
     RegisterAccountObserver();
 
     RegisterSystemEventObserver();
-
-    RegisterMemPsiMonitor();
-
     return true;
 }
 
@@ -111,9 +110,14 @@ void MemMgrEventCenter::RegisterAccountObserver()
     HILOGI("success to register account callback");
 }
 
-void MemMgrEventCenter::RegisterMemPsiMonitor()
+void MemMgrEventCenter::RegisterMemPressMonitor()
 {
-    HILOGI("success to register MemPsiMonitor callback");
+    HILOGI("called");
+    MemPressCallback callback = {
+        std::bind(&MemMgrEventCenter::OnMemPressLevelUploaded, this, std::placeholders::_1),
+    };
+    psiMonitor_ = std::make_unique<MemoryPressureMonitor>(callback);
+    HILOGI("success to register psi callback");
 }
 
 // callback list below
@@ -129,12 +133,12 @@ void MemMgrEventCenter::OnOsAccountsChanged(const int &id)
 {
     HILOGI("account changed=<%{public}d>", id);
     // notify reclaim priority manager
-    ReclaimPriorityManager::GetInstance().OsAccountChanged(id);
+    ReclaimPriorityManager::GetInstance().CurrentOsAccountChanged(id);
 }
 
-void MemMgrEventCenter::OnMemPsiUploaded(const int &level)
+void MemMgrEventCenter::OnMemPressLevelUploaded(const int &level)
 {
-    HILOGI("OnMemPsiUploaded: level=<%{public}d>", level);
+    HILOGI("memory pressure level=<%{public}d>", level);
     // notify kill strategy manager
 }
 } // namespace Memory

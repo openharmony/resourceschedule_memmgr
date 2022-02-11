@@ -21,6 +21,7 @@
 #include "app_state_callback_mem_host.h"
 #include "mem_mgr_event_observer.h"
 #include "account_observer.h"
+#include "memory_pressure_monitor.h"
 
 namespace OHOS {
 namespace Memory {
@@ -40,7 +41,7 @@ protected:
 
     void OnOsAccountsChanged(const int &id);
 
-    void OnMemPsiUploaded(const int &level);
+    void OnMemPressLevelUploaded(const int &level);
 private:
     MemMgrEventCenter();
     bool GetEventHandler();
@@ -48,13 +49,14 @@ private:
     void RegisterAppStateCallback();
     void RegisterSystemEventObserver();
     void RegisterAccountObserver();
-    void RegisterMemPsiMonitor();
+    void RegisterMemPressMonitor();
 
     std::function<void()> registerEventListenerFunc_;
     int retryTimes_ = 0;
     std::shared_ptr<AppStateCallbackMemHost> appStateCallback_;
     std::unique_ptr<MemMgrEventObserver> sysEvtOberserver_;
     std::unique_ptr<AccountObserver> accountOberserver_;
+    std::unique_ptr<MemoryPressureMonitor> psiMonitor_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 } // namespace Memory
