@@ -26,12 +26,14 @@ BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid):name_(na
 {
     this->priority_ = RECLAIM_PRIORITY_UNKNOWN;
     this->accountId_ = bundleUid / USER_ID_SHIFT;
+    this->state_ = BundleState::STATE_DEFAULT;
 }
 
 BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority):name_(name),
     uid_(bundleUid), priority_(priority)
 {
     this->accountId_ = bundleUid / USER_ID_SHIFT;
+    this->state_ = BundleState::STATE_DEFAULT;
 }
 
 bool BundlePriorityInfo::HasProc(pid_t pid)

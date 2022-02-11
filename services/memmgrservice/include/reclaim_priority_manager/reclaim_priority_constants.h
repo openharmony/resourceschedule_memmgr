@@ -71,6 +71,11 @@ enum class AppStateUpdateReason {
     PROCESS_TERMINATED,
     OS_ACCOUNT_CHANGED,
 };
+
+enum class BundleState {
+    STATE_DEFAULT = 0,
+    STATE_WAITING_FOR_KILL,
+};
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_RECALIM_PRIORITY_CONSTANTS_H
