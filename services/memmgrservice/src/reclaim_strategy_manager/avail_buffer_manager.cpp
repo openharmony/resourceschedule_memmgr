@@ -37,7 +37,7 @@ AvailBufferManager::~AvailBufferManager()
 bool AvailBufferManager::Init()
 {
     initialized_ = GetEventHandler();
-    LoadAvailBufferFromConfig();
+    CloseZswapd();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -94,6 +94,12 @@ bool AvailBufferManager::WriteAvailBufferToKernel()
     std::string fullPath = KernelInterface::GetInstance().JoinPath(BUFFER_PATH, "memory.avail_buffers");
     HILOGI("%{public}s", NumsToString().c_str());
     return KernelInterface::GetInstance().WriteToFile(fullPath, NumsToString());
+}
+
+void AvailBufferManager::CloseZswapd()
+{
+    HILOGI("Zswapd close now");
+    SetAvailBuffer(0, 0, 0, 0);
 }
 } // namespace Memory
 } // namespace OHOS

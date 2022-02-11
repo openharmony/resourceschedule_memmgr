@@ -28,6 +28,7 @@ public:
     bool WriteAvailBufferToKernel();
     bool SetAvailBuffer(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve);
     bool LoadAvailBufferFromConfig();
+    void CloseZswapd();
     bool Init();
     std::string NumsToString();
 
