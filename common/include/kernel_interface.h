@@ -26,6 +26,19 @@
 
 namespace OHOS {
 namespace Memory {
+#define PAGE_TO_KB 4
+#define KB_PER_MB 1024
+#define MAX_BUFFER_KB (300 * KB_PER_MB)
+
+struct ProcInfo {
+    int tgid;
+    int pid;
+    int pidfd;
+    int size;
+    std::string name;
+    std::string status;
+};
+
 class KernelInterface {
     DECLARE_SINGLE_INSTANCE(KernelInterface);
 
@@ -54,7 +67,12 @@ public:
     std::string JoinPath(const std::string& prefixPath, const std::string& subPath);
     std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
 
+    bool GetPidProcInfo(struct ProcInfo &procInfo);
+    int GetCurrentBuffer();
+    int KillOneProcessByPid(int pid);
+
     static const std::string MEMCG_BASE_PATH;
+    static const std::string CURRENT_BUFFER_PATH;
     static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
     static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
     static constexpr mode_t FILE_MODE_660 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
