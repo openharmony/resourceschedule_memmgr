@@ -12,7 +12,7 @@
 
 The part of *Memory Manager* belongs to the subsystem named *Resource Schedule Subsystem*. 
 
-In order to ensure the memory supply, it will reclaim the memory of some process or even kill these process in a certain order named *Reclaim Priority*. The calculation and update of *Reclaim Priority* is triggered by the state changes of the applications in the system.
+In order to ensure the memory supply, it will reclaim the memory of some processes or even kill these processes in a certain order named *Reclaim Priority*. The calculation and update of *Reclaim Priority* is triggered by the state changes of the applications in the system.
 
 ##  Directory Structure<a name="section_catalogue"></a>
 
@@ -27,7 +27,7 @@ In order to ensure the memory supply, it will reclaim the memory of some process
 |       |   ├── reclaim_priority_manager	# calculate the Reclaim Priority
 |       |   ├── reclaim_strategy			# reclaim the memory of process by its
 |       |   |                                 Reclaim Priority
-|       |   └── kill_strategy				# kill process by its Reclaim Priority
+|       |   └── kill_strategy				# kill the process by its Reclaim Priority
 |       └── src
 |           ├── event
 |           ├── reclaim_priority_manager
@@ -37,27 +37,26 @@ In order to ensure the memory supply, it will reclaim the memory of some process
 ```
 ## Framework<a name="section_framework"></a>
 
-*Memory Manager* updates the *Reclaim Priority* and triggers the reclaim and kill behaviors based on some events. Its framework is as follows (the right side of the dotted line in the figure below is this part), which includes the following modules:
+*Memory Manager* updates the *Reclaim Priority* and triggers the reclaim and kill behaviors based on some events. The framework of *Memory Manager* is shown in the following picture, which includes the following modules.
 
-1、 *Event Center*: monitor all external events concerned by this part. The monitors in *Event Center* are registered by calling the interfaces provided by other subsystems, and events about applications and users will be received and notified to *Reclaim Priority Manager*, *Reclaim Strategy* and *Kill Strategy*.
+1. *Event Center*: monitor all external events concerned by this part. The monitors in *Event Center* are registered by calling the interfaces provided by other subsystems, and events about applications and users will be received and notified to *Reclaim Priority Manager*, *Reclaim Strategy* and *Kill Strategy*.
+2. *Reclaim Priority Manager*: based on the notifications from the *Event Center*, calculate the sorted list of *Reclaim Priority* ,and provide an interface to *Reclaim Strategy* and *Kill Strategy* for querying this list.
 
-2、*Reclaim Priority Manager*: based on the notifications from the *Event Center*, calculate the sequence list of *Reclaim Priority* ,and provide an interface to *Reclaim Strategy* and *Kill Strategy* for querying this list.
+3. *Reclaim Strategy*: according to the list of *Reclaim Priority*, adjust the reclaim parameters (the memory waterline, the reclaim ratio of file page / anonymous page, the compaction / swap-out ratio, etc.) and coordinate different reclaim mechanisms to work together to ensure the performance of memory supply under low and medium memory pressure.
 
-3、*Reclaim Strategy*: according to the list of *Reclaim Priority*, adjust the reclaim parameters (the memory waterline, the reclaim ratio of file page / anonymous page, the compaction / swap-out ratio, etc.) and coordinate different reclaim mechanisms to work together to ensure the performance of memory supply under low and medium memory load.
+4. *Kill Strategy*: as the logical end of reclaim, it ensures the memory supply under heavy memory pressure according to the list of *Reclaim Priority*.
 
-4、*Kill Strategy*: as the logical end of reclaim, it ensures the memory supply under heavy memory load according to the list of *Reclaim Priority*.
+5. *Kernel Interface*: as an interface to interact with the kernel, issue control commands such as reclaim parameters and kill to the kernel.
 
-5、*Kernel Interface*: as an interface to interact with the kernel, issue control commands such as reclaim parameters and kill to the kernel.
+6. *Memory Configuration Manager*: read and maintain the configurations required by the *Memory Manager*.
 
-6、*Memory Configuration Manager*: read and maintain the configurations required by the *Memory Manager*.
-
-7、*Disk Life Manager* (under planning): limit the amount of data written to the disk to ensure the device life of it.
+7. *Disk Life Manager* (under planning): limit the amount of data written to the disk to ensure the device lifetime of it.
 
 ![](figures/zh-cn_image_fwk.png)
 
 ### The List of Process Reclaim Priority<a name="section_prio"></a>
 
-The list of process *Reclaim Priority* provides the sequence list for reclaim and kill between processes. The value and description of the *Reclaim Priority* defined by this part are shown in the following table:
+The list of process *Reclaim Priority* provides the sorted list for reclaim and kill between processes. The value and description of the *Reclaim Priority* defined by this part are shown in the following table:
 
 | Reclaim Priority                                                            | Description |
 |------------------------------------------------------------------------------------------|-------------|
@@ -70,17 +69,17 @@ The list of process *Reclaim Priority* provides the sequence list for reclaim an
 
 ### Reclaim Strategy/Kill Strategy<a name="section_reclaim"></a>
 
-As the logical end of reclaim, kill is essentially for the same purpose as reclaim, so they can use the same list of *Reclaim Priority*. At the same time, they should be called reasonably to ensure the function and performance of memory supply under different memory loads.
+As the logical end of reclaim, kill is essentially for the same purpose as reclaim, so they can use the same list of *Reclaim Priority*. At the same time, they should be called reasonably to ensure the function and performance of memory supply under different memory pressures.
 
 - *Reclaim Strategy*: is the most important in vertical memory management, and controls a variety of different memory reclaim mechanisms, which need to be coordinated to work together. For example, the reclaim of the *Purgeable / Speculative Memory* (under planning) is prior to other types of memory, and the trigger time of reclaim should precede the low memory killing.
 
-  Hotspot files can be cached in memory to improve performance under low memory load. (under planning)
+  Hotspot files can be cached in memory to improve performance under low memory pressure. (under planning)
 
-  Reclaim processes (kswapd, zswapd, etc.) will work under the guidance of configuration (waterline, reclaim parameters) when under medium memory load. (under planning)
+  Reclaim processes (kswapd, zswapd, etc.) will work under the guidance of configuration (waterline, reclaim parameters) when under medium memory pressure. (under planning)
 
   There are corresponding processing for single point special key events. In order to meet the requirements of large memory application, *pre-reclaim* will be started with configuration (under planning). The basic actions of reclaim processes should be stopped before killing to avoid invalid reclaim.
 
-- *Kill Strategy*: works under the heavy memory load, and is triggered by psi (pressure stall information) memory pressure event. Some low priority processes are selected from the list of *Reclaim Priority* and killed according to the memory waterline.
+- *Kill Strategy*: works under the heavy memory pressure, and is triggered by psi (pressure stall information) memory pressure event. Some low priority processes are selected from the list of *Reclaim Priority* and killed according to the memory waterline.
 
   The default corresponding relationship between the memory waterline for killing and the process reclaim priority is shown in the following table, and it can be modified by changing the XML file
 
