@@ -17,7 +17,6 @@
 
 #include "memmgr_log.h"
 #include "mem_mgr_event_observer.h"
-#include "os_account_manager.h"
 #include "reclaim_priority_manager.h"
 #include "mem_mgr_event_center.h"
 
