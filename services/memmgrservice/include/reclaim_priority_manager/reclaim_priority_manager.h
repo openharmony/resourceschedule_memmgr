@@ -35,7 +35,7 @@ class ReclaimPriorityManager {
 
 public:
     struct BundleInfoPtrCmp {
-        bool operator()(const BundlePriorityInfo* p1, const BundlePriorityInfo* p2)
+        bool operator()(const BundlePriorityInfo *p1, const BundlePriorityInfo *p2)
         {
             if (p1->priority_ <= p2->priority_) {
                 return true;
@@ -53,9 +53,9 @@ public:
     bool OsAccountChanged(int accountId);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
-    void AddBundleInfoToSet(BundlePriorityInfo* bundle);
-    void UpdateBundlePriority(BundlePriorityInfo* bundle);
-    void DeleteBundleInfoFromSet(BundlePriorityInfo* bundle);
+    void AddBundleInfoToSet(BundlePriorityInfo *bundle);
+    void UpdateBundlePriority(BundlePriorityInfo *bundle);
+    void DeleteBundleInfoFromSet(BundlePriorityInfo *bundle);
 
     inline bool Initailized()
     {
@@ -64,7 +64,8 @@ public:
 
     // for lmkd and memory reclaim
     const BundlePrioSet GetBundlePrioSet();
-
+    BundleState GetBundleState(BundlePriorityInfo *bundle);
+    void SetBundleState(BundlePriorityInfo *bundle, BundleState state);
 private:
     bool initialized_ = false;
 
@@ -93,7 +94,7 @@ private:
     OsAccountPriorityInfo* FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
     void AddOsAccountInfo(OsAccountPriorityInfo account);
-    bool IsSystemApp(BundlePriorityInfo* bundle);
+    bool IsSystemApp(BundlePriorityInfo *bundle);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {

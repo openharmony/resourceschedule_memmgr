@@ -39,6 +39,7 @@ public:
     ProcessesInfoMap procs_;
     int priority_;
     int accountId_;
+    BundleState state_;
 
     bool HasProc(pid_t pid);
     void AddProc(ProcessPriorityInfo &newProcess);
