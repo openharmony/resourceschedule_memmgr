@@ -78,6 +78,7 @@ public:
 
 class Memcg {
 public:
+    int score_;
     SwapInfo* swapInfo_;
     MemInfo* memInfo_;
     ReclaimRatios* reclaimRatios_;
@@ -92,10 +93,11 @@ public:
     void UpdateSwapInfoFromKernel();
     void UpdateMemInfoFromKernel();
 
-    bool SetScoreToKernel(int score);
+    void SetScore(int score);
     void SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
     bool SetReclaimRatios(ReclaimRatios * const ratios);
-    bool SetReclaimRatiosToKernel();
+    bool SetScoreAndReclaimRatiosToKernel();
+    bool SwapIn(); // 100% load to mem
 protected:
     virtual std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
