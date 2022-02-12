@@ -22,6 +22,7 @@
 #include "process_priority_info.h"
 #include "bundle_priority_info.h"
 #include "os_account_priority_info.h"
+#include "os_account_manager.h"
 #include "reclaim_param.h"
 
 #include <map>
@@ -48,9 +49,10 @@ public:
     using BundlePrioSet = std::set<BundlePriorityInfo*, BundleInfoPtrCmp>;
     // map <bundleUid, BundlePriorityInfo*>
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
+    using OsAccountsMap = std::map<int, OsAccountPriorityInfo>;
     bool Init();
     bool UpdateReclaimPriority(pid_t pid, int bundleUid, std::string bundleName, AppStateUpdateReason priorityReason);
-    bool OsAccountChanged(int accountId);
+    bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
     void AddBundleInfoToSet(BundlePriorityInfo *bundle);
@@ -70,7 +72,7 @@ private:
     bool initialized_ = false;
 
     // map <accountId, accountInfo>
-    std::map<int, OsAccountPriorityInfo> osAccountsInfoMap_;
+    OsAccountsMap osAccountsInfoMap_;
     // total system prioritySet
     // when new a BundlePriorityInfo, it will be added into this set
     // when delete a BundlePriorityInfo, it will be removed from this set
@@ -82,8 +84,8 @@ private:
     bool GetEventHandler();
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, std::string bundleName,
             AppStateUpdateReason priorityReason);
-    bool OsAccountChangedInner(int accountId);
-    bool UpdateAllPrioForOsAccountChanged(int accountId);
+    bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
+    bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);

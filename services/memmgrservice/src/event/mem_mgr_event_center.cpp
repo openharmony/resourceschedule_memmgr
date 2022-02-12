@@ -15,11 +15,10 @@
 
 #include <string>
 
-#include "mem_mgr_event_center.h"
 #include "memmgr_log.h"
-
 #include "mem_mgr_event_observer.h"
 #include "reclaim_priority_manager.h"
+#include "mem_mgr_event_center.h"
 
 namespace OHOS {
 namespace Memory {
@@ -133,7 +132,8 @@ void MemMgrEventCenter::OnOsAccountsChanged(const int &id)
 {
     HILOGI("account changed=<%{public}d>", id);
     // notify reclaim priority manager
-    ReclaimPriorityManager::GetInstance().OsAccountChanged(id);
+    AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod = AccountSA::OsAccountManager::GetOsAccountSwitchMod();
+    ReclaimPriorityManager::GetInstance().OsAccountChanged(id, switchMod);
 }
 
 void MemMgrEventCenter::OnMemPressLevelUploaded(const int &level)

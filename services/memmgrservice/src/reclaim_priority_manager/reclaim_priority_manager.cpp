@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "memmgr_log.h"
+#include "multi_account_manager.h"
 #include "kernel_interface.h"
 #include "reclaim_strategy_manager.h"
 #include "reclaim_priority_manager.h"
@@ -357,7 +358,7 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pi
     return WriteOomScoreAdjToKernel(bundle);
 }
 
-bool ReclaimPriorityManager::OsAccountChanged(int accountId)
+bool ReclaimPriorityManager::OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
@@ -368,23 +369,25 @@ bool ReclaimPriorityManager::OsAccountChanged(int accountId)
         return false;
     }
     std::function<bool()> osAccountChangedInnerFunc =
-        std::bind(&ReclaimPriorityManager::OsAccountChangedInner, this, accountId);
+        std::bind(&ReclaimPriorityManager::OsAccountChangedInner, this, accountId, switchMod);
     return handler_->PostImmediateTask(osAccountChangedInnerFunc);
 }
 
-bool ReclaimPriorityManager::OsAccountChangedInner(int accountId)
+bool ReclaimPriorityManager::OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod)
 {
-    return UpdateAllPrioForOsAccountChanged(accountId);
+    return UpdateAllPrioForOsAccountChanged(accountId, switchMod);
 }
 
-bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId)
+bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId,
+    AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
     HILOGI("UpdateReclaimPriority for all apps because of os account changed ");
-    return true;
+    bool ret = MultiAccountManager::GetInstance().HandleOsAccountsChanged(accountId, switchMod, osAccountsInfoMap_);
+    return ret;
 }
 } // namespace Memory
 } // namespace OHOS
