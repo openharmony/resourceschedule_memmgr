@@ -19,7 +19,6 @@
 #include "memmgr_log.h"
 #include "multi_account_manager.h"
 #include "kernel_interface.h"
-#include "os_account_manager.h"
 #include "reclaim_strategy_manager.h"
 #include "reclaim_priority_manager.h"
 
