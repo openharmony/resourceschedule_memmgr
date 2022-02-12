@@ -26,9 +26,8 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemoryPressureMonitor";
+const int MAX_CMD_LINE_LENGTH = 256;
 }
-
-#define MAX_CMD_LINE_LENGTH 256
 
 MemoryPressureMonitor::MemoryPressureMonitor(const MemPressCallback &callback) : callback_(callback)
 {
@@ -183,14 +182,7 @@ void MemoryPressureMonitor::MainLoop(void)
 
             GetTimeAndSetTo(currentTime_);
             if (TimeBetweenInMs(lastTime_, currentTime_) >= POLL_PERIOD_MS) {
-                polling_--;
-                if (pollHandler_) {
-                    HILOGD("#1 call handler");
-                    pollHandler_->handler(pollHandler_->data, 0);
-                    lastTime_ = currentTime_;
-                } else {
-                    HILOGE("pollHandler_ is NULL!");
-                }
+                HandleTimeOut();
             }
         } else {
             nevents = epoll_wait(epollfd_, events, curLevelCount_, -1);
@@ -218,6 +210,18 @@ void MemoryPressureMonitor::MainLoop(void)
             }
         } // end of for
     } // end of while
+}
+
+void MemoryPressureMonitor::HandleTimeOut()
+{
+    polling_--;
+    if (pollHandler_) {
+        HILOGD("#1 call handler");
+        pollHandler_->handler(pollHandler_->data, 0);
+        lastTime_ = currentTime_;
+    } else {
+        HILOGE("pollHandler_ is NULL!");
+    }
 }
 
 void MemoryPressureMonitor::HandleEpollEvent(struct epoll_event *curEpollEvent)
