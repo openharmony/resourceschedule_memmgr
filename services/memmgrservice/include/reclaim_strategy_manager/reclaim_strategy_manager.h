@@ -18,7 +18,7 @@
 
 #include "single_instance.h"
 #include "event_handler.h"
-#include "memcg.h"
+#include "memcg_mgr.h"
 #include "reclaim_param.h"
 
 namespace OHOS {
@@ -40,25 +40,19 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    Memcg* rootMemcg_;
-    std::map<int, UserMemcg*> userMemcgsMap_; // map<userId, UserMemcg*>
+    std::shared_ptr<MemcgMgr> memcgMgr_;
 
     ReclaimStrategyManager();
-    ~ReclaimStrategyManager();
     bool GetEventHandler();
 
+    // handle app and os user event
     bool HandleAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara);
     bool HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara);
-    bool GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios);
-    bool SetRootMemcgPara();
-    void UpdateMemcgReclaimInfo();
-
-    UserMemcg* UserMemcgsAdd(int userId);
-    UserMemcg* UserMemcgsRemove(int userId);
-    UserMemcg* UserMemcgsGet(int userId);
-
     bool HandleAccountDied(int accountId);
     bool HandleAccountPriorityChanged(int accountId, int priority);
+
+    // get param for config_mgr
+    bool GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios);
 };
 } // namespace Memory
 } // namespace OHOS

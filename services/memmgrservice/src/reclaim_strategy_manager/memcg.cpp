@@ -107,7 +107,7 @@ inline std::string ReclaimRatios::NumsToString() const
     return ret;
 }
 
-inline std::string ReclaimRatios::ToString() const
+std::string ReclaimRatios::ToString() const
 {
     std::string ret = "mem2zramRatio:" + std::to_string(mem2zramRatio_)
                     + " zram2ufsRatio:" + std::to_string(zram2ufsRatio_)
@@ -115,7 +115,7 @@ inline std::string ReclaimRatios::ToString() const
     return ret;
 }
 
-Memcg::Memcg()
+Memcg::Memcg() : score_(0)
 {
     swapInfo_ = new SwapInfo();
     memInfo_ = new MemInfo();
@@ -179,16 +179,16 @@ void Memcg::UpdateMemInfoFromKernel()
     HILOGD("success. %{public}s", memInfo_->ToString().c_str());
 }
 
-bool Memcg::SetScoreToKernel(int score)
+void Memcg::SetScore(int score)
 {
-    std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.app_score");
-    std::string content = std::to_string(score);
-    return WriteToFile_(path, content);
+    score_ = score;
 }
 
 void Memcg::SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
 {
-    reclaimRatios_->SetRatios(mem2zramRatio, zram2ufsRatio, refaultThreshold);
+    reclaimRatios_->mem2zramRatio_ = mem2zramRatio;
+    reclaimRatios_->zram2ufsRatio_ = zram2ufsRatio;
+    reclaimRatios_->refaultThreshold_ = refaultThreshold;
 }
 
 bool Memcg::SetReclaimRatios(ReclaimRatios * const ratios)
@@ -196,11 +196,26 @@ bool Memcg::SetReclaimRatios(ReclaimRatios * const ratios)
     return reclaimRatios_->SetRatios(ratios);
 }
 
-bool Memcg::SetReclaimRatiosToKernel()
+bool Memcg::SetScoreAndReclaimRatiosToKernel()
 {
-    std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.zswapd_single_memcg_param");
-    std::string content = reclaimRatios_->NumsToString();
-    return WriteToFile_(path, content);
+    bool ret = false;
+    // write score
+    std::string scorePath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.app_score");
+    ret = WriteToFile_(scorePath, std::to_string(score_));
+    // write reclaim ratios
+    std::string ratiosPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(),
+        "memory.zswapd_single_memcg_param");
+    ret = ret && WriteToFile_(ratiosPath, reclaimRatios_->NumsToString());
+    return ret;
+}
+
+bool Memcg::SwapIn()
+{
+    std::string zramPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.ub_ufs2zram_ratio");
+    bool ret = WriteToFile_(zramPath, "100"); // 100 means 100% load to zram
+    std::string swapinPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.force_swapin");
+    ret = ret && WriteToFile_(swapinPath, "0"); // echo 0 to tigger force swapin
+    return ret;
 }
 
 inline std::string Memcg::GetMemcgPath_()
@@ -237,7 +252,7 @@ bool UserMemcg::CreateMemcgDir()
         HILOGE("failed. %{public}s", fullPath.c_str());
         return false;
     }
-    HILOGD("success. %{public}s", fullPath.c_str());
+    HILOGI("success. %{public}s", fullPath.c_str());
     return true;
 }
 
@@ -248,7 +263,7 @@ bool UserMemcg::RemoveMemcgDir()
         HILOGE("failed. %{public}s", fullPath.c_str());
         return false;
     }
-    HILOGD("success. %{public}s", fullPath.c_str());
+    HILOGI("success. %{public}s", fullPath.c_str());
     return true;
 }
 
