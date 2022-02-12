@@ -33,12 +33,12 @@
 |   └── memmgrservice    					# 对内接口目录
 |       ├── include
 |       |   ├── event						# 事件注册中心目录
-|       |   ├── relcaim_priority_manager	# 进程回收优先级管理目录
+|       |   ├── reclaim_priority_manager	# 进程回收优先级管理目录
 |       |   ├── reclaim_strategy			# 回收策略目录
 |       |   └── kill_strategy				# 查杀策略目录
 |       └── src
 |           ├── event
-|           ├── relcaim_priority_manager
+|           ├── reclaim_priority_manager
 |           ├── reclaim_strategy
 |           └── kill_strategry
 |
