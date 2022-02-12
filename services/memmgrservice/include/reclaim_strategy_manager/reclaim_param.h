@@ -36,15 +36,15 @@ struct ReclaimParam {
     int bundleUid_;
     std::string bundleName_;
     int accountId_;
-    int appScore_;
+    int score_;
     AppAction action_;
 
-    ReclaimParam(pid_t pid, int bundleUid, std::string bundleName, int accountId, int appScore, AppAction action)
+    ReclaimParam(pid_t pid, int bundleUid, std::string bundleName, int accountId, int score, AppAction action)
         : pid_(pid),
           bundleUid_(bundleUid),
           bundleName_(bundleName),
           accountId_(accountId),
-          appScore_(appScore),
+          score_(score),
           action_(action) {}
 
     inline std::string ToString() const
@@ -53,7 +53,7 @@ struct ReclaimParam {
                         + " bundle:" + std::to_string(bundleUid_)
                         + " " + bundleName_
                         + " userId:" + std::to_string(accountId_)
-                        + " score:" + std::to_string(appScore_)
+                        + " score:" + std::to_string(score_)
                         + " action:" + std::to_string(static_cast<int32_t>(action_));
         return ret;
     }

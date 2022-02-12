@@ -31,31 +31,29 @@ IMPLEMENT_SINGLE_INSTANCE(ReclaimStrategyManager);
 
 ReclaimStrategyManager::ReclaimStrategyManager()
 {
-    rootMemcg_ = new Memcg();
-}
-
-ReclaimStrategyManager::~ReclaimStrategyManager()
-{
-    delete rootMemcg_;
-    while (!userMemcgsMap_.empty()) {
-        auto iter = userMemcgsMap_.begin();
-        delete iter->second;
-        userMemcgsMap_.erase(iter);
-    }
 }
 
 bool ReclaimStrategyManager::Init()
 {
-    initialized_ = GetEventHandler();
-    initialized_ = initialized_ && SetRootMemcgPara();
+    initialized_ = false;
+    do {
+        if (!GetEventHandler()) {
+            break;
+        }
+        memcgMgr_ = std::make_shared<MemcgMgr>();
+        MemmgrConfigManager::GetInstance().Init();
+        AvailBufferManager::GetInstance().Init();
+        if (!memcgMgr_->SetRootMemcgPara()) {
+            break;
+        }
+        initialized_ = true;
+    } while (0);
+
     if (initialized_) {
         HILOGI("init successed");
     } else {
         HILOGE("init failed");
     }
-
-    MemmgrConfigManager::GetInstance().Init();
-    AvailBufferManager::GetInstance().Init();
     return initialized_;
 }
 
@@ -110,88 +108,15 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
     if (funcPtr != nullptr) {
         ret = (this->*funcPtr)(reclaimPara);
     }
-
-    UpdateMemcgReclaimInfo();
-
     reclaimPara.reset();
     return ret;
 }
 
 bool ReclaimStrategyManager::HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara)
 {
-    HILOGI("%{public}s", reclaimPara->ToString().c_str());
-    UserMemcg* memcg = UserMemcgsGet(reclaimPara->accountId_);
-    if (memcg == nullptr) { // new user
-        memcg = UserMemcgsAdd(reclaimPara->accountId_);
-        memcg->CreateMemcgDir();
-    }
-    memcg->AddProc(std::to_string(reclaimPara->pid_)); // add pid to memcg
-    return true;
-}
-
-bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios)
-{
-    if (ratios == nullptr) {
-        HILOGE("param ratios nullptr");
-        return false;
-    }
-    HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
-    MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
-        MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
-    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
-        if ((*i)->minScore <= score && (*i)->maxScore >= score) {
-            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d",
-                (*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
-            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
-            return true;
-        }
-    }
-    HILOGW("can not get ratios from MemmgrConfigManager");
-    return true;
-}
-
-bool ReclaimStrategyManager::SetRootMemcgPara()
-{
-    if (!rootMemcg_ || !rootMemcg_->reclaimRatios_) {
-        HILOGE("rootMemcg nullptr");
-        return false;
-    }
-    rootMemcg_->SetScoreToKernel(APP_SCORE);
-    rootMemcg_->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
-        ROOT_MEMCG_ZRAM_2_UFS_RATIO, ROOT_MEMCG_REFAULT_THRESHOLD);
-    rootMemcg_->SetReclaimRatiosToKernel();
-    HILOGI("Init rootMemcg reclaim retios success");
-    return true;
-}
-
-void ReclaimStrategyManager::UpdateMemcgReclaimInfo()
-{
-    rootMemcg_->UpdateSwapInfoFromKernel();
-}
-
-UserMemcg* ReclaimStrategyManager::UserMemcgsAdd(int userId)
-{
-    HILOGD("userId=%{public}d", userId);
-    UserMemcg* memcg = new UserMemcg(userId);
-    userMemcgsMap_.insert(std::make_pair(userId, memcg));
-    return memcg;
-}
-
-UserMemcg* ReclaimStrategyManager::UserMemcgsRemove(int userId)
-{
-    HILOGD("userId=%{public}d", userId);
-    UserMemcg* memcg = UserMemcgsGet(userId);
-    userMemcgsMap_.erase(userId);
-    return memcg;
-}
-
-UserMemcg* ReclaimStrategyManager::UserMemcgsGet(int userId)
-{
-    std::map<int, UserMemcg*>::iterator it = userMemcgsMap_.find(userId);
-    if (it == userMemcgsMap_.end()) {
-        return nullptr;
-    }
-    return it->second;
+    bool ret = memcgMgr_->AddProcToMemcg(std::to_string(reclaimPara->pid_), reclaimPara->accountId_);
+    HILOGI("%{public}s. %{public}s", ret ? "succ" : "fail",  reclaimPara->ToString().c_str());
+    return ret;
 }
 
 void ReclaimStrategyManager::NotifyAccountDied(int accountId)
@@ -219,30 +144,40 @@ void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int pri
 
 bool ReclaimStrategyManager::HandleAccountDied(int accountId)
 {
-    HILOGD("userId=%{public}d", accountId);
-    UserMemcg* memcg = UserMemcgsRemove(accountId);
-    if (memcg == nullptr) {
-        HILOGI("account %{public}d not exist. not need to remove", accountId);
-        return true;
-    }
-    memcg->RemoveMemcgDir();
-    delete memcg;
-    memcg = nullptr;
-    return true;
+    return memcgMgr_->RemoveUserMemcg(accountId);
 }
 
 bool ReclaimStrategyManager::HandleAccountPriorityChanged(int accountId, int priority)
 {
-    UserMemcg* memcg = UserMemcgsGet(accountId);
-    if (memcg == nullptr) {
-        HILOGI("account %{public}d not exist. cannot update ratios", accountId);
+    ReclaimRatios* ratios = new ReclaimRatios();
+    if (!GetReclaimRatiosByScore(priority, ratios)) {
         return false;
     }
-    HILOGI("update reclaim retios userId=%{public}d priority=%{public}d", accountId, priority);
-    memcg->SetScoreToKernel(priority);
-    if (GetReclaimRatiosByScore(priority, memcg->reclaimRatios_)) {
-        memcg->SetReclaimRatiosToKernel();
+    bool ret = memcgMgr_->UpdateMemcgScoreAndReclaimRatios(accountId, priority, ratios);
+    HILOGI("update user reclaim retios %{public}s. userId=%{public}d score=%{public}d %{public}s",
+           ret ? "succ" : "fail", accountId, priority, ratios->ToString().c_str());
+    delete ratios;
+    return ret;
+}
+
+bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios)
+{
+    if (ratios == nullptr) {
+        HILOGE("param ratios nullptr");
+        return false;
     }
+    HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
+    MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
+        MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
+    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
+        if ((*i)->minScore <= score && (*i)->maxScore >= score) {
+            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d",
+                (*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
+            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
+            return true;
+        }
+    }
+    HILOGW("can not get ratios from MemmgrConfigManager"); // will using default para
     return true;
 }
 } // namespace Memory
