@@ -133,7 +133,7 @@ void MemMgrEventCenter::OnOsAccountsChanged(const int &id)
 {
     HILOGI("account changed=<%{public}d>", id);
     // notify reclaim priority manager
-    ReclaimPriorityManager::GetInstance().CurrentOsAccountChanged(id);
+    ReclaimPriorityManager::GetInstance().OsAccountChanged(id);
 }
 
 void MemMgrEventCenter::OnMemPressLevelUploaded(const int &level)
