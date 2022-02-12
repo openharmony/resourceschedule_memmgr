@@ -96,5 +96,11 @@ void MultiAccountManager::SetMultiAccountStrategy(std::shared_ptr<MultiAccountSt
 {
     strategy_ = strategy;
 }
+
+bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
+    std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+{
+    return true;
+}
 } // namespace Memory
 } // namespace OHOS
