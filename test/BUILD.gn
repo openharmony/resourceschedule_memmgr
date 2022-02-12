@@ -31,6 +31,7 @@ memmgr_deps = [
 memmgr_external_deps = [
   "hiviewdfx_hilog_native:libhilog",
   "ipc:ipc_core",
+  "os_account_standard:os_account_innerkits",
 ]
 
 memmgr_public_deps = [ "//third_party/googletest:gtest_main" ]

@@ -22,6 +22,8 @@
 #include "single_instance.h"
 #include "account_priority_info.h"
 #include "multi_account_strategy.h"
+#include "os_account_priority_info.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -34,6 +36,8 @@ public:
     void AddAccountPriorityInfo(std::shared_ptr<AccountPriorityInfo> accountPriorityInfo);
     std::shared_ptr<MultiAccountStrategy> GetMultiAccountStratgy();
     void SetMultiAccountStrategy(std::shared_ptr<MultiAccountStrategy> strategy);
+    bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
+            std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
 
 private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
