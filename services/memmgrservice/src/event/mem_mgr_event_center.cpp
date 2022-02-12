@@ -117,7 +117,7 @@ void MemMgrEventCenter::RegisterMemPressMonitor()
         std::bind(&MemMgrEventCenter::OnMemPressLevelUploaded, this, std::placeholders::_1),
     };
     psiMonitor_ = std::make_unique<MemoryPressureMonitor>(callback);
-    HILOGI("success to register psi callback");
+    HILOGI("success to register memory pressure callback");
 }
 
 // callback list below

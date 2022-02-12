@@ -16,8 +16,8 @@
 #ifndef OHOS_MEMORY_MEMMGR_MEMORY_PRESSURE_MONITOR_H
 #define OHOS_MEMORY_MEMMGR_MEMORY_PRESSURE_MONITOR_H
 
-#include "event_handler.h"
 #include <sys/epoll.h>
+#include "event_handler.h"
 
 #define MS_PER_SECOND 1000
 
@@ -98,6 +98,7 @@ private:
     int delLevelFileFdFromEpoll(int epollfd, int fd);
     void CloseLevelFileFd(int fd);
     void MainLoop(void);
+    void HandleTimeOut();
     void HandleEpollEvent(struct epoll_event *curEpollEvent);
 };
 } // namespace Memory
