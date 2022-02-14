@@ -28,7 +28,7 @@ namespace Memory {
 using namespace testing;
 using namespace testing::ext;
 
-class MemMgrTest : public testing::Test {
+class KernelInterfaceTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -36,29 +36,29 @@ public:
     void TearDown();
 };
 
-void MemMgrTest::SetUpTestCase()
+void KernelInterfaceTest::SetUpTestCase()
 {
 }
 
-void MemMgrTest::TearDownTestCase()
+void KernelInterfaceTest::TearDownTestCase()
 {
 }
 
-void MemMgrTest::SetUp()
+void KernelInterfaceTest::SetUp()
 {
 }
 
-void MemMgrTest::TearDown()
+void KernelInterfaceTest::TearDown()
 {
 }
 
-HWTEST_F(MemMgrTest, EchoToPath_InvalidPath, TestSize.Level1)
+HWTEST_F(KernelInterfaceTest, EchoToPath_InvalidPath, TestSize.Level1)
 {
     bool ret = KernelInterface::GetInstance().EchoToPath("", "");
     EXPECT_EQ(ret, false);
 }
 
-HWTEST_F(MemMgrTest, GetPidProcInfoTest, TestSize.Level1)
+HWTEST_F(KernelInterfaceTest, GetPidProcInfoTest, TestSize.Level1)
 {
     ProcInfo procInfo;
     procInfo.pid = 1;
@@ -68,14 +68,14 @@ HWTEST_F(MemMgrTest, GetPidProcInfoTest, TestSize.Level1)
     EXPECT_EQ(ret, true);
 }
 
-HWTEST_F(MemMgrTest, GetCurrentBufferTest, TestSize.Level1)
+HWTEST_F(KernelInterfaceTest, GetCurrentBufferTest, TestSize.Level1)
 {
     int buffer = KernelInterface::GetInstance().GetCurrentBuffer();
     printf("buffer=%d", buffer);
     EXPECT_GT(buffer, 0);
 }
 
-HWTEST_F(MemMgrTest, KillOneProcessByPidTest, TestSize.Level1)
+HWTEST_F(KernelInterfaceTest, KillOneProcessByPidTest, TestSize.Level1)
 {
     int pid = -1;
     printf("please input pid to kill\n");
