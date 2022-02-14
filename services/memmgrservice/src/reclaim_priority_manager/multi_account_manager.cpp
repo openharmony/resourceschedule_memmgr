@@ -14,6 +14,7 @@
  */
 
 #include "memmgr_log.h"
+#include "multi_account_kill.h"
 #include "default_multi_account_strategy.h"
 #include "multi_account_manager.h"
 
@@ -35,6 +36,12 @@ MultiAccountManager::~MultiAccountManager()
     if (strategy_) {
         strategy_ = nullptr;
     }
+}
+
+void MultiAccountManager::Init()
+{
+    oldActiveAccountIds_.clear();
+    AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
 }
 
 void MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
@@ -97,10 +104,103 @@ void MultiAccountManager::SetMultiAccountStrategy(std::shared_ptr<MultiAccountSt
     strategy_ = strategy;
 }
 
-bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
-    std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+void MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
 {
+    std::vector<int> newActiveAccountIds;
+    AccountSA::OsAccountManager::QueryActiveOsAccountIds(newActiveAccountIds);
+    for (unsigned int i = 0; i < oldActiveAccountIds_.size(); i++) {
+        bool isExist = false;
+        for (unsigned int j = 0; j < newActiveAccountIds.size(); j++) {
+            if (oldActiveAccountIds_.at(i) == newActiveAccountIds.at(j)) {
+                isExist = true;
+                break;
+            }
+        }
+        if (!isExist) {
+            accountIds.push_back(oldActiveAccountIds_.at(i));
+            HILOGI("Get switch account success, accountId = %{public}d.", oldActiveAccountIds_.at(i));
+        }
+    }
+
+    oldActiveAccountIds_ = newActiveAccountIds;
+}
+
+void MultiAccountManager::UpdateAccountPriorityInfo(int accountId)
+{
+    AccountSA::OsAccountInfo osAccountInfo;
+    AccountSA::OsAccountManager::QueryOsAccountById(accountId, osAccountInfo);
+    SetAccountPriority(accountId, osAccountInfo.GetLocalName(), static_cast<AccountType>(osAccountInfo.GetType()),
+                       osAccountInfo.GetIsActived());
+}
+
+void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_,
+                                              std::vector<pid_t> &processes)
+{
+    processes.clear();
+    OsAccountPriorityInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+    std::map<int, BundlePriorityInfo*>::iterator iter;
+    for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
+         iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
+        BundlePriorityInfo *bundleInfo = iter->second;
+        std::map<pid_t, ProcessPriorityInfo>::iterator iter2;
+        for (iter2 = bundleInfo->procs_.begin(); iter2 != bundleInfo->procs_.end(); iter2++) {
+            processes.push_back(iter2->first);
+        }
+    }
+}
+
+bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
+                                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+{
+    for (unsigned int accountId = 0; accountId < switchedAccountIds.size(); accountId++) {
+        HILOGI("Account cold switch account = %{public}d.", accountId);
+        std::vector<pid_t> processes;
+        GetAccountProcesses(accountId, osAccountsInfoMap_, processes);
+        MultiAccountKill::GetInstance().KillAccountProccesses(processes);
+    }
     return true;
+}
+
+bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
+                                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+{
+    for (unsigned int accountId = 0; accountId < switchedAccountIds.size(); accountId++) {
+        OsAccountPriorityInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+        std::map<int, BundlePriorityInfo*>::iterator iter;
+        for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
+             iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
+            BundlePriorityInfo *bundleInfo = iter->second;
+            int oldPriority = bundleInfo->priority_;
+            bundleInfo->priority_ = RecalcBundlePriority(accountId, oldPriority);
+            HILOGI("Account hot switch account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
+                   accountId, iter->first, oldPriority, bundleInfo->priority_);
+        }
+    }
+    return true;
+}
+
+bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
+                                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+{
+    std::vector<int> switchedAccountIds;
+    GetSwitchedAccountIds(switchedAccountIds);
+
+    /* Account info update */
+    UpdateAccountPriorityInfo(accountId);
+    for (unsigned int id = 0; id < switchedAccountIds.size(); id++) {
+        UpdateAccountPriorityInfo(id);
+    }
+
+    /* Handle different switch mode */
+    switch (switchMod) {
+        case AccountSA::COLD_SWITCH:
+            return HandleAccountColdSwitch(switchedAccountIds, osAccountsInfoMap_);
+        case AccountSA::HOT_SWITCH:
+            return HandleAccountHotSwitch(switchedAccountIds, osAccountsInfoMap_);
+        default:
+            HILOGI("Switch mode incorrect, mode = %{public}d.", static_cast<int>(switchMod));
+            return false;
+    }
 }
 } // namespace Memory
 } // namespace OHOS

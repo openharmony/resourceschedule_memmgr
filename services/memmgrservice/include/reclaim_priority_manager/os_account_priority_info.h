@@ -35,7 +35,6 @@ public:
     void AddBundleToOsAccount(BundlePriorityInfo* bundle);
     void RemoveBundleById(int bundleUid);
     int GetBundlesCount();
-private:
     // map <bundleUid, BundlePriorityInfo*>
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
     BundlePrioMap bundleIdInfoMapping_;

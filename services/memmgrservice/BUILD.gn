@@ -56,6 +56,7 @@ ohos_shared_library("memmgrservice") {
     "src/event/mem_mgr_event_subscriber.cpp",
     "src/event/memory_pressure_monitor.cpp",
     "src/kill_strategy_manager/low_memory_killer.cpp",
+    "src/kill_strategy_manager/multi_account_kill.cpp",
     "src/mem_mgr_service.cpp",
     "src/reclaim_priority_manager/account_priority_info.cpp",
     "src/reclaim_priority_manager/bundle_priority_info.cpp",
