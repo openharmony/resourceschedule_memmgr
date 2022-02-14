@@ -13,6 +13,8 @@
       "adapted_system_type": [ "standard" ],
       "deps": {
         "components": [
+          "ability_base",
+          "ability_runtime",
           "utils_base",
           "ipc_core",
           "libhilog",
