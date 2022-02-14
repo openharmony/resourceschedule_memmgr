@@ -30,18 +30,28 @@ namespace Memory {
 class MultiAccountManager {
     DECLARE_SINGLE_INSTANCE_BASE(MultiAccountManager);
 public:
+    void Init();
     void SetAccountPriority(int accountId, std::string accountName, AccountType accountType, bool isActived);
     int RecalcBundlePriority(int accountId, int bundlePriority);
     std::shared_ptr<AccountPriorityInfo> GetAccountPriorityInfo(int accountId);
     void AddAccountPriorityInfo(std::shared_ptr<AccountPriorityInfo> accountPriorityInfo);
     std::shared_ptr<MultiAccountStrategy> GetMultiAccountStratgy();
     void SetMultiAccountStrategy(std::shared_ptr<MultiAccountStrategy> strategy);
+    void GetSwitchedAccountIds(std::vector<int> &accountIds);
+    void UpdateAccountPriorityInfo(int accountId);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
-            std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
 
 private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
     std::shared_ptr<MultiAccountStrategy> strategy_;
+    std::vector<int> oldActiveAccountIds_;
+    void GetAccountProcesses(int accountId, std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_,
+                             std::vector<pid_t> &processes);
+    bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
+                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+    bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
+                                std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
     MultiAccountManager();
     ~MultiAccountManager();
 };
