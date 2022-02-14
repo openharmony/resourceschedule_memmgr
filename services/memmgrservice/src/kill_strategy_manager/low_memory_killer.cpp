@@ -21,13 +21,12 @@ namespace OHOS {
 namespace Memory {
 namespace {
     const std::string TAG = "LowMemoryKiller";
+    const int LOW_MEM_KILL_LEVELS = 5;
+    const int MAX_KILL_CNT_PER_EVENT = 3;
+    const int MAX_TARGET_BUFFER = (500 * 1024) // the same with upper bound of minPrioTable;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(LowMemoryKiller);
-
-#define LOW_MEM_KILL_LEVELS 5
-#define MAX_KILL_CNT_PER_EVENT 3
-#define MAX_TARGET_BUFFER (500 * 1024) // the same with upper bound of minPrioTable
 
 typedef enum {
     MIN_BUFFER = 0,
