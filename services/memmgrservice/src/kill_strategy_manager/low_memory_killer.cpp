@@ -23,6 +23,8 @@ namespace {
     const std::string TAG = "LowMemoryKiller";
 }
 
+IMPLEMENT_SINGLE_INSTANCE(LowMemoryKiller);
+
 #define LOW_MEM_KILL_LEVELS 5
 #define MAX_KILL_CNT_PER_EVENT 3
 #define MAX_TARGET_BUFFER (500 * 1024) // the same with upper bound of minPrioTable
@@ -37,8 +39,8 @@ static int g_minPrioTable[LOW_MEM_KILL_LEVELS][MIN_PRIO_FIELD_COUNT] = {
     {100 * 1024, 0},   // 100M buffer, 0 priority
     {200 * 1024, 100}, // 200M buffer, 100 priority
     {300 * 1024, 200}, // 300M buffer, 200 priority
-    {400 * 1024, 600}, // 400M buffer, 600 priority
-    {500 * 1024, 800}  // 500M buffer, 800 priority
+    {400 * 1024, 300}, // 400M buffer, 300 priority
+    {500 * 1024, 400}  // 500M buffer, 400 priority
 };
 
 int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
@@ -74,12 +76,14 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandler()
 {
+    HILOGD("called");
     int triBuf, availBuf, thBuf, freedBuf;
     int totalBuf = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
     int killCnt = 0;
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
+    HILOGD("current buffer = %{public}d", triBuf);
     if (triBuf == 0) { // max
         return;
     }
@@ -91,6 +95,7 @@ void LowMemoryKiller::PsiHandler()
             break;
         }
     }
+    HILOGD("minPrio = %{public}d", minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
         return;
@@ -99,7 +104,7 @@ void LowMemoryKiller::PsiHandler()
     // stop zswapd
     do {
         if ((freedBuf = KillOneBundleByPrio(minPrio)) == 0) {
-            HILOGE("Noting to kill above score %d!", minPrio);
+            HILOGE("Noting to kill above score %{public}d!", minPrio);
             goto out;
         }
         totalBuf += freedBuf;

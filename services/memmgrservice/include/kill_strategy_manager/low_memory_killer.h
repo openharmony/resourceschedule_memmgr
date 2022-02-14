@@ -26,10 +26,10 @@ class  LowMemoryKiller {
 public:
     /* PSI events' call back */
     void PsiHandler();
-
 private:
+    LowMemoryKiller() = default;
+    ~LowMemoryKiller() = default;
     int KillOneBundleByPrio(int minPrio);
-	
 };
 } // namespace Memory
 } // namespace OHOS
