@@ -16,6 +16,7 @@
 #include "memmgr_log.h"
 #include "multi_account_kill.h"
 #include "default_multi_account_strategy.h"
+#include "reclaim_strategy_manager.h"
 #include "multi_account_manager.h"
 
 namespace OHOS {
@@ -61,6 +62,7 @@ void MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
     strategy_->SetAccountPriority(accountId);
     HILOGI("Set acccount priority success, accountId = %{public}d, old = %{public}d, new = %{public}d.",
            accountId, oldPriority, accountInfo->GetPriority());
+    ReclaimStrategyManager::GetInstance().NotifyAccountPriorityChanged(accountId, accountInfo->GetPriority());
 }
 
 int MultiAccountManager::RecalcBundlePriority(int accountId, int bundlePriority)
@@ -157,6 +159,7 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
         std::vector<pid_t> processes;
         GetAccountProcesses(accountId, osAccountsInfoMap_, processes);
         MultiAccountKill::GetInstance().KillAccountProccesses(processes);
+        ReclaimStrategyManager::GetInstance().NotifyAccountDied(accountId);
     }
     return true;
 }
