@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Memory {
 #define PAGE_TO_KB 4
 #define KB_PER_MB 1024
-#define MAX_BUFFER_KB (300 * KB_PER_MB)
+#define MAX_BUFFER_KB 0x7fffffff
 
 struct ProcInfo {
     int tgid;
