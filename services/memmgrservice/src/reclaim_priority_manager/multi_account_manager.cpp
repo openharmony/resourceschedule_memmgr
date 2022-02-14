@@ -43,6 +43,10 @@ void MultiAccountManager::Init()
 {
     oldActiveAccountIds_.clear();
     AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
+    for (unsigned int i = 0; i < oldActiveAccountIds_.size(); i++) {
+        int accountId = oldActiveAccountIds_.at(i);
+        UpdateAccountPriorityInfo(accountId);
+    }
 }
 
 void MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
@@ -154,7 +158,8 @@ void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, OsAcc
 bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
                                                   std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
 {
-    for (unsigned int accountId = 0; accountId < switchedAccountIds.size(); accountId++) {
+    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
+        int accountId = switchedAccountIds.at(i);
         HILOGI("Account cold switch account = %{public}d.", accountId);
         std::vector<pid_t> processes;
         GetAccountProcesses(accountId, osAccountsInfoMap_, processes);
@@ -167,7 +172,8 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
 bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
                                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
 {
-    for (unsigned int accountId = 0; accountId < switchedAccountIds.size(); accountId++) {
+    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
+        int accountId = switchedAccountIds.at(i);
         OsAccountPriorityInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
         std::map<int, BundlePriorityInfo*>::iterator iter;
         for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
@@ -190,8 +196,8 @@ bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_A
 
     /* Account info update */
     UpdateAccountPriorityInfo(accountId);
-    for (unsigned int id = 0; id < switchedAccountIds.size(); id++) {
-        UpdateAccountPriorityInfo(id);
+    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
+        UpdateAccountPriorityInfo(switchedAccountIds.at(i));
     }
 
     /* Handle different switch mode */
