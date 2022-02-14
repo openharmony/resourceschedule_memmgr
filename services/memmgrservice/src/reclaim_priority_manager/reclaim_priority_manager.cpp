@@ -58,6 +58,7 @@ bool ReclaimPriorityManager::Init()
     } else {
         HILOGE("init failed");
     }
+    MultiAccountManager::GetInstance().Init();
     return initialized_;
 }
 
