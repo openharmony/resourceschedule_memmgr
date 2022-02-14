@@ -23,18 +23,17 @@ namespace {
     const std::string TAG = "LowMemoryKiller";
     const int LOW_MEM_KILL_LEVELS = 5;
     const int MAX_KILL_CNT_PER_EVENT = 3;
-    const int MAX_TARGET_BUFFER = (500 * 1024) // the same with upper bound of minPrioTable;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(LowMemoryKiller);
 
-typedef enum {
+enum class MinPrioField {
     MIN_BUFFER = 0,
     MIN_PRIO,
     MIN_PRIO_FIELD_COUNT,
-} MinPrioField;
+};
 
-static int g_minPrioTable[LOW_MEM_KILL_LEVELS][MIN_PRIO_FIELD_COUNT] = {
+static int g_minPrioTable[LOW_MEM_KILL_LEVELS][static_cast<int32_t>(MinPrioField::MIN_PRIO_FIELD_COUNT)] = {
     {100 * 1024, 0},   // 100M buffer, 0 priority
     {200 * 1024, 100}, // 200M buffer, 100 priority
     {300 * 1024, 200}, // 300M buffer, 200 priority
@@ -68,7 +67,6 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
         itrBundle++;
         prio = (*itrBundle)->priority_;
     }
-
     return freedBuf;
 }
 
@@ -83,14 +81,14 @@ void LowMemoryKiller::PsiHandler()
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
     HILOGD("current buffer = %{public}d", triBuf);
-    if (triBuf == 0) { // max
+    if (triBuf == MAX_BUFFER_KB) {
         return;
     }
 
     for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
-        thBuf = g_minPrioTable[i][MIN_BUFFER];
+        thBuf = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
         if (triBuf < thBuf) {
-            minPrio = g_minPrioTable[i][MIN_PRIO];
+            minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
             break;
         }
     }
@@ -113,7 +111,7 @@ void LowMemoryKiller::PsiHandler()
         if (availBuf == 0) { // max
             goto out;
         }
-    } while (availBuf < MAX_TARGET_BUFFER && killCnt < MAX_KILL_CNT_PER_EVENT);
+    } while (availBuf < MAX_BUFFER_KB && killCnt < MAX_KILL_CNT_PER_EVENT);
 
 out:
     // resume zswapd

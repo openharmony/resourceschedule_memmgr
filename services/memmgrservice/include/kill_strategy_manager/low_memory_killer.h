@@ -24,7 +24,6 @@ class  LowMemoryKiller {
     DECLARE_SINGLE_INSTANCE_BASE(LowMemoryKiller);
 
 public:
-    /* PSI events' call back */
     void PsiHandler();
 private:
     LowMemoryKiller() = default;
