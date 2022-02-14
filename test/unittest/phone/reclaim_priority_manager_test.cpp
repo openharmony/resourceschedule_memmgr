@@ -28,7 +28,7 @@ namespace Memory {
 using namespace testing;
 using namespace testing::ext;
 
-class MemMgrTest : public testing::Test {
+class ReclaimPriorityManagerTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -36,23 +36,23 @@ public:
     void TearDown();
 };
 
-void MemMgrTest::SetUpTestCase()
+void ReclaimPriorityManagerTest::SetUpTestCase()
 {
 }
 
-void MemMgrTest::TearDownTestCase()
+void ReclaimPriorityManagerTest::TearDownTestCase()
 {
 }
 
-void MemMgrTest::SetUp()
+void ReclaimPriorityManagerTest::SetUp()
 {
 }
 
-void MemMgrTest::TearDown()
+void ReclaimPriorityManagerTest::TearDown()
 {
 }
 
-HWTEST_F(MemMgrTest, AddOsAccountInfo, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, AddOsAccountInfo, TestSize.Level1)
 {
     int account_id = 0;
     OsAccountPriorityInfo account(account_id);
@@ -62,7 +62,7 @@ HWTEST_F(MemMgrTest, AddOsAccountInfo, TestSize.Level1)
     EXPECT_EQ(isAccountExist, true);
 }
 
-HWTEST_F(MemMgrTest, RemoveOsAccountById, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, RemoveOsAccountById, TestSize.Level1)
 {
     int account_id = 0;
     OsAccountPriorityInfo account(account_id);
@@ -76,7 +76,7 @@ HWTEST_F(MemMgrTest, RemoveOsAccountById, TestSize.Level1)
     EXPECT_EQ(isAccountExist, false);
 }
 
-HWTEST_F(MemMgrTest, IsProcExist, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, IsProcExist, TestSize.Level1)
 {
     int pid = 1000;
     int uid = 100;
@@ -97,7 +97,7 @@ HWTEST_F(MemMgrTest, IsProcExist, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, IsSystemApp, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, IsSystemApp, TestSize.Level1)
 {
     BundlePriorityInfo* bundle_1 = new BundlePriorityInfo("test", 101, 100);
     bool isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle_1);
@@ -115,7 +115,7 @@ HWTEST_F(MemMgrTest, IsSystemApp, TestSize.Level1)
     delete bundle_3;
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityProcessCreate, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSize.Level1)
 {
     int pid = 1002;
     int uid = 104;
@@ -136,7 +136,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityProcessCreate, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityProcessTerminate, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessTerminate, TestSize.Level1)
 {
     int pid_1 = 1003;
     int pid_2 = 1004;
@@ -160,7 +160,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityProcessTerminate, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPrioritySystemProcess, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySystemProcess, TestSize.Level1)
 {
     int pid = 1005;
     int uid = 106;
@@ -182,7 +182,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPrioritySystemProcess, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityBackground, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBackground, TestSize.Level1)
 {
     int pid = 1006;
     int uid = 107;
@@ -201,7 +201,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityBackground, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPrioritySuspendDelayStart, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayStart, TestSize.Level1)
 {
     int pid = 1007;
     int uid = 108;
@@ -227,7 +227,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPrioritySuspendDelayStart, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPrioritySuspendDelayEnd, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayEnd, TestSize.Level1)
 {
     int pid = 1008;
     int uid = 109;
@@ -257,7 +257,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPrioritySuspendDelayEnd, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityBgRunningStart, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningStart, TestSize.Level1)
 {
     int pid = 1009;
     int uid = 110;
@@ -283,7 +283,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityBgRunningStart, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityBgRunningEnd, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningEnd, TestSize.Level1)
 {
     int pid = 1010;
     int uid = 111;
@@ -314,7 +314,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityBgRunningEnd, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityEventStart, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventStart, TestSize.Level1)
 {
     int pid = 1011;
     int uid = 112;
@@ -340,7 +340,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityEventStart, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityEventEnd, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventEnd, TestSize.Level1)
 {
     int pid = 1012;
     int uid = 113;
@@ -370,7 +370,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityEventEnd, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityDataAbilityStart, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityStart, TestSize.Level1)
 {
     int pid = 1013;
     int uid = 114;
@@ -396,7 +396,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityDataAbilityStart, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityDataAbilityEnd, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityEnd, TestSize.Level1)
 {
     int pid = 1014;
     int uid = 115;
@@ -427,7 +427,7 @@ HWTEST_F(MemMgrTest, UpdateReclaimPriorityDataAbilityEnd, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(MemMgrTest, GetBundlePrioSet, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, GetBundlePrioSet, TestSize.Level1)
 {
     int pid = 1015;
     int uid = 116;
@@ -438,7 +438,7 @@ HWTEST_F(MemMgrTest, GetBundlePrioSet, TestSize.Level1)
     EXPECT_EQ(isEmpty, false);
 }
 
-HWTEST_F(MemMgrTest, UpdateReclaimPriorityApplicationSuspend, TestSize.Level1)
+HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityApplicationSuspend, TestSize.Level1)
 {
     int pid = 1016;
     int uid = 117;
