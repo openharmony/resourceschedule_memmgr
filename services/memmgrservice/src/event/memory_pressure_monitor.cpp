@@ -15,6 +15,7 @@
 
 #include "memory_pressure_monitor.h"
 #include "memmgr_log.h"
+#include "low_memory_killer.h"
 
 #include <string>
 #include <sys/epoll.h>
@@ -240,6 +241,7 @@ void MemoryPressureMonitor::HandleEpollEvent(struct epoll_event *curEpollEvent)
 void HandleLevelReport(int level, uint32_t events)
 {
     HILOGI("level=%{public}d !", level);
+    LowMemoryKiller::GetInstance().PsiHandler();
 }
 
 MemoryPressureMonitor::~MemoryPressureMonitor()
