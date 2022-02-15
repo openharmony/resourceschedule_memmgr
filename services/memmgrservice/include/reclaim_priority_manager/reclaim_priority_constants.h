@@ -50,7 +50,7 @@ constexpr int RECLAIM_PRIORITY_MAX = 1000;
 constexpr std::string_view SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr std::string_view LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
-const int USER_ID_SHIFT = 100000;
+const int USER_ID_SHIFT = 200000;
 
 const int IGNORE_PID = -1;
 

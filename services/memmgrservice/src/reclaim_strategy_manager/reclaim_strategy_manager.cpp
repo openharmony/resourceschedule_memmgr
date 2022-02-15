@@ -86,7 +86,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
         HILOGE("reclaimPara nullptr");
         return false;
     }
-    HILOGD("%{public}s", reclaimPara->ToString().c_str());
+    HILOGI("%{public}s", reclaimPara->ToString().c_str());
     bool ret = false;
     bool (ReclaimStrategyManager::*funcPtr)(std::shared_ptr<ReclaimParam>) = nullptr;
     switch (reclaimPara->action_) {
@@ -99,7 +99,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
         case AppAction::APP_FOREGROUND:
         case AppAction::APP_BACKGROUND:
         case AppAction::OTHERS: {
-            HILOGD("OTHERS app action! %{public}d", reclaimPara->action_);
+            HILOGI("OTHERS app action! %{public}d", reclaimPara->action_);
             break;
         }
         default:
@@ -122,7 +122,7 @@ bool ReclaimStrategyManager::HandleProcessCreate(std::shared_ptr<ReclaimParam> r
 void ReclaimStrategyManager::NotifyAccountDied(int accountId)
 {
     if (!Initailized()) {
-        HILOGE("has not been initialized_, skiped!");
+        HILOGE("has not been initialized, skiped! accountId=%{public}d", accountId);
         return;
     }
     std::function<bool()> func = std::bind(
@@ -133,7 +133,7 @@ void ReclaimStrategyManager::NotifyAccountDied(int accountId)
 void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int priority)
 {
     if (!Initailized()) {
-        HILOGE("has not been initialized_, skiped!");
+        HILOGE("has not been initialized, skiped! accountId=%{public}d, priority=%{public}d", accountId, priority);
         return;
     }
     std::function<bool()> func = std::bind(
@@ -166,7 +166,7 @@ bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * 
         HILOGE("param ratios nullptr");
         return false;
     }
-    HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
+    HILOGI("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
     MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
         MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
     for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {

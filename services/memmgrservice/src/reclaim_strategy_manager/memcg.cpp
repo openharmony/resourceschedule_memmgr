@@ -156,7 +156,7 @@ void Memcg::UpdateSwapInfoFromKernel()
         swapInfo_->swapSizeCurr_ = std::stoi(res.str(6)); // 6: swapSizeCurr index
         swapInfo_->swapSizeMax_ = std::stoi(res.str(7)); // 7: swapSizeMax index
     }
-    HILOGD("success. %{public}s", swapInfo_->ToString().c_str());
+    HILOGI("success. %{public}s", swapInfo_->ToString().c_str());
 }
 
 void Memcg::UpdateMemInfoFromKernel()
@@ -176,7 +176,7 @@ void Memcg::UpdateMemInfoFromKernel()
         memInfo_->zramKiB_ = std::stoi(res.str(2)); // 2: zramKiB index
         memInfo_->eswapKiB_ = std::stoi(res.str(3)); // 3: eswapKiB index
     }
-    HILOGD("success. %{public}s", memInfo_->ToString().c_str());
+    HILOGI("success. %{public}s", memInfo_->ToString().c_str());
 }
 
 void Memcg::SetScore(int score)
@@ -231,7 +231,7 @@ inline bool Memcg::WriteToFile_(const std::string& path, const std::string& cont
         HILOGE("failed. %{public}s %{public}s %{public}s", content.c_str(), op.c_str(), path.c_str());
         return false;
     }
-    HILOGD("success. %{public}s %{public}s %{public}s", content.c_str(), op.c_str(), path.c_str());
+    HILOGI("success. %{public}s %{public}s %{public}s", content.c_str(), op.c_str(), path.c_str());
     return true;
 }
 
