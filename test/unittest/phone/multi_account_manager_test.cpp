@@ -67,7 +67,7 @@ HWTEST_F(MultiAccountManagerTest, SetAccountPrority, TestSize.Level1)
     EXPECT_STREQ(info->GetName().c_str(), accountName.c_str());
     EXPECT_EQ(info->GetType(), accountType);
     EXPECT_EQ(info->GetIsActived(), isActived);
-    EXPECT_EQ(info->GetPriority(), 50);
+    EXPECT_EQ(info->GetPriority(), 0);
 }
 
 HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
@@ -75,7 +75,7 @@ HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
     int accountId = 2;
     std::string accountName = "admin";
     AccountType accountType = AccountType::NORMAL;
-    bool isActived = true;
+    bool isActived = false;
     int bundlePriority = RECLAIM_PRIORITY_FOREGROUND;
 
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
