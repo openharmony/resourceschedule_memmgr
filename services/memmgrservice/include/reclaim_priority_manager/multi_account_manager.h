@@ -41,6 +41,10 @@ public:
     void UpdateAccountPriorityInfo(int accountId);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+    bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
+                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+    bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
+                                std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
 
 private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
@@ -48,10 +52,6 @@ private:
     std::vector<int> oldActiveAccountIds_;
     void GetAccountProcesses(int accountId, std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_,
                              std::vector<pid_t> &processes);
-    bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
-                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
-    bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
-                                std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
     MultiAccountManager();
     ~MultiAccountManager();
 };
