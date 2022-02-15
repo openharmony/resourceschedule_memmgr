@@ -47,6 +47,7 @@ void MultiAccountManager::Init()
         int accountId = oldActiveAccountIds_.at(i);
         UpdateAccountPriorityInfo(accountId);
     }
+    HILOGI("Multiple account manager initial completed, accountCount = %{public}d.", oldActiveAccountIds_.size());
 }
 
 void MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
