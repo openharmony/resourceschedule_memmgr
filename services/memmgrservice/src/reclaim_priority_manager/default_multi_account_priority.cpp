@@ -26,17 +26,10 @@ void DefaultMultiAccountStrategy::SetAccountPriority(int accountId)
     }
 
     int priority;
-    switch (accountPriorityInfo->GetType()) {
-        case ADMIN:
-            priority = static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY);
-            break;
-        case NORMAL:
-            priority = static_cast<int>(DefaultMultiAccountPriority::MID_PRIORITY);
-            break;
-        case GUEST:
-            priority = static_cast<int>(DefaultMultiAccountPriority::LOW_PRIORITY);
-        default:
-            break;
+    if (accountPriorityInfo->GetIsActived()) {
+        priority = static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY);
+    } else {
+        priority = static_cast<int>(DefaultMultiAccountPriority::MID_PRIORITY);
     }
 
     accountPriorityInfo->SetPriority(priority);
