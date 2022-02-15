@@ -57,7 +57,7 @@ HWTEST_F(MultiAccountManagerTest, SetAccountPrority, TestSize.Level1)
 {
     int accountId = 2;
     std::string accountName = "admin";
-    AccountType accountType = AccountType::NORMAL;
+    AccountType accountType = AccountType::ADMIN;
     bool isActived = true;
 
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
@@ -74,7 +74,7 @@ HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
 {
     int accountId = 2;
     std::string accountName = "admin";
-    AccountType accountType = AccountType::NORMAL;
+    AccountType accountType = AccountType::ADMIN;
     bool isActived = false;
     int bundlePriority = RECLAIM_PRIORITY_FOREGROUND;
 
@@ -82,6 +82,57 @@ HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
     int recalcPriority = MultiAccountManager::GetInstance().RecalcBundlePriority(accountId, bundlePriority);
 
     EXPECT_EQ(recalcPriority, RECLAIM_PRIORITY_FOREGROUND + 50);
+}
+
+HWTEST_F(MultiAccountManagerTest, AccountColdSwitch, TestSize.Level1)
+{
+    int accountId = 100;
+    OsAccountPriorityInfo account(accountId);
+    BundlePriorityInfo bundle("app", accountId * USER_ID_SHIFT + 1, 100);
+    ProcessPriorityInfo proc1(1001, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc2(1002, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc3(1003, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc4(1004, bundle.uid_, bundle.priority_);
+
+    std::map<int, OsAccountPriorityInfo> osAccountsInfoMap;
+    bundle.AddProc(proc1);
+    bundle.AddProc(proc2);
+    bundle.AddProc(proc3);
+    bundle.AddProc(proc4);
+    account.AddBundleToOsAccount(&bundle);
+    osAccountsInfoMap.insert(std::make_pair(account.id_, account));
+
+    std::vector<int> switchedIds { accountId };
+    MultiAccountManager::GetInstance().HandleAccountColdSwitch(switchedIds, osAccountsInfoMap);
+}
+
+HWTEST_F(MultiAccountManagerTest, AccountHotSwitch, TestSize.Level1)
+{
+    int accountId = 100;
+    OsAccountPriorityInfo account(accountId);
+    BundlePriorityInfo bundle("app", accountId * USER_ID_SHIFT + 1, 100);
+    ProcessPriorityInfo proc1(1001, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc2(1002, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc3(1003, bundle.uid_, bundle.priority_);
+    ProcessPriorityInfo proc4(1004, bundle.uid_, bundle.priority_);
+
+    std::map<int, OsAccountPriorityInfo> osAccountsInfoMap;
+    bundle.AddProc(proc1);
+    bundle.AddProc(proc2);
+    bundle.AddProc(proc3);
+    bundle.AddProc(proc4);
+    account.AddBundleToOsAccount(&bundle);
+    osAccountsInfoMap.insert(std::make_pair(account.id_, account));
+
+    std::string accountName = "admin";
+    AccountType accountType = AccountType::ADMIN;
+    bool isActived = false;
+    MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
+
+    std::vector<int> switchedIds { accountId };
+    MultiAccountManager::GetInstance().HandleAccountHotSwitch(switchedIds, osAccountsInfoMap);
+
+    EXPECT_EQ(bundle.priority_, 150);
 }
 }
 }
