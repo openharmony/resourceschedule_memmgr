@@ -68,6 +68,54 @@ ohos_unittest("kernel_interface_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("memcg_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/memcg_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
+ohos_unittest("user_memcg_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/user_memcg_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
+ohos_unittest("memcg_mgr_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/memcg_mgr_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 ohos_unittest("multi_account_manager_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
@@ -84,11 +132,31 @@ ohos_unittest("multi_account_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("reclaim_strategy_manager_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/reclaim_strategy_manager_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 group("memmgr_unittest") {
   testonly = true
   deps = [
     ":kernel_interface_test",
+    ":memcg_mgr_test",
+    ":memcg_test",
     ":multi_account_manager_test",
     ":reclaim_priority_manager_test",
+    ":reclaim_strategy_manager_test",
+    ":user_memcg_test",
   ]
 }
