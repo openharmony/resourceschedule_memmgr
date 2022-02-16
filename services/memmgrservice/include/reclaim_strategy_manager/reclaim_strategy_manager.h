@@ -40,19 +40,22 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<MemcgMgr> memcgMgr_;
 
     ReclaimStrategyManager();
-    bool GetEventHandler();
+    bool GetEventHandler_();
 
     // handle app and os user event
-    bool HandleAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara);
-    bool HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara);
-    bool HandleAccountDied(int accountId);
-    bool HandleAccountPriorityChanged(int accountId, int priority);
+    bool HandleAppStateChanged_(std::shared_ptr<ReclaimParam> reclaimPara);
+    bool HandleProcessCreate_(std::shared_ptr<ReclaimParam> reclaimPara);
+    bool HandleAccountDied_(int accountId);
+    bool HandleAccountPriorityChanged_(int accountId, int priority);
 
     // get param for config_mgr
-    bool GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios);
+    bool GetReclaimRatiosByScore_(int score, ReclaimRatios * const ratios);
+    void GetValidScore_(int& priority);
+
+    static constexpr int RECLAIM_SCORE_MIN = 0;
+    static constexpr int RECLAIM_SCORE_MAX = 1000;
 };
 } // namespace Memory
 } // namespace OHOS
