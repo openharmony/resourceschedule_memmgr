@@ -282,11 +282,30 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
     bool ret = true;
     AppAction action = AppAction::OTHERS;
-    switch (reason) {
-        case AppStateUpdateReason::PROCESS_TERMINATED: {
-            ret = HandleTerminateProcess(proc, bundle, account);
-            return ret;
+    if (reason == AppStateUpdateReason::PROCESS_TERMINATED) {
+        ret = HandleTerminateProcess(proc, bundle, account);
+        return ret;
+    } else {
+        HandleUpdateProcess(reason, bundle, proc, action);
+    }
+    // if the priority is smaller than RECLAIM_PRIORITY_BACKGROUND, it shouldn't update
+    if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
+        if (bundle->priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
+            proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
+            UpdateBundlePriority(bundle);
         }
+    } else if (bundle->priority_ == RECLAIM_PRIORITY_BG_PERCEIVED) {
+        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
+        UpdateBundlePriority(bundle);
+    }
+    ret = ApplyReclaimPriority(bundle, pid, action);
+    return ret;
+}
+
+void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, BundlePriorityInfo *bundle,
+    ProcessPriorityInfo &proc, AppAction &action)
+{
+    switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
             UpdateBundlePriority(bundle);
@@ -334,18 +353,6 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         default:
             break;
     }
-    // if priority of the process or the bundle is smaller than RECLAIM_PRIORITY_BACKGROUND, it need not to update
-    if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
-        if (bundle->priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
-            proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
-            UpdateBundlePriority(bundle);
-        }
-    } else if (bundle->priority_ == RECLAIM_PRIORITY_BG_PERCEIVED) {
-        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
-        UpdateBundlePriority(bundle);
-    }
-    ret = ApplyReclaimPriority(bundle, pid, action);
-    return ret;
 }
 
 bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action)
