@@ -58,8 +58,7 @@ public:
     bool IsDirExists(const std::string& path);
     bool IsExists(const std::string& path); // file or dir
     bool IsEmptyDir(const std::string& path);
-    bool CreateDir(const std::string& path); // create dir recursively
-    bool CreateDir(const std::string& path, const mode_t& mode); // create dir recursively with mode
+    bool CreateDir(const std::string& path); // create dir recursively 755
     bool RemoveDirRecursively(const std::string& path);
     bool RemoveItemsInDir(const std::string& dirPath);
     std::string AddDelimiter(const std::string& path); // IncludeTrailingPathDelimiter

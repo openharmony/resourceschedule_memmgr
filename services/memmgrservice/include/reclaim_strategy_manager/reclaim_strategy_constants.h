@@ -33,6 +33,7 @@ constexpr int ROOT_MEMCG_ZRAM_2_UFS_RATIO = 0; // 0%
 constexpr int ROOT_MEMCG_REFAULT_THRESHOLD = 0; // 0 times
 // default app_score of memcg
 constexpr int APP_SCORE = 300;
+constexpr int PERCENT_100 = 100;
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_RECALIM_STRATEGY_CONSTANTS_H

@@ -37,13 +37,12 @@ bool ReclaimStrategyManager::Init()
 {
     initialized_ = false;
     do {
-        if (!GetEventHandler()) {
+        if (!GetEventHandler_()) {
             break;
         }
-        memcgMgr_ = std::make_shared<MemcgMgr>();
         MemmgrConfigManager::GetInstance().Init();
         AvailBufferManager::GetInstance().Init();
-        if (!memcgMgr_->SetRootMemcgPara()) {
+        if (!MemcgMgr::GetInstance().SetRootMemcgPara()) {
             break;
         }
         initialized_ = true;
@@ -57,7 +56,7 @@ bool ReclaimStrategyManager::Init()
     return initialized_;
 }
 
-bool ReclaimStrategyManager::GetEventHandler()
+bool ReclaimStrategyManager::GetEventHandler_()
 {
     if (handler_ == nullptr) {
         handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
@@ -76,11 +75,11 @@ void ReclaimStrategyManager::NotifyAppStateChanged(std::shared_ptr<ReclaimParam>
         return;
     }
     std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAppStateChanged, this, reclaimPara);
+        &ReclaimStrategyManager::HandleAppStateChanged_, this, reclaimPara);
     handler_->PostImmediateTask(func);
 }
 
-bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara)
+bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam> reclaimPara)
 {
     if (reclaimPara == nullptr) {
         HILOGE("reclaimPara nullptr");
@@ -92,7 +91,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
     switch (reclaimPara->action_) {
         case AppAction::CREATE_PROCESS_AND_APP:
         case AppAction::CREATE_PROCESS_ONLY: {
-            funcPtr = &ReclaimStrategyManager::HandleProcessCreate;
+            funcPtr = &ReclaimStrategyManager::HandleProcessCreate_;
             break;
         }
         case AppAction::APP_DIED:
@@ -112,9 +111,9 @@ bool ReclaimStrategyManager::HandleAppStateChanged(std::shared_ptr<ReclaimParam>
     return ret;
 }
 
-bool ReclaimStrategyManager::HandleProcessCreate(std::shared_ptr<ReclaimParam> reclaimPara)
+bool ReclaimStrategyManager::HandleProcessCreate_(std::shared_ptr<ReclaimParam> reclaimPara)
 {
-    bool ret = memcgMgr_->AddProcToMemcg(std::to_string(reclaimPara->pid_), reclaimPara->accountId_);
+    bool ret = MemcgMgr::GetInstance().AddProcToMemcg(reclaimPara->pid_, reclaimPara->accountId_);
     HILOGI("%{public}s. %{public}s", ret ? "succ" : "fail",  reclaimPara->ToString().c_str());
     return ret;
 }
@@ -126,7 +125,7 @@ void ReclaimStrategyManager::NotifyAccountDied(int accountId)
         return;
     }
     std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAccountDied, this, accountId);
+        &ReclaimStrategyManager::HandleAccountDied_, this, accountId);
     handler_->PostImmediateTask(func);
 }
 
@@ -137,30 +136,38 @@ void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int pri
         return;
     }
     std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAccountPriorityChanged, this, accountId, priority);
+        &ReclaimStrategyManager::HandleAccountPriorityChanged_, this, accountId, priority);
     handler_->PostImmediateTask(func);
 }
 
 
-bool ReclaimStrategyManager::HandleAccountDied(int accountId)
+bool ReclaimStrategyManager::HandleAccountDied_(int accountId)
 {
-    return memcgMgr_->RemoveUserMemcg(accountId);
+    return MemcgMgr::GetInstance().RemoveUserMemcg(accountId);
 }
 
-bool ReclaimStrategyManager::HandleAccountPriorityChanged(int accountId, int priority)
+bool ReclaimStrategyManager::HandleAccountPriorityChanged_(int accountId, int priority)
 {
-    ReclaimRatios* ratios = new ReclaimRatios();
-    if (!GetReclaimRatiosByScore(priority, ratios)) {
+    if (MemcgMgr::GetInstance().GetUserMemcg(accountId) == nullptr) {
+        HILOGI("account %{public}d not exist.", accountId);
         return false;
     }
-    bool ret = memcgMgr_->UpdateMemcgScoreAndReclaimRatios(accountId, priority, ratios);
+    GetValidScore_(priority);
+    ReclaimRatios* ratios = new ReclaimRatios();
+    if (!GetReclaimRatiosByScore_(priority, ratios)) {
+        delete ratios;
+        ratios = nullptr;
+        return false;
+    }
+    bool ret = MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(accountId, priority, ratios);
     HILOGI("update user reclaim retios %{public}s. userId=%{public}d score=%{public}d %{public}s",
            ret ? "succ" : "fail", accountId, priority, ratios->ToString().c_str());
     delete ratios;
+    ratios = nullptr;
     return ret;
 }
 
-bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * const ratios)
+bool ReclaimStrategyManager::GetReclaimRatiosByScore_(int score, ReclaimRatios * const ratios)
 {
     if (ratios == nullptr) {
         HILOGE("param ratios nullptr");
@@ -179,6 +186,14 @@ bool ReclaimStrategyManager::GetReclaimRatiosByScore(int score, ReclaimRatios * 
     }
     HILOGW("can not get ratios from MemmgrConfigManager"); // will using default para
     return true;
+}
+void ReclaimStrategyManager::GetValidScore_(int& priority)
+{
+    if (priority < RECLAIM_SCORE_MIN) {
+        priority = RECLAIM_SCORE_MIN;
+    } else if (priority > RECLAIM_SCORE_MAX) {
+        priority = RECLAIM_SCORE_MAX;
+    }
 }
 } // namespace Memory
 } // namespace OHOS
