@@ -27,11 +27,14 @@ void MemMgrBgTaskSubscriber::OnConnected()
 {
     HILOGI("called");
 }
+
 void MemMgrBgTaskSubscriber::OnDisconnected()
 {
     HILOGE("called");
 }
-void MemMgrBgTaskSubscriber::OnTransientTaskStart(const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
+
+void MemMgrBgTaskSubscriber::OnTransientTaskStart(
+    const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
 {
     if (ttInfo == nullptr) {
         HILOGE("called with null TransientTaskAppInfo");
@@ -41,9 +44,12 @@ void MemMgrBgTaskSubscriber::OnTransientTaskStart(const std::shared_ptr<Backgrou
     int uid = ttInfo->GetUid();
     int pid = ttInfo->GetPid();
     HILOGD("called, pkg=%{public}s, uid=%{public}d, pid=%{public}d", pkgName.c_str(), uid, pid);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, pkgName, AppStateUpdateReason::SUSPEND_DELAY_START);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, pkgName,
+        AppStateUpdateReason::SUSPEND_DELAY_START);
 }
-void MemMgrBgTaskSubscriber::OnTransientTaskEnd(const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
+
+void MemMgrBgTaskSubscriber::OnTransientTaskEnd(
+    const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
 {
     if (ttInfo == nullptr) {
         HILOGE("called with null TransientTaskAppInfo");
@@ -53,9 +59,12 @@ void MemMgrBgTaskSubscriber::OnTransientTaskEnd(const std::shared_ptr<Background
     int uid = ttInfo->GetUid();
     int pid = ttInfo->GetPid();
     HILOGD("called, pkg=%{public}s, uid=%{public}d, pid=%{public}d", pkgName.c_str(), uid, pid);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, pkgName, AppStateUpdateReason::SUSPEND_DELAY_END);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, pkgName,
+        AppStateUpdateReason::SUSPEND_DELAY_END);
 }
-void MemMgrBgTaskSubscriber::OnContinuousTaskStart(const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
+
+void MemMgrBgTaskSubscriber::OnContinuousTaskStart(
+    const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
 {
     if (ctInfo == nullptr) {
         HILOGE("called with null ContinuousTaskCallbackInfo");
@@ -66,9 +75,12 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStart(const std::shared_ptr<Backgro
     pid_t pid = ctInfo->GetCreatorPid();
     std::string abilityName = ctInfo->GetAbilityName();
     HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d", abilityName.c_str(), type, uid, pid);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName, AppStateUpdateReason::BACKGROUND_RUNNING_START);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName,
+        AppStateUpdateReason::BACKGROUND_RUNNING_START);
 }
-void MemMgrBgTaskSubscriber::OnContinuousTaskStop(const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
+
+void MemMgrBgTaskSubscriber::OnContinuousTaskStop(
+    const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
 {
     if (ctInfo == nullptr) {
         HILOGE("called with null ContinuousTaskCallbackInfo");
@@ -79,14 +91,13 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStop(const std::shared_ptr<Backgrou
     pid_t pid = ctInfo->GetCreatorPid();
     std::string abilityName = ctInfo->GetAbilityName();
     HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d", abilityName.c_str(), type, uid, pid);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName, AppStateUpdateReason::BACKGROUND_RUNNING_END);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName,
+        AppStateUpdateReason::BACKGROUND_RUNNING_END);
 }
+
 void MemMgrBgTaskSubscriber::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     HILOGE("called");
 }
-
-
-
 } // namespace Memory
 } // namespace OHOS
