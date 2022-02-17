@@ -22,6 +22,7 @@
 #include "mem_mgr_event_observer.h"
 #include "account_observer.h"
 #include "memory_pressure_monitor.h"
+#include "mem_mgr_bg_task_subscriber.h"
 
 namespace OHOS {
 namespace Memory {
@@ -47,6 +48,7 @@ private:
     bool GetEventHandler();
     bool RegisterEventListener();
     void RegisterAppStateCallback();
+    void RegisterBgTaskObserver();
     void RegisterSystemEventObserver();
     void RegisterAccountObserver();
     void RegisterMemPressMonitor();
@@ -54,6 +56,7 @@ private:
     std::function<void()> registerEventListenerFunc_;
     int retryTimes_ = 0;
     std::shared_ptr<AppStateCallbackMemHost> appStateCallback_;
+    std::shared_ptr<MemMgrBgTaskSubscriber> subscriber_;
     std::unique_ptr<MemMgrEventObserver> sysEvtOberserver_;
     std::unique_ptr<AccountObserver> accountOberserver_;
     std::unique_ptr<MemoryPressureMonitor> psiMonitor_;
