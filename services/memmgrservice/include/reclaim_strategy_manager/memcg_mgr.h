@@ -19,35 +19,31 @@
 #include <map>
 #include <string>
 
+#include "single_instance.h"
 #include "memcg.h"
 
 namespace OHOS {
 namespace Memory {
 class MemcgMgr final {
+    DECLARE_SINGLE_INSTANCE_BASE(MemcgMgr);
 public:
-    MemcgMgr();
     ~MemcgMgr();
-
-    MemcgMgr(const MemcgMgr&) = delete;
-    MemcgMgr& operator=(const MemcgMgr&) = delete;
-    MemcgMgr(MemcgMgr&&) = delete;
-    MemcgMgr& operator=(MemcgMgr&&) = delete;
 
     // root memcg operations
     Memcg* GetRootMemcg() const;
     bool SetRootMemcgPara();
 
     // user memcg operations
-    UserMemcg* GetUserMemcg(int userId);
-    UserMemcg* AddUserMemcg(int userId);
-    bool RemoveUserMemcg(int userId);
-    bool UpdateMemcgScoreAndReclaimRatios(int userId, int score, ReclaimRatios * const ratios);
-    bool AddProcToMemcg(const std::string& pid, int userId);
-    bool SwapInMemcg(int userId);
-    SwapInfo* GetMemcgSwapInfo(int userId);
-    MemInfo* GetMemcgMemInfo(int userId);
-    bool MemcgSwapIn(int userId); // load memcg data 100% to mem
+    UserMemcg* GetUserMemcg(unsigned int userId);
+    UserMemcg* AddUserMemcg(unsigned int userId);
+    bool RemoveUserMemcg(unsigned int userId);
+    bool UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, ReclaimRatios * const ratios);
+    bool AddProcToMemcg(unsigned int pid, unsigned int userId);
+    bool SwapInMemcg(unsigned int userId); // load memcg data 100% to mem
+    SwapInfo* GetMemcgSwapInfo(unsigned int userId);
+    MemInfo* GetMemcgMemInfo(unsigned int userId);
 private:
+    MemcgMgr();
     Memcg* rootMemcg_;
     std::map<int, UserMemcg*> userMemcgsMap_; // map<userId, UserMemcg*>
 }; // end class MemcgMgr

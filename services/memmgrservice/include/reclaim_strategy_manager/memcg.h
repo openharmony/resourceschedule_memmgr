@@ -90,8 +90,8 @@ public:
     Memcg(Memcg&&) = delete;
     Memcg& operator=(Memcg&&) = delete;
 
-    void UpdateSwapInfoFromKernel();
-    void UpdateMemInfoFromKernel();
+    bool UpdateSwapInfoFromKernel();
+    bool UpdateMemInfoFromKernel();
 
     void SetScore(int score);
     void SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
@@ -101,20 +101,25 @@ public:
 protected:
     virtual std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
+    bool ReadScoreAndReclaimRatiosFromKernel_(int& score, unsigned int& mem2zramRatio, unsigned int& zram2ufsRatio,
+                                             unsigned int& refaultThreshold);
 }; // end class Memcg
 
 class UserMemcg final : public Memcg {
 public:
-    int userId_;
+    unsigned int userId_;
 
-    explicit UserMemcg(int userId);
+    explicit UserMemcg(unsigned int userId);
     ~UserMemcg();
+    UserMemcg() = delete;
     UserMemcg(const UserMemcg&) = delete;
     UserMemcg& operator=(const UserMemcg&) = delete;
+    UserMemcg(UserMemcg&&) = delete;
+    UserMemcg& operator=(UserMemcg&&) = delete;
 
     bool CreateMemcgDir();
     bool RemoveMemcgDir();
-    bool AddProc(const std::string& pid);
+    bool AddProc(unsigned int pid);
 protected:
     std::string GetMemcgPath_() final;
 }; // end class UserMemcg

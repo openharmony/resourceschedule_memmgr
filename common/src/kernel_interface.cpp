@@ -171,27 +171,9 @@ bool KernelInterface::CreateDir(const std::string& path)
     return OHOS::ForceCreateDirectory(path); // default mode 755
 }
 
-bool KernelInterface::CreateDir(const std::string& path, const mode_t& mode)
-{
-    if (path.empty()) {
-        return false;
-    }
-    std::string::size_type index = 0;
-    do {
-        index = path.find('/', index + 1);
-        std::string subPath = (index == std::string::npos) ? path : path.substr(0, index);
-        if (access(subPath.c_str(), F_OK) != 0) {
-            if (mkdir(subPath.c_str(), mode) != 0) {
-                return false;
-            }
-        }
-    } while (index != std::string::npos);
-    return access(path.c_str(), F_OK) == 0;
-}
-
 bool KernelInterface::RemoveDirRecursively(const std::string& path)
 {
-    return OHOS::ForceRemoveDirectory(path);
+    return OHOS::ForceRemoveDirectory(path) || (remove(path.c_str()) == 0);
 }
 
 bool KernelInterface::RemoveItemsInDir(const std::string& dirPath)
@@ -220,21 +202,21 @@ bool KernelInterface::RemoveItemsInDir(const std::string& dirPath)
         std::string fullPath = JoinPath(std::string(dirPath), std::string(dirp->d_name));
         if (stat(fullPath.c_str(), &buf) == -1) {
             HILOGE("stat file failed: %{public}s", fullPath.c_str());
-            closedir(dir);
-            return false;
+            continue;
         }
         if (S_ISDIR(buf.st_mode)) { // sub dir
-            RemoveDirRecursively(fullPath);
+            if (RemoveDirRecursively(fullPath) == false) {
+                remove(fullPath.c_str());
+            }
             continue;
         }
         if (!RemoveFile(fullPath)) { // rm file
             HILOGE("remove file failed: %{public}s", fullPath.c_str());
-            closedir(dir);
-            return false;
+            continue;
         }
     }
     closedir(dir);
-    return true;
+    return IsEmptyFolder(dirPath);
 }
 
 std::string KernelInterface::RmDelimiter(const std::string& path)

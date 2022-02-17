@@ -24,11 +24,11 @@ namespace OHOS {
 namespace Memory {
 enum class AppAction {
     CREATE_PROCESS_AND_APP = 0,
-    CREATE_PROCESS_ONLY,
-    APP_DIED,
-    APP_FOREGROUND,
-    APP_BACKGROUND,
-    OTHERS,
+    CREATE_PROCESS_ONLY = 1,
+    APP_DIED = 2,
+    APP_FOREGROUND = 3,
+    APP_BACKGROUND = 4,
+    OTHERS = 5,
 };
 
 struct ReclaimParam {
