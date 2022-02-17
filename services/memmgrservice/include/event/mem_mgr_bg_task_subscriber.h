@@ -24,10 +24,14 @@ class MemMgrBgTaskSubscriber : public BackgroundTaskMgr::BackgroundTaskSubscribe
 public:
     virtual void OnConnected() override;
     virtual void OnDisconnected() override;
-    virtual void OnTransientTaskStart(const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo) override;
-    virtual void OnTransientTaskEnd(const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo) override;
-    virtual void OnContinuousTaskStart(const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo> &ctInfo) override;
-    virtual void OnContinuousTaskStop(const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo> &ctInfo) override;
+    virtual void OnTransientTaskStart(
+        const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo) override;
+    virtual void OnTransientTaskEnd(
+        const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo) override;
+    virtual void OnContinuousTaskStart(
+        const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo> &ctInfo) override;
+    virtual void OnContinuousTaskStop(
+        const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo> &ctInfo) override;
     virtual void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace Memory
