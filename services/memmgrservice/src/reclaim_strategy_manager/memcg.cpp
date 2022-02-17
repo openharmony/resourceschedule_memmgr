@@ -79,14 +79,16 @@ ReclaimRatios::ReclaimRatios()
       refaultThreshold_(MEMCG_REFAULT_THRESHOLD) {}
 
 ReclaimRatios::ReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
-    : mem2zramRatio_(mem2zramRatio),
-      zram2ufsRatio_(zram2ufsRatio),
-      refaultThreshold_(refaultThreshold) {}
+    : refaultThreshold_(refaultThreshold)
+{
+    mem2zramRatio_ = (mem2zramRatio > PERCENT_100 ? PERCENT_100 : mem2zramRatio);
+    zram2ufsRatio_ = (zram2ufsRatio > PERCENT_100 ? PERCENT_100 : zram2ufsRatio);
+}
 
 void ReclaimRatios::SetRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
 {
-    mem2zramRatio_ = mem2zramRatio;
-    zram2ufsRatio_ = zram2ufsRatio;
+    mem2zramRatio_ = (mem2zramRatio > PERCENT_100 ? PERCENT_100 : mem2zramRatio);
+    zram2ufsRatio_ = (zram2ufsRatio > PERCENT_100 ? PERCENT_100 : zram2ufsRatio);
     refaultThreshold_ = refaultThreshold;
 }
 
@@ -126,17 +128,21 @@ Memcg::Memcg() : score_(0)
 Memcg::~Memcg()
 {
     delete swapInfo_;
+    swapInfo_ = nullptr;
     delete memInfo_;
+    memInfo_ = nullptr;
     delete reclaimRatios_;
+    reclaimRatios_ = nullptr;
     HILOGI("release memcg success");
 }
 
-void Memcg::UpdateSwapInfoFromKernel()
+bool Memcg::UpdateSwapInfoFromKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.eswap_stat");
     std::string content;
     if (!KernelInterface::GetInstance().ReadFromFile(path, content)) {
-        return;
+        HILOGE("file not found. %{public}s", path.c_str());
+        return false;
     }
     content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
     std::regex re(".*swapOutTotal:([[:d:]]+)[[:s:]]*"
@@ -147,36 +153,43 @@ void Memcg::UpdateSwapInfoFromKernel()
                   "swapSizeCur:([[:d:]]*) MB[[:s:]]*"
                   "swapSizeMax:([[:d:]]*) MB[[:s:]]*");
     std::smatch res;
-    if (std::regex_match(content, res, re)) {
-        swapInfo_->swapOutCount_ = std::stoi(res.str(1)); // 1: swapOutCount index
-        swapInfo_->swapOutSize_ = std::stoi(res.str(2)); // 2: swapOutSize index
-        swapInfo_->swapInSize_ = std::stoi(res.str(3)); // 3: swapInSize index
-        swapInfo_->swapInCount_ = std::stoi(res.str(4)); // 4: swapInCount index
-        swapInfo_->pageInCount_ = std::stoi(res.str(5)); // 5: pageInCount index
-        swapInfo_->swapSizeCurr_ = std::stoi(res.str(6)); // 6: swapSizeCurr index
-        swapInfo_->swapSizeMax_ = std::stoi(res.str(7)); // 7: swapSizeMax index
+    if (!std::regex_match(content, res, re)) {
+        HILOGI("re not match. %{public}s", content.c_str());
+        return false;
     }
+    swapInfo_->swapOutCount_ = std::stoi(res.str(1)); // 1: swapOutCount index
+    swapInfo_->swapOutSize_ = std::stoi(res.str(2)); // 2: swapOutSize index
+    swapInfo_->swapInSize_ = std::stoi(res.str(3)); // 3: swapInSize index
+    swapInfo_->swapInCount_ = std::stoi(res.str(4)); // 4: swapInCount index
+    swapInfo_->pageInCount_ = std::stoi(res.str(5)); // 5: pageInCount index
+    swapInfo_->swapSizeCurr_ = std::stoi(res.str(6)); // 6: swapSizeCurr index
+    swapInfo_->swapSizeMax_ = std::stoi(res.str(7)); // 7: swapSizeMax index
     HILOGI("success. %{public}s", swapInfo_->ToString().c_str());
+    return true;
 }
 
-void Memcg::UpdateMemInfoFromKernel()
+bool Memcg::UpdateMemInfoFromKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.stat");
     std::string content;
     if (!KernelInterface::GetInstance().ReadFromFile(path, content)) {
-        return;
+        HILOGE("file not found. %{public}s", path.c_str());
+        return false;
     }
     content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
     std::regex re(".*Anon:[[:s:]]*([[:d:]]+) kB[[:s:]]*"
-                  ".*Zram:[[:s:]]*([[:d:]]+) kB[[:s:]]*"
+                  ".*[zZ]ram:[[:s:]]*([[:d:]]+) kB[[:s:]]*"
                   "Eswap:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
     std::smatch res;
-    if (std::regex_match(content, res, re)) {
-        memInfo_->anonKiB_ = std::stoi(res.str(1)); // 1: anonKiB index
-        memInfo_->zramKiB_ = std::stoi(res.str(2)); // 2: zramKiB index
-        memInfo_->eswapKiB_ = std::stoi(res.str(3)); // 3: eswapKiB index
+    if (!std::regex_match(content, res, re)) {
+        HILOGI("re not match. %{public}s", content.c_str());
+        return false;
     }
+    memInfo_->anonKiB_ = std::stoi(res.str(1)); // 1: anonKiB index
+    memInfo_->zramKiB_ = std::stoi(res.str(2)); // 2: zramKiB index
+    memInfo_->eswapKiB_ = std::stoi(res.str(3)); // 3: eswapKiB index
     HILOGI("success. %{public}s", memInfo_->ToString().c_str());
+    return true;
 }
 
 void Memcg::SetScore(int score)
@@ -186,8 +199,8 @@ void Memcg::SetScore(int score)
 
 void Memcg::SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
 {
-    reclaimRatios_->mem2zramRatio_ = mem2zramRatio;
-    reclaimRatios_->zram2ufsRatio_ = zram2ufsRatio;
+    reclaimRatios_->mem2zramRatio_ = (mem2zramRatio > PERCENT_100 ? PERCENT_100 : mem2zramRatio);
+    reclaimRatios_->zram2ufsRatio_ = (zram2ufsRatio > PERCENT_100 ? PERCENT_100 : zram2ufsRatio);
     reclaimRatios_->refaultThreshold_ = refaultThreshold;
 }
 
@@ -206,13 +219,31 @@ bool Memcg::SetScoreAndReclaimRatiosToKernel()
     std::string ratiosPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(),
         "memory.zswapd_single_memcg_param");
     ret = ret && WriteToFile_(ratiosPath, reclaimRatios_->NumsToString());
+    // double check : check file content
+    int score = 0;
+    unsigned int mem2zramRatio = 0;
+    unsigned int zram2ufsRatio = 0;
+    unsigned int refaultThreshold = 0;
+    if (!ReadScoreAndReclaimRatiosFromKernel_(score, mem2zramRatio, zram2ufsRatio, refaultThreshold)) {
+        return ret;
+    }
+    ret = ret && (score_ == score);
+    ret = ret && (reclaimRatios_->mem2zramRatio_ == mem2zramRatio);
+    ret = ret && (reclaimRatios_->zram2ufsRatio_ == zram2ufsRatio);
+    ret = ret && (reclaimRatios_->refaultThreshold_ == refaultThreshold);
+    if (ret == false) { // if values of mem and kernel not matched, using kernel values
+        score_ = score;
+        reclaimRatios_->mem2zramRatio_ = mem2zramRatio;
+        reclaimRatios_->zram2ufsRatio_ = zram2ufsRatio;
+        reclaimRatios_->refaultThreshold_ = refaultThreshold;
+    }
     return ret;
 }
 
 bool Memcg::SwapIn()
 {
     std::string zramPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.ub_ufs2zram_ratio");
-    bool ret = WriteToFile_(zramPath, "100"); // 100 means 100% load to zram
+    bool ret = WriteToFile_(zramPath, std::to_string(PERCENT_100)); // load 100% to zram
     std::string swapinPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.force_swapin");
     ret = ret && WriteToFile_(swapinPath, "0"); // echo 0 to tigger force swapin
     return ret;
@@ -220,7 +251,7 @@ bool Memcg::SwapIn()
 
 inline std::string Memcg::GetMemcgPath_()
 {
-    // memcg dir = /dev/memcg/
+    // memcg dir = /dev/memcg
     return KernelInterface::MEMCG_BASE_PATH;
 }
 
@@ -235,7 +266,33 @@ inline bool Memcg::WriteToFile_(const std::string& path, const std::string& cont
     return true;
 }
 
-UserMemcg::UserMemcg(int userId) : userId_(userId)
+bool Memcg::ReadScoreAndReclaimRatiosFromKernel_(int& score, unsigned int& mem2zramRatio,
+    unsigned int& zram2ufsRatio, unsigned int& refaultThreshold)
+{
+    std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.zswapd_single_memcg_param");
+    std::string content;
+    if (!KernelInterface::GetInstance().ReadFromFile(path, content)) {
+        HILOGE("file not found. %{public}s", path.c_str());
+        return false;
+    }
+    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
+    std::regex re("memcg score:[[:s:]]*([[:d:]]+)[[:s:]]*"
+                  "memcg ub_mem2zram_ratio:[[:s:]]*([[:d:]]+)[[:s:]]*"
+                  "memcg ub_zram2ufs_ratio:[[:s:]]*([[:d:]]+)[[:s:]]*"
+                  "memcg refault_threshold:[[:s:]]*([[:d:]]+)[[:s:]]*");
+    std::smatch res;
+    if (!std::regex_match(content, res, re)) {
+        HILOGI("re not match. %{public}s", content.c_str());
+        return false;
+    }
+    score = std::stoi(res.str(1)); // 1: memcg score index
+    mem2zramRatio = std::stoi(res.str(2)); // 2: memcg mem2zramRatio index
+    zram2ufsRatio = std::stoi(res.str(3)); // 3: memcg zram2ufsRatio index
+    refaultThreshold = std::stoi(res.str(4)); // 4: memcg refaultThreshold index
+    return true;
+}
+
+UserMemcg::UserMemcg(unsigned int userId) : userId_(userId)
 {
     HILOGI("init UserMemcg success");
 }
@@ -267,16 +324,16 @@ bool UserMemcg::RemoveMemcgDir()
     return true;
 }
 
-inline std::string UserMemcg::GetMemcgPath_()
+std::string UserMemcg::GetMemcgPath_()
 {
     // memcg dir = /dev/memcg/${userId}
     return KernelInterface::GetInstance().JoinPath(KernelInterface::MEMCG_BASE_PATH, std::to_string(userId_));
 }
 
-bool UserMemcg::AddProc(const std::string& pid)
+bool UserMemcg::AddProc(unsigned int pid)
 {
     std::string fullPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "cgroup.procs");
-    return WriteToFile_(fullPath, pid, false);
+    return WriteToFile_(fullPath, std::to_string(pid), false);
 }
 } // namespace Memory
 } // namespace OHOS

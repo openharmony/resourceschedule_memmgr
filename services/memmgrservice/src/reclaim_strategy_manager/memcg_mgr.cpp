@@ -22,6 +22,9 @@ namespace Memory {
 namespace {
 const std::string TAG = "MemcgMgr";
 } // namespace
+
+IMPLEMENT_SINGLE_INSTANCE(MemcgMgr);
+
 MemcgMgr::MemcgMgr()
 {
     rootMemcg_ = new Memcg();
@@ -30,9 +33,11 @@ MemcgMgr::MemcgMgr()
 MemcgMgr::~MemcgMgr()
 {
     delete rootMemcg_;
+    rootMemcg_ = nullptr;
     while (!userMemcgsMap_.empty()) {
         auto iter = userMemcgsMap_.begin();
         delete iter->second;
+        iter->second = nullptr;
         userMemcgsMap_.erase(iter);
     }
 }
@@ -51,12 +56,12 @@ bool MemcgMgr::SetRootMemcgPara()
     rootMemcg_->SetScore(APP_SCORE);
     rootMemcg_->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
         ROOT_MEMCG_ZRAM_2_UFS_RATIO, ROOT_MEMCG_REFAULT_THRESHOLD);
-    rootMemcg_->SetScoreAndReclaimRatiosToKernel();
+    bool ret = rootMemcg_->SetScoreAndReclaimRatiosToKernel();
     HILOGI("Init rootMemcg reclaim retios success");
-    return true;
+    return ret;
 }
 
-UserMemcg* MemcgMgr::GetUserMemcg(int userId)
+UserMemcg* MemcgMgr::GetUserMemcg(unsigned int userId)
 {
     std::map<int, UserMemcg*>::iterator it = userMemcgsMap_.find(userId);
     if (it == userMemcgsMap_.end()) {
@@ -65,26 +70,36 @@ UserMemcg* MemcgMgr::GetUserMemcg(int userId)
     return it->second;
 }
 
-UserMemcg* MemcgMgr::AddUserMemcg(int userId)
+UserMemcg* MemcgMgr::AddUserMemcg(unsigned int userId)
 {
     HILOGI("userId=%{public}d", userId);
     UserMemcg* memcg = new UserMemcg(userId);
     userMemcgsMap_.insert(std::make_pair(userId, memcg));
+    memcg->CreateMemcgDir();
     return memcg;
 }
 
-bool MemcgMgr::RemoveUserMemcg(int userId)
+bool MemcgMgr::RemoveUserMemcg(unsigned int userId)
 {
     HILOGI("userId=%{public}d", userId);
     UserMemcg* memcg = GetUserMemcg(userId);
+    if (memcg == nullptr) {
+        HILOGI("account %{public}d not exist. cannot remove", userId);
+        return false;
+    }
+    memcg->RemoveMemcgDir();
     userMemcgsMap_.erase(userId);
     delete memcg;
     memcg = nullptr;
     return GetUserMemcg(userId) == nullptr;
 }
 
-bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(int userId, int score, ReclaimRatios * const ratios)
+bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, ReclaimRatios * const ratios)
 {
+    if (ratios == nullptr) {
+        HILOGI("parma ratios nullptr. userId=%{public}d score=%{public}d", userId, score);
+        return false;
+    }
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) {
         HILOGI("account %{public}d not exist. cannot update score and ratios", userId);
@@ -96,25 +111,30 @@ bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(int userId, int score, ReclaimRa
     return memcg->SetReclaimRatios(ratios) && memcg->SetScoreAndReclaimRatiosToKernel();
 }
 
-bool MemcgMgr::AddProcToMemcg(const std::string& pid, int userId)
+bool MemcgMgr::AddProcToMemcg(unsigned int pid, unsigned int userId)
 {
-    HILOGI("pid=%{public}s userId=%{public}d", pid.c_str(), userId);
+    if (userId < 0) {
+        HILOGE("invalid param. empty pid(%{public}d) or userId(%{public}d) < 0", pid, userId);
+        return false;
+    }
+    HILOGI("pid=%{public}d userId=%{public}d", pid, userId);
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // new user
         memcg = AddUserMemcg(userId);
-        memcg->CreateMemcgDir();
     }
-    memcg->AddProc(pid); // add pid to memcg
-    return true;
+    return memcg->AddProc(pid); // add pid to memcg
 }
 
-bool MemcgMgr::SwapInMemcg(int userId)
+bool MemcgMgr::SwapInMemcg(unsigned int userId)
 {
-    HILOGI("userId=%{public}d", userId);
-    return true;
+    UserMemcg* memcg = GetUserMemcg(userId);
+    if (memcg == nullptr) { // no such user
+        return false;
+    }
+    return memcg->SwapIn();
 }
 
-SwapInfo* MemcgMgr::GetMemcgSwapInfo(int userId)
+SwapInfo* MemcgMgr::GetMemcgSwapInfo(unsigned int userId)
 {
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // no such user
@@ -124,7 +144,7 @@ SwapInfo* MemcgMgr::GetMemcgSwapInfo(int userId)
     return memcg->swapInfo_;
 }
 
-MemInfo* MemcgMgr::GetMemcgMemInfo(int userId)
+MemInfo* MemcgMgr::GetMemcgMemInfo(unsigned int userId)
 {
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // no such user
@@ -132,15 +152,6 @@ MemInfo* MemcgMgr::GetMemcgMemInfo(int userId)
     }
     memcg->UpdateMemInfoFromKernel();
     return memcg->memInfo_;
-}
-
-bool MemcgMgr::MemcgSwapIn(int userId)
-{
-    UserMemcg* memcg = GetUserMemcg(userId);
-    if (memcg == nullptr) { // no such user
-        return false;
-    }
-    return memcg->SwapIn();
 }
 } // namespace Memory
 } // namespace OHOS
