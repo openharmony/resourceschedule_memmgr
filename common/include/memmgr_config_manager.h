@@ -16,6 +16,7 @@
 #ifndef OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
 #define OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
 
+#include <stdexcept>
 #include <map>
 #include <string>
 #include <set>
@@ -24,6 +25,8 @@
 #include "libxml/xpath.h"
 #include "kernel_interface.h"
 #include "single_instance.h"
+#include "reclaim_strategy_constants.h"
+#include "reclaim_priority_constants.h"
 
 namespace OHOS {
 namespace Memory {
@@ -73,7 +76,7 @@ private:
     bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
     bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
-    void SetParam(std::map<std::string, std::string> &param, std::string key, int* dst);
+    void SetIntParam(std::map<std::string, std::string> &param, std::string key, int* dst);
     bool SetReclaimParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     bool SetAvailBufferConfig(std::map<std::string, std::string> &param);
     bool SetZswapdParamConfig (std::map<std::string, std::string> &param);
@@ -82,8 +85,11 @@ private:
     bool CheckPathExist(const char *path);
     void ClearExistConfig();
     bool XmlLoaded = false;
-    AvailBufferSize *availBufferSize = new AvailBufferSize(800, 750, 850, 200); // default AvailBuffer Param
-    ReclaimRatiosConfigSet reclaimRatiosConfigSet {new ReclaimRatiosConfig(0, 1000, 40, 0, 0)}; // default ReclaimRatio
+    AvailBufferSize *availBufferSize =
+        new AvailBufferSize(AVAIL_BUFFER, MIN_AVAIL_BUFFER, HIGH_AVAIL_BUFFER, SWAP_RESERVE);
+    ReclaimRatiosConfigSet reclaimRatiosConfigSet {
+        new ReclaimRatiosConfig(RECLAIM_PRIORITY_MIN, RECLAIM_PRIORITY_MAX, MEMCG_MEM_2_ZRAM_RATIO,
+                                MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD)};
     void AddReclaimRatiosConfigToSet(ReclaimRatiosConfig *reclaimRatiosConfig);
     void ClearReclaimRatiosConfigSet();
     MemmgrConfigManager();
