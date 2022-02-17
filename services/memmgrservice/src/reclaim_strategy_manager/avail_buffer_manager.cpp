@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include "avail_buffer_manager.h"
+#include <regex>
+
 #include "memmgr_log.h"
 #include "kernel_interface.h"
 #include "memmgr_config_manager.h"
+#include "avail_buffer_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -37,7 +39,7 @@ AvailBufferManager::~AvailBufferManager()
 bool AvailBufferManager::Init()
 {
     initialized_ = GetEventHandler();
-    CloseZswapd();
+    InitAvailBuffer();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -100,6 +102,52 @@ void AvailBufferManager::CloseZswapd()
 {
     HILOGI("Zswapd close now");
     SetAvailBuffer(0, 0, 0, 0);
+}
+
+void AvailBufferManager::InitAvailBuffer()
+{
+    UpdateZramEnableFromKernel();
+    if (this->zramEnable) {
+        LoadAvailBufferFromConfig();
+    } else {
+        CloseZswapd();
+    }
+}
+
+void AvailBufferManager::UpdateZramEnableFromKernel()
+{
+    std::string content;
+    int swapTotal = 0;
+    if (!KernelInterface::GetInstance().ReadFromFile("/proc/meminfo", content)) {
+        return;
+    }
+    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
+    std::regex re("SwapTotal:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
+    std::smatch res;
+    if (std::regex_search(content, res, re)) {
+        swapTotal = std::stoi(res.str(1)); // 1: swapOutCount index
+        HILOGI("success. %{public}d", swapTotal);
+    }
+    if (swapTotal != 0) {
+        this->zramEnable = true;
+    } else {
+        this->zramEnable = false;
+    }
+}
+
+void AvailBufferManager::UpdateMemTotalFromKernel()
+{
+    std::string content;
+    if (!KernelInterface::GetInstance().ReadFromFile("/proc/meminfo", content)) {
+        return;
+    }
+    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
+    std::regex re("MemTotal:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
+    std::smatch res;
+    if (std::regex_search(content, res, re)) {
+        this->memTotal = std::stoi(res.str(1)); // 1: swapOutCount index
+        HILOGI("success. %{public}d", this->memTotal);
+    }
 }
 } // namespace Memory
 } // namespace OHOS

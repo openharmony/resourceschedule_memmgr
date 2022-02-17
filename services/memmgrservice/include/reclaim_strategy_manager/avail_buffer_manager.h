@@ -18,6 +18,7 @@
 
 #include "single_instance.h"
 #include "event_handler.h"
+#include "reclaim_strategy_constants.h"
 
 namespace OHOS {
 namespace Memory {
@@ -29,6 +30,7 @@ public:
     bool SetAvailBuffer(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve);
     bool LoadAvailBufferFromConfig();
     void CloseZswapd();
+    void InitAvailBuffer();
     bool Init();
     std::string NumsToString();
 
@@ -40,13 +42,17 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    int availBuffer = 800; // default availBuffer 800MB
-    int minAvailBuffer = 750; // default minAvailBuffer 750MB
-    int highAvailBuffer = 850; // default highAvailBuffer 850MB
-    int swapReserve = 200; // default swapReserve 200MB
+    int availBuffer = AVAIL_BUFFER; // default availBuffer 800MB
+    int minAvailBuffer = MIN_AVAIL_BUFFER; // default minAvailBuffer 750MB
+    int highAvailBuffer = HIGH_AVAIL_BUFFER; // default highAvailBuffer 850MB
+    int swapReserve = SWAP_RESERVE; // default swapReserve 200MB
+    bool zramEnable = false;
+    int memTotal = 0;
     AvailBufferManager();
     ~AvailBufferManager();
     bool GetEventHandler();
+    void UpdateZramEnableFromKernel();
+    void UpdateMemTotalFromKernel();
 };
 } // namespace Memory
 } // namespace OHOS
