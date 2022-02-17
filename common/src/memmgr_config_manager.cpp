@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include <kernel_interface.h>
+
 #include "memmgr_log.h"
 #include "memmgr_config_manager.h"
 
@@ -139,12 +140,16 @@ bool MemmgrConfigManager::GetModuleParam(const xmlNodePtr &rootNodePtr, std::map
     return true;
 }
 
-void MemmgrConfigManager::SetParam(std::map<std::string, std::string> &param, std::string key, int* dst)
+void MemmgrConfigManager::SetIntParam(std::map<std::string, std::string> &param, std::string key, int* dst)
 {
     std::map<std::string, std::string>::iterator iter = param.find(key);
     if (iter != param.end()) {
-        *dst = stoi(iter->second);
-        return;
+        char *endptr;
+            int val = strtol(iter->second.c_str(), &endptr, 10);
+            if (*endptr == '\0') {
+                *dst = val;
+            }
+            return;
     }
     HILOGW("find param failed key:<%{public}s>", key.c_str());
 }
@@ -165,15 +170,15 @@ bool MemmgrConfigManager::SetReclaimParam(const xmlNodePtr &currNodePtr,
 
 bool MemmgrConfigManager::SetAvailBufferConfig(std::map<std::string, std::string> &param)
 {
-    int availBuffer = 800; // default availBuffer 800MB
-    int minAvailBuffer = 750; // default minAvailBuffer 750MB
-    int highAvailBuffer = 850; // default highAvailBuffer 850MB
-    int swapReserve = 200; // default swapReserve 200MB
+    int availBuffer = AVAIL_BUFFER; // default availBuffer 800MB
+    int minAvailBuffer = MIN_AVAIL_BUFFER; // default minAvailBuffer 750MB
+    int highAvailBuffer = HIGH_AVAIL_BUFFER; // default highAvailBuffer 850MB
+    int swapReserve = SWAP_RESERVE; // default swapReserve 200MB
 
-    SetParam(param, "availBuffer", &availBuffer);
-    SetParam(param, "minAvailBuffer", &minAvailBuffer);
-    SetParam(param, "highAvailBuffer", &highAvailBuffer);
-    SetParam(param, "swapReserve", &swapReserve);
+    SetIntParam(param, "availBuffer", &availBuffer);
+    SetIntParam(param, "minAvailBuffer", &minAvailBuffer);
+    SetIntParam(param, "highAvailBuffer", &highAvailBuffer);
+    SetIntParam(param, "swapReserve", &swapReserve);
     delete this->availBufferSize;
     this->availBufferSize = new AvailBufferSize(availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
     return true;
@@ -182,17 +187,17 @@ bool MemmgrConfigManager::SetAvailBufferConfig(std::map<std::string, std::string
 bool MemmgrConfigManager::SetZswapdParamConfig(std::map<std::string, std::string> &param)
 {
     std::map<std::string, std::string>::iterator iter;
-    int minScore = 0;
-    int maxScore = 1000; // default maxAppscore 1000
-    int mem2zramRatio = 40; // default mem2zramRatio 40%
-    int zran2ufsRation = 0;
-    int refaultThreshold = 0;
+    int minScore = RECLAIM_PRIORITY_MIN;
+    int maxScore = RECLAIM_PRIORITY_MAX; // default maxAppscore 1000
+    int mem2zramRatio = MEMCG_MEM_2_ZRAM_RATIO; // default mem2zramRatio 40%
+    int zran2ufsRation = MEMCG_ZRAM_2_UFS_RATIO;
+    int refaultThreshold = MEMCG_REFAULT_THRESHOLD;
 
-    SetParam(param, "minScore", &minScore);
-    SetParam(param, "maxScore", &maxScore);
-    SetParam(param, "mem2zramRatio", &mem2zramRatio);
-    SetParam(param, "zran2ufsRation", &zran2ufsRation);
-    SetParam(param, "refaultThreshold", &refaultThreshold);
+    SetIntParam(param, "minScore", &minScore);
+    SetIntParam(param, "maxScore", &maxScore);
+    SetIntParam(param, "mem2zramRatio", &mem2zramRatio);
+    SetIntParam(param, "zran2ufsRation", &zran2ufsRation);
+    SetIntParam(param, "refaultThreshold", &refaultThreshold);
 
     ReclaimRatiosConfig *reclaimRatiosConfig =
         new ReclaimRatiosConfig(minScore, maxScore, mem2zramRatio, zran2ufsRation, refaultThreshold);
