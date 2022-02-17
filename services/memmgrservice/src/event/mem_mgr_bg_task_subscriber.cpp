@@ -74,7 +74,8 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStart(
     uid_t uid = ctInfo->GetCreatorUid();
     pid_t pid = ctInfo->GetCreatorPid();
     std::string abilityName = ctInfo->GetAbilityName();
-    HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d", abilityName.c_str(), type, uid, pid);
+    HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d",
+        abilityName.c_str(), type, uid, pid);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName,
         AppStateUpdateReason::BACKGROUND_RUNNING_START);
 }
@@ -90,7 +91,8 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStop(
     uid_t uid = ctInfo->GetCreatorUid();
     pid_t pid = ctInfo->GetCreatorPid();
     std::string abilityName = ctInfo->GetAbilityName();
-    HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d", abilityName.c_str(), type, uid, pid);
+    HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d",
+        abilityName.c_str(), type, uid, pid);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, abilityName,
         AppStateUpdateReason::BACKGROUND_RUNNING_END);
 }
