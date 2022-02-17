@@ -19,6 +19,7 @@
 #include "mem_mgr_event_observer.h"
 #include "reclaim_priority_manager.h"
 #include "mem_mgr_event_center.h"
+#include "background_task_mgr_helper.h"
 
 namespace OHOS {
 namespace Memory {
@@ -28,7 +29,8 @@ const std::string TAG = "MemMgrEventCenter";
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
 
-MemMgrEventCenter::MemMgrEventCenter() : appStateCallback_(std::make_shared<AppStateCallbackMemHost>())
+MemMgrEventCenter::MemMgrEventCenter() : appStateCallback_(std::make_shared<AppStateCallbackMemHost>()),
+                                         subscriber_(std::make_shared<MemMgrBgTaskSubscriber>())
 {
     registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
 }
@@ -65,6 +67,8 @@ bool MemMgrEventCenter::RegisterEventListener()
 
     RegisterAppStateCallback();
 
+    RegisterBgTaskObserver();
+
     RegisterAccountObserver();
 
     RegisterSystemEventObserver();
@@ -88,6 +92,13 @@ void MemMgrEventCenter::RegisterAppStateCallback()
         }
         HILOGI("success to RegisterAppStateCallback");
     }
+}
+
+void MemMgrEventCenter::RegisterBgTaskObserver()
+{
+    HILOGI("called");
+    ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*subscriber_);
+    HILOGI("ret = %{public}d", ret);
 }
 
 void MemMgrEventCenter::RegisterSystemEventObserver()
