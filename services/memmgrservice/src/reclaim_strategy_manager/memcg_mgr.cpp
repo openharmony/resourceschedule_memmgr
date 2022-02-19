@@ -113,10 +113,6 @@ bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, 
 
 bool MemcgMgr::AddProcToMemcg(unsigned int pid, unsigned int userId)
 {
-    if (userId < 0) {
-        HILOGE("invalid param. empty pid(%{public}d) or userId(%{public}d) < 0", pid, userId);
-        return false;
-    }
     HILOGI("pid=%{public}d userId=%{public}d", pid, userId);
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // new user

@@ -15,7 +15,6 @@
 
 
 #include "avail_buffer_manager.h"
-#include "kernel_interface.h"
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
 #include "reclaim_strategy_constants.h"
