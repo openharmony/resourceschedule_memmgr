@@ -28,7 +28,8 @@
           "cesfwk_innerkits",
           "libhisysevent",
           "libaccountkits",
-          "os_account_innerkits"
+          "os_account_innerkits",
+          "bgtaskmgr_innerkits"
         ],
         "third_party": []
       },
