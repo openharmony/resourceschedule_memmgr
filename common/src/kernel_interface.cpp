@@ -19,6 +19,7 @@
 #include "directory_ex.h"
 #include "file_ex.h"
 
+#include <securec.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -37,7 +38,9 @@ const std::string TAG = "KernelInterface";
 IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
-const std::string KernelInterface::CURRENT_BUFFER_PATH = "/dev/memcg/memory.zswapd_pressure_show";
+
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
@@ -281,22 +284,49 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     return true;
 }
 
+void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>& result)
+{
+    std::string contentStr;
+    if (!ReadFromFile(ZWAPD_PRESSURE_SHOW_PATH, contentStr)) {
+        HILOGE("read %{public}s faild, content=[%{public}s]", ZWAPD_PRESSURE_SHOW_PATH.c_str(), contentStr.c_str());
+        return;
+    }
+    char *contentPtr = new char[contentStr.size() + 1];
+    if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
+        HILOGE("copy fail");
+        return;
+    }
+    char *restPtr;
+    char *line = strtok_r(contentPtr, "\n", &restPtr);
+    do {
+        for (size_t i = 0; i < strlen(line); i++) {
+            if (line[i] == ':') {
+                line[i] = ' ';
+            }
+        }
+        std::string lineStr(line);
+        std::istringstream is(lineStr);
+        std::string name, value;
+        is >> name >> value;
+        HILOGD("[%{public}s][%{public}s]", name.c_str(), value.c_str());
+        result.insert(std::make_pair(name, value));
+
+        line = strtok_r(NULL, "\n", &restPtr);
+    } while (line);
+    HILOGD("finished!");
+    return;
+}
+
 int KernelInterface::GetCurrentBuffer()
 {
     HILOGD("called!");
-    std::string content, buffer, size, buffer_;
-
-    if (!ReadFromFile(CURRENT_BUFFER_PATH, content)) {
-        HILOGE("read %{public}s failed, return max value", CURRENT_BUFFER_PATH.c_str());
-        return MAX_BUFFER_KB;
+    std::map<std::string, std::string> result;
+    ReadZswapdPressureShow(result);
+    auto value = result.find(ZWAPD_PRESSURE_SHOW_BUFFER_SIZE);
+    if (value != result.end()) {
+        return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str()) * KB_PER_MB;
     }
-    HILOGI("read %{public}s success, content=[%{public}s]", CURRENT_BUFFER_PATH.c_str(), content.c_str());
-
-    std::istringstream is(content);
-    is >> buffer >> size >> buffer_;
-
-    HILOGI("GetCurrentBuffer success: %{public}s MB", buffer_.c_str());
-    return atoi(buffer_.c_str()) * KB_PER_MB;
+    return MAX_BUFFER_KB;
 }
 
 int KernelInterface::KillOneProcessByPid(int pid)
