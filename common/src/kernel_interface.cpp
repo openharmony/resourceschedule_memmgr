@@ -292,7 +292,10 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         return;
     }
     char *contentPtr = new char[contentStr.size() + 1];
-    strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str());
+    if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
+        HILOGE("copy fail");
+        return;
+    }
     char *restPtr;
     char *line = strtok_r(contentPtr, "\n", &restPtr);
     do {
