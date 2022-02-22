@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -67,11 +68,13 @@ public:
     std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
 
     bool GetPidProcInfo(struct ProcInfo &procInfo);
+    void ReadZswapdPressureShow(std::map<std::string, std::string>& result);
     int GetCurrentBuffer();
     int KillOneProcessByPid(int pid);
 
     static const std::string MEMCG_BASE_PATH;
-    static const std::string CURRENT_BUFFER_PATH;
+    static const std::string ZWAPD_PRESSURE_SHOW_PATH;
+    static const std::string ZWAPD_PRESSURE_SHOW_BUFFER_SIZE;
     static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
     static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
     static constexpr mode_t FILE_MODE_660 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
