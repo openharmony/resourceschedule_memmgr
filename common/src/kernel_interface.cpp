@@ -19,6 +19,7 @@
 #include "directory_ex.h"
 #include "file_ex.h"
 
+#include <securec.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -37,7 +38,9 @@ const std::string TAG = "KernelInterface";
 IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
-const std::string KernelInterface::CURRENT_BUFFER_PATH = "/dev/memcg/memory.zswapd_pressure_show";
+
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
@@ -289,11 +292,11 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         return;
     }
     char *contentPtr = new char[contentStr.size() + 1];
-    strcpy(contentPtr, contentStr.c_str());
+    strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str());
     char *restPtr;
     char *line = strtok_r(contentPtr, "\n", &restPtr);
     do {
-        for (auto i = 0; i < strlen(line); i++) {
+        for (size_t i = 0; i < strlen(line); i++) {
             if (line[i] == ':') {
                 line[i] = ' ';
             }
