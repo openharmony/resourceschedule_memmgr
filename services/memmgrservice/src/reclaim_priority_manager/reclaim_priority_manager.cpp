@@ -198,13 +198,11 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
         AddBundleInfoToSet(bundle);
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
-    ProcessPriorityInfo *proc;
+    ProcessPriorityInfo proc(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
     if (IsSystemApp(bundle)) {
-        proc = new ProcessPriorityInfo(pid, bundleUid, RECLAIM_PRIORITY_SYSTEM);
-    } else {
-        proc = new ProcessPriorityInfo(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
+        proc.priority_ = RECLAIM_PRIORITY_SYSTEM;
     }
-    bundle->AddProc(*proc);
+    bundle->AddProc(proc);
     UpdateBundlePriority(bundle);
     account->AddBundleToOsAccount(bundle);
     bool ret = ApplyReclaimPriority(bundle, pid, action);
