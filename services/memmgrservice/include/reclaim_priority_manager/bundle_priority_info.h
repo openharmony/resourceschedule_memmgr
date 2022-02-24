@@ -49,6 +49,8 @@ public:
     int GetMinProcPriority();
     void SetPriority(int targetPriority);
     void UpdatePriority();
+    BundleState GetState();
+    void SetState(BundleState state);
 };
 } // namespace Memory
 } // namespace OHOS
