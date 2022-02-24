@@ -59,7 +59,8 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
             break;
         }
-        if (bundle && ReclaimPriorityManager::GetInstance().GetBundleState(bundle) == BundleState::STATE_WAITING_FOR_KILL) {
+        if (bundle && ReclaimPriorityManager::GetInstance().GetBundleState(bundle) ==
+            BundleState::STATE_WAITING_FOR_KILL) {
             HILOGD("bundle <%{publics}s> is waiting to kill, skiped.", bundle->name_.c_str());
             continue;
         }
@@ -71,6 +72,10 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
         HILOGD("iter processes of <%{publics}s> begin", bundle->name_.c_str());
         for (auto itrProcess = bundle->procs_.begin(); bundle && itrProcess != bundle->procs_.end(); itrProcess++) {
             freedBuf += KernelInterface::GetInstance().KillOneProcessByPid(itrProcess->first);
+        }
+        if (bundle == nullptr) {
+            HILOGE("#3 nullptr error");
+            continue;
         }
         HILOGD("iter processes of <%{publics}s> end", bundle->name_.c_str());
 
