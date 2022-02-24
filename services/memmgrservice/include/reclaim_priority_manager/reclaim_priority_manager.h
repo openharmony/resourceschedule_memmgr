@@ -66,8 +66,6 @@ public:
 
     // for lmkd and memory reclaim
     const BundlePrioSet GetBundlePrioSet();
-    BundleState GetBundleState(BundlePriorityInfo *bundle);
-    void SetBundleState(BundlePriorityInfo *bundle, BundleState state);
 private:
     bool initialized_ = false;
 
