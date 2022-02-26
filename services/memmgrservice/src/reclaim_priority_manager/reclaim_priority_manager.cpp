@@ -79,21 +79,6 @@ const ReclaimPriorityManager::BundlePrioSet ReclaimPriorityManager::GetBundlePri
     return totalBundlePrioSet_;
 }
 
-BundleState ReclaimPriorityManager::GetBundleState(BundlePriorityInfo *bundle)
-{
-    if (bundle != nullptr) {
-        return bundle->state_;
-    }
-    return BundleState::STATE_DEFAULT;
-}
-
-void ReclaimPriorityManager::SetBundleState(BundlePriorityInfo *bundle, BundleState state)
-{
-    if (bundle != nullptr) {
-        bundle->state_ = state;
-    }
-}
-
 bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 {
     if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
