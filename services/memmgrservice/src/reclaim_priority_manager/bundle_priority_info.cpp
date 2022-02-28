@@ -44,6 +44,7 @@ BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int prio
 BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) : name_(copyBundle.name_),
     uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_), state_(copyBundle.state_)
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     for (auto itrProcess = copyBundle.procs_.begin(); itrProcess != copyBundle.procs_.end(); itrProcess++) {
         ProcessPriorityInfo processInfo = itrProcess->second;
         ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);

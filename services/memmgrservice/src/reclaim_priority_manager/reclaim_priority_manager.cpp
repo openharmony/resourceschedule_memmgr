@@ -29,7 +29,7 @@ const std::string TAG = "ReclaimPriorityManager";
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
-bool WriteOomScoreAdjToKernel(const BundlePriorityInfo *bundle)
+bool WriteOomScoreAdjToKernel(BundlePriorityInfo *bundle)
 {
     if (bundle == nullptr) {
         return false;
