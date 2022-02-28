@@ -34,6 +34,7 @@ bool WriteOomScoreAdjToKernel(const BundlePriorityInfo *bundle)
     if (bundle == nullptr) {
         return false;
     }
+    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         int priority = i->second.priority_;
         pid_t pid = i->second.pid_;
@@ -272,6 +273,7 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle
     if (bundle == nullptr) {
         return false;
     }
+    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     HILOGI("application suspend: bundleName=%{public}s", bundle->name_.c_str());
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         i->second.priority_ = RECLAIM_PRIORITY_SUSPEND;
