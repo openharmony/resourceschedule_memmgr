@@ -433,7 +433,8 @@ HWTEST_F(ReclaimPriorityManagerTest, GetBundlePrioSet, TestSize.Level1)
     int uid = 116;
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    const ReclaimPriorityManager::BundlePrioSet bundleSet = ReclaimPriorityManager::GetInstance().GetBundlePrioSet();
+    std::set<BundlePriorityInfo> bundleSet;
+    ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundleSet);
     bool isEmpty = bundleSet.size() == 0;
     EXPECT_EQ(isEmpty, false);
 }

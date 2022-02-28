@@ -26,6 +26,7 @@
 #include "reclaim_param.h"
 
 #include <map>
+#include <mutex>
 #include <string>
 #include <set>
 
@@ -65,7 +66,10 @@ public:
     };
 
     // for lmkd and memory reclaim
-    const BundlePrioSet GetBundlePrioSet();
+    void GetBundlePrioSet(std::set<BundlePriorityInfo> &bundleSet);
+
+    void SetBundleState(int accountId, int uid, BundleState state);
+
 private:
     bool initialized_ = false;
 
@@ -76,6 +80,7 @@ private:
     // when delete a BundlePriorityInfo, it will be removed from this set
     // when change the priority of BundlePriorityInfo, it will be removed and added from this set to re-sort it
     BundlePrioSet totalBundlePrioSet_;
+    std::mutex totalBundlePrioSetLock_;
 
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     ReclaimPriorityManager();

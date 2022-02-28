@@ -19,6 +19,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include <mutex>
 
 #include "reclaim_priority_constants.h"
 #include "process_priority_info.h"
@@ -30,6 +31,8 @@ public:
     using ProcessesInfoMap = std::map<pid_t, ProcessPriorityInfo>;
     explicit BundlePriorityInfo(std::string name, int bundleUid);
     explicit BundlePriorityInfo(std::string name, int bundleUid, int priority);
+    explicit BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId, BundleState state);
+    BundlePriorityInfo(const BundlePriorityInfo &copyBundle);
     inline bool operator<(const BundlePriorityInfo &tmp) const
     {
         return priority_ < tmp.priority_;
@@ -40,6 +43,7 @@ public:
     int priority_;
     int accountId_;
     BundleState state_;
+    std::mutex bundleLock_;
 
     bool HasProc(pid_t pid);
     void AddProc(ProcessPriorityInfo &newProcess);
