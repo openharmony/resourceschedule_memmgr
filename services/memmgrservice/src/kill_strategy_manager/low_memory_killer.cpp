@@ -45,46 +45,38 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 {
     HILOGD("called");
     int freedBuf = 0;
-    ReclaimPriorityManager::BundlePrioSet bundles = ReclaimPriorityManager::GetInstance().GetBundlePrioSet();
+    std::set<BundlePriorityInfo> bundles;
+
+    ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundles);
     HILOGD("BundlePrioSet size=%{public}d", bundles.size());
 
     HILOGD("iter bundles begin");
-    for (auto itrBundle = bundles.rbegin(); itrBundle != bundles.rend(); itrBundle++) {
-        BundlePriorityInfo *bundle = *itrBundle;
-        if (bundle == nullptr) {
-            HILOGE("#1 nullptr error");
-            continue;
-        }
-        if (bundle && bundle->priority_ < minPrio) {
+    int count = 0;
+    for (auto bundle : bundles) {
+        HILOGD("bundle %{public}d/%{public}d begin", count, bundles.size());
+        if (bundle.priority_ < minPrio) {
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
             break;
         }
-        if (bundle && bundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
-            HILOGD("bundle <%{publics}s> is waiting to kill, skiped.", bundle->name_.c_str());
+        if (ReclaimPriorityManager::GetInstance().GetBundleState(&bundle) ==
+            BundleState::STATE_WAITING_FOR_KILL) {
+            HILOGD("bundle <%{publics}s> is waiting to kill, skiped.", bundle.name_.c_str());
             continue;
         }
 
-        if (bundle == nullptr) {
-            HILOGE("#2 nullptr error");
-            continue;
-        }
-        HILOGD("iter processes of <%{publics}s> begin", bundle->name_.c_str());
-        for (auto itrProcess = bundle->procs_.begin(); bundle && itrProcess != bundle->procs_.end(); itrProcess++) {
+        HILOGD("iter processes of <%{publics}s> begin", bundle.name_.c_str());
+        for (auto itrProcess = bundle.procs_.begin(); itrProcess != bundle.procs_.end(); itrProcess++) {
             freedBuf += KernelInterface::GetInstance().KillOneProcessByPid(itrProcess->first);
         }
-        if (bundle == nullptr) {
-            HILOGE("#3 nullptr error");
-            continue;
-        }
-        HILOGD("iter processes of <%{publics}s> end", bundle->name_.c_str());
+        HILOGD("iter processes of <%{publics}s> end", bundle.name_.c_str());
 
-        if (bundle) {
-            bundle->SetState(BundleState::STATE_WAITING_FOR_KILL);
-        }
+        ReclaimPriorityManager::GetInstance().SetBundleState(bundle.accountId_, bundle.uid_, BundleState::STATE_WAITING_FOR_KILL);
         if (freedBuf) {
             HILOGD("freedBuf = %{public}d, return", freedBuf);
             break;
         }
+        HILOGD("%{public}d/%{public}d end", count, bundles.size());
+        count++;
     }
     HILOGD("iter bundles end");
     return freedBuf;

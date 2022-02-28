@@ -74,10 +74,39 @@ bool ReclaimPriorityManager::GetEventHandler()
     return true;
 }
 
-const ReclaimPriorityManager::BundlePrioSet ReclaimPriorityManager::GetBundlePrioSet()
+void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bundleSet)
 {
-    return totalBundlePrioSet_;
+    HILOGD("called");
+    // add lock
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+
+    HILOGD("iter bundles begin");
+    int count = 0;
+    for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); itrBundle++, count++) {
+        BundlePriorityInfo *bundle = *itrBundle;
+        // add lock
+        std::lock_guard<std::mutex> lock(bundle->bundleLock_);
+        HILOGD("bundle %{public}d/%{public}d begin", count, bundleSet.size());
+        BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_, bundle->accountId_, bundle->state_);
+
+        HILOGD("iter processes of <%{publics}s> begin", bundle->name_.c_str());
+        for (auto itrProcess = bundle->procs_.begin(); bundle && itrProcess != bundle->procs_.end(); itrProcess++) {
+            ProcessPriorityInfo processInfo = itrProcess->second;
+            ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);
+            tmpProcess.isBackgroundRunning = processInfo.isBackgroundRunning;
+            tmpProcess.isSuspendDelay = processInfo.isSuspendDelay;
+            tmpProcess.isEventStart = processInfo.isEventStart;
+            tmpProcess.isDataAbilityStart = processInfo.isDataAbilityStart;
+
+            tmpBundleInfo.procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
+        }
+        bundleSet.insert(tmpBundleInfo);
+        HILOGD("%{public}d/%{public}d end", count, bundleSet.size());
+    }
+    HILOGD("iter bundles end");
 }
+
+
 
 bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 {
@@ -90,11 +119,13 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 
 void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
 {
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.insert(bundle);
 }
 
 void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo *bundle)
 {
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.erase(bundle);
 }
 
