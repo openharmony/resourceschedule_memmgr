@@ -101,6 +101,7 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
 
             tmpBundleInfo.procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
         }
+        HILOGD("iter processes of <%{publics}s> end", bundle->name_.c_str());
         bundleSet.insert(tmpBundleInfo);
         HILOGD("%{public}d/%{public}d end", count, bundleSet.size());
     }
