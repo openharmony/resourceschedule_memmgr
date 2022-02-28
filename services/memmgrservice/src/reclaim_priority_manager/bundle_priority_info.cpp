@@ -36,13 +36,13 @@ BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int prio
     this->state_ = BundleState::STATE_DEFAULT;
 }
 
-BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId, BundleState state) :
-    name_(name), uid_(bundleUid), priority_(priority), accountId_(accountId), state_(state)
+BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId,
+    BundleState state) : name_(name), uid_(bundleUid), priority_(priority), accountId_(accountId), state_(state)
 {
 }
 
-BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) :
-    name_(copyBundle.name_), uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_), state_(copyBundle.state_)
+BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) : name_(copyBundle.name_),
+    uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_), state_(copyBundle.state_)
 {
     for (auto itrProcess = copyBundle.procs_.begin(); itrProcess != copyBundle.procs_.end(); itrProcess++) {
         ProcessPriorityInfo processInfo = itrProcess->second;
