@@ -87,7 +87,8 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
         // add lock
         std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
         HILOGD("bundle %{public}d/%{public}d begin", count, bundleSet.size());
-        BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_, bundle->accountId_, bundle->state_);
+        BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
+                                         bundle->accountId_, bundle->state_);
 
         HILOGD("iter processes of <%{publics}s> begin", bundle->name_.c_str());
         for (auto itrProcess = bundle->procs_.begin(); bundle && itrProcess != bundle->procs_.end(); itrProcess++) {
@@ -107,6 +108,20 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
 }
 
 
+void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
+{
+    std::lock_guard<std::mutex> lock(totalBundlePrioSet_);
+    if (IsOsAccountExist(accountId)) {
+        OsAccountPriorityInfo* accountPtr = FindOsAccountById(accountId);
+        auto pairPtr = accountPtr->bundleIdInfoMapping_.find(uid);
+        if (pairPtr != accountPtr->bundleIdInfoMapping_.end()) {
+            if (pairPtr->second != nullptr) {
+                auto bundlePtr = pairPtr->second;
+				bundlePtr->SetState(state);
+            }
+        }
+    }
+}
 
 bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 {
