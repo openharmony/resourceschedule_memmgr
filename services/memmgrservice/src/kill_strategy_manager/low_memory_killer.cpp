@@ -70,7 +70,8 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
         }
         HILOGD("iter processes of <%{publics}s> end", bundle.name_.c_str());
 
-        ReclaimPriorityManager::GetInstance().SetBundleState(bundle.accountId_, bundle.uid_, BundleState::STATE_WAITING_FOR_KILL);
+        ReclaimPriorityManager::GetInstance().SetBundleState(bundle.accountId_, bundle.uid_,
+                                                             BundleState::STATE_WAITING_FOR_KILL);
         if (freedBuf) {
             HILOGD("freedBuf = %{public}d, return", freedBuf);
             break;

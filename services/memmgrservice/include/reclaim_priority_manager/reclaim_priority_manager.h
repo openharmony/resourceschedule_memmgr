@@ -67,6 +67,10 @@ public:
 
     // for lmkd and memory reclaim
     void GetBundlePrioSet(std::set<BundlePriorityInfo> &bundleSet);
+
+    void SetBundleState(int accountId, int uid, BundleState state);
+
+    std::mutex totalBundlePrioSetLock_;
 private:
     bool initialized_ = false;
 
