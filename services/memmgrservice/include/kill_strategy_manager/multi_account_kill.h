@@ -16,7 +16,7 @@
 #ifndef OHOS_MEMORY_MEMMGR_MULTI_ACCOUNT_KILL_H
 #define OHOS_MEMORY_MEMMGR_MULTI_ACCOUNT_KILL_H
 
-#include "os_account_priority_info.h"
+#include "account_bundle_info.h"
 #include "single_instance.h"
 
 namespace OHOS {

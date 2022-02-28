@@ -25,11 +25,11 @@
 
 namespace OHOS {
 namespace Memory {
-class OsAccountPriorityInfo {
+class AccountBundleInfo {
 public:
     int id_;
 
-    explicit OsAccountPriorityInfo(int accountId);
+    explicit AccountBundleInfo(int accountId);
     bool HasBundle(int bundleId);
     BundlePriorityInfo* FindBundleById(int bundleId);
     void AddBundleToOsAccount(BundlePriorityInfo* bundle);
