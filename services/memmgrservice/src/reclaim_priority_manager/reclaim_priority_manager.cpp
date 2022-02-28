@@ -107,17 +107,16 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
     HILOGD("iter bundles end");
 }
 
-
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSet_);
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     if (IsOsAccountExist(accountId)) {
-        OsAccountPriorityInfo* accountPtr = FindOsAccountById(accountId);
+        AccountBundleInfo* accountPtr = FindOsAccountById(accountId);
         auto pairPtr = accountPtr->bundleIdInfoMapping_.find(uid);
         if (pairPtr != accountPtr->bundleIdInfoMapping_.end()) {
             if (pairPtr->second != nullptr) {
                 auto bundlePtr = pairPtr->second;
-				bundlePtr->SetState(state);
+                bundlePtr->SetState(state);
             }
         }
     }

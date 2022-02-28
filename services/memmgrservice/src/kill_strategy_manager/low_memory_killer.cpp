@@ -58,8 +58,7 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
             break;
         }
-        if (ReclaimPriorityManager::GetInstance().GetBundleState(&bundle) ==
-            BundleState::STATE_WAITING_FOR_KILL) {
+        if (bundle.GetState() == BundleState::STATE_WAITING_FOR_KILL) {
             HILOGD("bundle <%{publics}s> is waiting to kill, skiped.", bundle.name_.c_str());
             continue;
         }
