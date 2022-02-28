@@ -29,11 +29,12 @@ const std::string TAG = "ReclaimPriorityManager";
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
-bool WriteOomScoreAdjToKernel(const BundlePriorityInfo *bundle)
+bool WriteOomScoreAdjToKernel(BundlePriorityInfo *bundle)
 {
     if (bundle == nullptr) {
         return false;
     }
+    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         int priority = i->second.priority_;
         pid_t pid = i->second.pid_;
@@ -74,9 +75,53 @@ bool ReclaimPriorityManager::GetEventHandler()
     return true;
 }
 
-const ReclaimPriorityManager::BundlePrioSet ReclaimPriorityManager::GetBundlePrioSet()
+void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bundleSet)
 {
-    return totalBundlePrioSet_;
+    HILOGD("called");
+    // add lock
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    HILOGD("iter bundles begin");
+    int count = 0;
+    for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); itrBundle++, count++) {
+        BundlePriorityInfo *bundle = *itrBundle;
+        // add lock
+        std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
+        HILOGD("bundle %{public}d/%{public}d begin", count, bundleSet.size());
+        BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
+                                         bundle->accountId_, bundle->state_);
+
+        HILOGD("iter processes of <%{publics}s> begin", bundle->name_.c_str());
+        for (auto itrProcess = bundle->procs_.begin(); bundle && itrProcess != bundle->procs_.end(); itrProcess++) {
+            ProcessPriorityInfo processInfo = itrProcess->second;
+            ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);
+            tmpProcess.isBackgroundRunning = processInfo.isBackgroundRunning;
+            tmpProcess.isSuspendDelay = processInfo.isSuspendDelay;
+            tmpProcess.isEventStart = processInfo.isEventStart;
+            tmpProcess.isDataAbilityStart = processInfo.isDataAbilityStart;
+
+            tmpBundleInfo.procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
+        }
+        HILOGD("iter processes of <%{publics}s> end", bundle->name_.c_str());
+        bundleSet.insert(tmpBundleInfo);
+        HILOGD("%{public}d/%{public}d end", count, bundleSet.size());
+    }
+    HILOGD("iter bundles end");
+}
+
+void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
+{
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+    if (IsOsAccountExist(accountId)) {
+        AccountBundleInfo* accountPtr = FindOsAccountById(accountId);
+        auto pairPtr = accountPtr->bundleIdInfoMapping_.find(uid);
+        if (pairPtr != accountPtr->bundleIdInfoMapping_.end()) {
+            if (pairPtr->second != nullptr) {
+                auto bundlePtr = pairPtr->second;
+                bundlePtr->SetState(state);
+            }
+        }
+    }
 }
 
 bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
@@ -90,11 +135,13 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 
 void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
 {
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.insert(bundle);
 }
 
 void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo *bundle)
 {
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.erase(bundle);
 }
 
@@ -226,6 +273,7 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle
     if (bundle == nullptr) {
         return false;
     }
+    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     HILOGI("application suspend: bundleName=%{public}s", bundle->name_.c_str());
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         i->second.priority_ = RECLAIM_PRIORITY_SUSPEND;

@@ -36,6 +36,27 @@ BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int prio
     this->state_ = BundleState::STATE_DEFAULT;
 }
 
+BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId,
+    BundleState state) : name_(name), uid_(bundleUid), priority_(priority), accountId_(accountId), state_(state)
+{
+}
+
+BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) : name_(copyBundle.name_),
+    uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_), state_(copyBundle.state_)
+{
+    std::lock_guard<std::mutex> lock(bundleLock_);
+    for (auto itrProcess = copyBundle.procs_.begin(); itrProcess != copyBundle.procs_.end(); itrProcess++) {
+        ProcessPriorityInfo processInfo = itrProcess->second;
+        ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);
+        tmpProcess.isBackgroundRunning = processInfo.isBackgroundRunning;
+        tmpProcess.isSuspendDelay = processInfo.isSuspendDelay;
+        tmpProcess.isEventStart = processInfo.isEventStart;
+        tmpProcess.isDataAbilityStart = processInfo.isDataAbilityStart;
+
+        this->procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
+    }
+}
+
 bool BundlePriorityInfo::HasProc(pid_t pid)
 {
     if (procs_.count(pid) == 0) {
@@ -46,11 +67,13 @@ bool BundlePriorityInfo::HasProc(pid_t pid)
 
 void BundlePriorityInfo::AddProc(ProcessPriorityInfo &newProcess)
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     procs_.insert(std::make_pair(newProcess.pid_, newProcess));
 }
 
 void BundlePriorityInfo::RemoveProcByPid(pid_t pid)
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     procs_.erase(pid);
 }
 
@@ -66,6 +89,7 @@ ProcessPriorityInfo& BundlePriorityInfo::FindProcByPid(pid_t pid)
 
 int BundlePriorityInfo::GetMinProcPriority()
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     int min_priority = RECLAIM_PRIORITY_UNKNOWN;
     for (auto i = procs_.begin(); i != procs_.end(); ++i) {
         if (i->second.priority_ < min_priority) {
@@ -77,11 +101,13 @@ int BundlePriorityInfo::GetMinProcPriority()
 
 void BundlePriorityInfo::SetPriority(int targetPriority)
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     priority_  = targetPriority;
 }
 
 void BundlePriorityInfo::UpdatePriority()
 {
+    std::lock_guard<std::mutex> lock(bundleLock_);
     int targetPriority = GetMinProcPriority();
     if (targetPriority >= RECLAIM_PRIORITY_MAX) {
         targetPriority = RECLAIM_PRIORITY_MAX;
