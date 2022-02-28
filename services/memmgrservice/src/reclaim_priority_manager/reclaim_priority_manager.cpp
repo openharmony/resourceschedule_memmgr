@@ -78,14 +78,14 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
 {
     HILOGD("called");
     // add lock
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
 
     HILOGD("iter bundles begin");
     int count = 0;
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); itrBundle++, count++) {
         BundlePriorityInfo *bundle = *itrBundle;
         // add lock
-        std::lock_guard<std::mutex> lock(bundle->bundleLock_);
+        std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
         HILOGD("bundle %{public}d/%{public}d begin", count, bundleSet.size());
         BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_, bundle->accountId_, bundle->state_);
 
