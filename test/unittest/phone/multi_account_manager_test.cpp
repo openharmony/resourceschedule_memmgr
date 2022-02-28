@@ -87,14 +87,14 @@ HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
 HWTEST_F(MultiAccountManagerTest, AccountColdSwitch, TestSize.Level1)
 {
     int accountId = 100;
-    OsAccountPriorityInfo account(accountId);
+    AccountBundleInfo account(accountId);
     BundlePriorityInfo bundle("app", accountId * USER_ID_SHIFT + 1, 100);
     ProcessPriorityInfo proc1(1001, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc2(1002, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc3(1003, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc4(1004, bundle.uid_, bundle.priority_);
 
-    std::map<int, OsAccountPriorityInfo> osAccountsInfoMap;
+    std::map<int, AccountBundleInfo> osAccountsInfoMap;
     bundle.AddProc(proc1);
     bundle.AddProc(proc2);
     bundle.AddProc(proc3);
@@ -109,14 +109,14 @@ HWTEST_F(MultiAccountManagerTest, AccountColdSwitch, TestSize.Level1)
 HWTEST_F(MultiAccountManagerTest, AccountHotSwitch, TestSize.Level1)
 {
     int accountId = 100;
-    OsAccountPriorityInfo account(accountId);
+    AccountBundleInfo account(accountId);
     BundlePriorityInfo bundle("app", accountId * USER_ID_SHIFT + 1, 100);
     ProcessPriorityInfo proc1(1001, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc2(1002, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc3(1003, bundle.uid_, bundle.priority_);
     ProcessPriorityInfo proc4(1004, bundle.uid_, bundle.priority_);
 
-    std::map<int, OsAccountPriorityInfo> osAccountsInfoMap;
+    std::map<int, AccountBundleInfo> osAccountsInfoMap;
     bundle.AddProc(proc1);
     bundle.AddProc(proc2);
     bundle.AddProc(proc3);

@@ -21,7 +21,7 @@
 #include "reclaim_priority_constants.h"
 #include "process_priority_info.h"
 #include "bundle_priority_info.h"
-#include "os_account_priority_info.h"
+#include "account_bundle_info.h"
 #include "os_account_manager.h"
 #include "reclaim_param.h"
 
@@ -49,7 +49,7 @@ public:
     using BundlePrioSet = std::set<BundlePriorityInfo*, BundleInfoPtrCmp>;
     // map <bundleUid, BundlePriorityInfo*>
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
-    using OsAccountsMap = std::map<int, OsAccountPriorityInfo>;
+    using OsAccountsMap = std::map<int, AccountBundleInfo>;
     bool Init();
     bool UpdateReclaimPriority(pid_t pid, int bundleUid, std::string bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
@@ -89,13 +89,13 @@ private:
     bool IsOsAccountExist(int accountId);
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
     bool HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
-            OsAccountPriorityInfo *account);
+            AccountBundleInfo *account);
     void HandleUpdateProcess(AppStateUpdateReason reason, BundlePriorityInfo *bundle,
             ProcessPriorityInfo &proc, AppAction &action);
     bool HandleApplicationSuspend(BundlePriorityInfo *bundle);
-    OsAccountPriorityInfo* FindOsAccountById(int accountId);
+    AccountBundleInfo* FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
-    void AddOsAccountInfo(OsAccountPriorityInfo account);
+    void AddOsAccountInfo(AccountBundleInfo account);
     bool IsSystemApp(BundlePriorityInfo *bundle);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
