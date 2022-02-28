@@ -55,7 +55,7 @@ void ReclaimPriorityManagerTest::TearDown()
 HWTEST_F(ReclaimPriorityManagerTest, AddOsAccountInfo, TestSize.Level1)
 {
     int account_id = 0;
-    OsAccountPriorityInfo account(account_id);
+    AccountBundleInfo account(account_id);
     ReclaimPriorityManager::GetInstance().AddOsAccountInfo(account);
 
     bool isAccountExist = ReclaimPriorityManager::GetInstance().IsOsAccountExist(account_id);
@@ -65,7 +65,7 @@ HWTEST_F(ReclaimPriorityManagerTest, AddOsAccountInfo, TestSize.Level1)
 HWTEST_F(ReclaimPriorityManagerTest, RemoveOsAccountById, TestSize.Level1)
 {
     int account_id = 0;
-    OsAccountPriorityInfo account(account_id);
+    AccountBundleInfo account(account_id);
     ReclaimPriorityManager::GetInstance().AddOsAccountInfo(account);
 
     bool isAccountExist = ReclaimPriorityManager::GetInstance().IsOsAccountExist(account_id);
@@ -125,7 +125,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSiz
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
 
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     bool hasBundle = account->HasBundle(uid);
     EXPECT_EQ(hasBundle, true);
 
@@ -149,7 +149,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessTerminate, Test
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     bool hasProc_1 = bundle->HasProc(pid_1);
     EXPECT_EQ(hasProc_1, true);
@@ -170,7 +170,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySystemProcess, TestSiz
                 "com.ohos.systemui", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     bool isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle);
     EXPECT_EQ(isSystem, true);
@@ -192,7 +192,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBackground, TestSize.L
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_BACKGROUND);
@@ -211,7 +211,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayStart, Tes
                 "com.ohos.reclaim_test", AppStateUpdateReason::SUSPEND_DELAY_START);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
@@ -238,7 +238,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayEnd, TestS
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_BACKGROUND);
@@ -267,7 +267,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningStart, TestSi
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND_RUNNING_START);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
@@ -294,7 +294,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningEnd, TestSize
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_BACKGROUND);
@@ -324,7 +324,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventStart, TestSize.L
                 "com.ohos.reclaim_test", AppStateUpdateReason::EVENT_START);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
@@ -351,7 +351,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventEnd, TestSize.Lev
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_BACKGROUND);
@@ -380,7 +380,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityStart, Test
                 "com.ohos.reclaim_test", AppStateUpdateReason::DATA_ABILITY_START);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
@@ -407,7 +407,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityEnd, TestSi
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_BACKGROUND);
@@ -449,7 +449,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityApplicationSuspend, Te
                 "com.ohos.reclaim_test", AppStateUpdateReason::APPLICATION_SUSPEND);
 
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    OsAccountPriorityInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
+    AccountBundleInfo *account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     BundlePriorityInfo* bundle = account->FindBundleById(uid);
     priority = bundle->priority_;
     EXPECT_EQ(priority, RECLAIM_PRIORITY_SUSPEND);

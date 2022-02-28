@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#include "os_account_priority_info.h"
+#include "account_bundle_info.h"
 #include "memmgr_log.h"
 
 
 namespace OHOS {
 namespace Memory {
 namespace {
-const std::string TAG = "OsAccountPriorityInfo";
+const std::string TAG = "AccountBundleInfo";
 } // namespace
 
-OsAccountPriorityInfo::OsAccountPriorityInfo(int accountId):id_(accountId)
+AccountBundleInfo::AccountBundleInfo(int accountId):id_(accountId)
 {
 }
 
-bool OsAccountPriorityInfo::HasBundle(int bundleUid)
+bool AccountBundleInfo::HasBundle(int bundleUid)
 {
     if (bundleIdInfoMapping_.count(bundleUid) == 0) {
         return false;
@@ -35,22 +35,22 @@ bool OsAccountPriorityInfo::HasBundle(int bundleUid)
     return true;
 }
 
-BundlePriorityInfo* OsAccountPriorityInfo::FindBundleById(int bundleUid)
+BundlePriorityInfo* AccountBundleInfo::FindBundleById(int bundleUid)
 {
     return bundleIdInfoMapping_.at(bundleUid);
 }
 
-void OsAccountPriorityInfo::AddBundleToOsAccount(BundlePriorityInfo* bundle)
+void AccountBundleInfo::AddBundleToOsAccount(BundlePriorityInfo* bundle)
 {
     bundleIdInfoMapping_.insert(std::make_pair(bundle->uid_, bundle));
 }
 
-void OsAccountPriorityInfo::RemoveBundleById(int bundleUid)
+void AccountBundleInfo::RemoveBundleById(int bundleUid)
 {
     bundleIdInfoMapping_.erase(bundleUid);
 }
 
-int OsAccountPriorityInfo::GetBundlesCount()
+int AccountBundleInfo::GetBundlesCount()
 {
     return bundleIdInfoMapping_.size();
 }
