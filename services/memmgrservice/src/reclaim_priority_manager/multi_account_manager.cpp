@@ -140,11 +140,11 @@ void MultiAccountManager::UpdateAccountPriorityInfo(int accountId)
                        osAccountInfo.GetIsActived());
 }
 
-void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_,
+void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, AccountBundleInfo> &osAccountsInfoMap_,
                                               std::vector<pid_t> &processes)
 {
     processes.clear();
-    OsAccountPriorityInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+    AccountBundleInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
     std::map<int, BundlePriorityInfo*>::iterator iter;
     for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
          iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
@@ -157,7 +157,7 @@ void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, OsAcc
 }
 
 bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
-                                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+                                                  std::map<int, AccountBundleInfo> &osAccountsInfoMap_)
 {
     for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
         int accountId = switchedAccountIds.at(i);
@@ -171,11 +171,11 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
 }
 
 bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
-                                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+                                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_)
 {
     for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
         int accountId = switchedAccountIds.at(i);
-        OsAccountPriorityInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+        AccountBundleInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
         std::map<int, BundlePriorityInfo*>::iterator iter;
         for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
              iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
@@ -190,7 +190,7 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
 }
 
 bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
-                                                  std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_)
+                                                  std::map<int, AccountBundleInfo> &osAccountsInfoMap_)
 {
     std::vector<int> switchedAccountIds;
     GetSwitchedAccountIds(switchedAccountIds);

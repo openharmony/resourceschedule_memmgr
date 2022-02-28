@@ -22,7 +22,7 @@
 #include "single_instance.h"
 #include "account_priority_info.h"
 #include "multi_account_strategy.h"
-#include "os_account_priority_info.h"
+#include "account_bundle_info.h"
 #include "os_account_manager.h"
 
 namespace OHOS {
@@ -40,17 +40,17 @@ public:
     void GetSwitchedAccountIds(std::vector<int> &accountIds);
     void UpdateAccountPriorityInfo(int accountId);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
-                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
     bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
-                                 std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
     bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
-                                std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_);
+                                std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
 
 private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
     std::shared_ptr<MultiAccountStrategy> strategy_;
     std::vector<int> oldActiveAccountIds_;
-    void GetAccountProcesses(int accountId, std::map<int, OsAccountPriorityInfo> &osAccountsInfoMap_,
+    void GetAccountProcesses(int accountId, std::map<int, AccountBundleInfo> &osAccountsInfoMap_,
                              std::vector<pid_t> &processes);
     MultiAccountManager();
     ~MultiAccountManager();

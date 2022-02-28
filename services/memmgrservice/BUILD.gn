@@ -63,7 +63,7 @@ ohos_shared_library("memmgrservice") {
     "src/reclaim_priority_manager/bundle_priority_info.cpp",
     "src/reclaim_priority_manager/default_multi_account_priority.cpp",
     "src/reclaim_priority_manager/multi_account_manager.cpp",
-    "src/reclaim_priority_manager/os_account_priority_info.cpp",
+    "src/reclaim_priority_manager/account_bundle_info.cpp",
     "src/reclaim_priority_manager/process_priority_info.cpp",
     "src/reclaim_priority_manager/reclaim_priority_manager.cpp",
     "src/reclaim_strategy_manager/avail_buffer_manager.cpp",
