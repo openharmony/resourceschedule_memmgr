@@ -31,10 +31,10 @@ IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
 bool WriteOomScoreAdjToKernel(BundlePriorityInfo *bundle)
 {
+    HILOGD("called");
     if (bundle == nullptr) {
         return false;
     }
-    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         int priority = i->second.priority_;
         pid_t pid = i->second.pid_;
@@ -42,6 +42,7 @@ bool WriteOomScoreAdjToKernel(BundlePriorityInfo *bundle)
         ss << "/proc/" << pid << "/oom_score_adj";
         std::string path = ss.str();
         std::string content = std::to_string(priority);
+        HILOGD("prepare to echo %{public}s > %{public}s", content.c_str(), path.c_str());
         KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
     }
     return true;
@@ -86,7 +87,6 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); itrBundle++, count++) {
         BundlePriorityInfo *bundle = *itrBundle;
         // add lock
-        std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
         HILOGD("bundle %{public}d/%{public}d begin", count, bundleSet.size());
         BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
                                          bundle->accountId_, bundle->state_);
@@ -111,7 +111,6 @@ void ReclaimPriorityManager::GetBundlePrioSet(std::set<BundlePriorityInfo> &bund
 
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     if (IsOsAccountExist(accountId)) {
         AccountBundleInfo* accountPtr = FindOsAccountById(accountId);
         auto pairPtr = accountPtr->bundleIdInfoMapping_.find(uid);
@@ -273,7 +272,6 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle
     if (bundle == nullptr) {
         return false;
     }
-    std::lock_guard<std::mutex> bundleLock(bundle->bundleLock_);
     HILOGI("application suspend: bundleName=%{public}s", bundle->name_.c_str());
     for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
         i->second.priority_ = RECLAIM_PRIORITY_SUSPEND;
@@ -286,9 +284,12 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid,
     std::string bundleName, AppStateUpdateReason reason)
 {
+    HILOGD("called");
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
+    HILOGD("accountId=%{public}d", accountId);
 
     if (reason == AppStateUpdateReason::CREATE_PROCESS) {
+        HILOGD("call HandleCreateProcess");
         bool ret = HandleCreateProcess(pid, bundleUid, bundleName, accountId);
         return ret;
     }
@@ -306,6 +307,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     }
 
     if (reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
+        HILOGD("call HandleApplicationSuspend");
         bool ret = HandleApplicationSuspend(bundle);
         return ret;
     }
@@ -314,9 +316,11 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     bool ret = true;
     AppAction action = AppAction::OTHERS;
     if (reason == AppStateUpdateReason::PROCESS_TERMINATED) {
+        HILOGD("call HandleTerminateProcess");
         ret = HandleTerminateProcess(proc, bundle, account);
         return ret;
     } else {
+        HILOGD("call HandleUpdateProcess");
         HandleUpdateProcess(reason, bundle, proc, action);
     }
     // if the priority is smaller than RECLAIM_PRIORITY_BACKGROUND, it shouldn't update
@@ -388,6 +392,7 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, Bu
 
 bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action)
 {
+    HILOGD("called");
     if (bundle == nullptr) {
         return false;
     }
