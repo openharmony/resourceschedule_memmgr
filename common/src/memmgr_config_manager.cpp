@@ -104,7 +104,6 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
 
 bool MemmgrConfigManager::ParseKillConfig(const xmlNodePtr &rootNodePtr)
 {
-    HILOGI("Todo:parseKillConfig");
     return true;
 }
 
