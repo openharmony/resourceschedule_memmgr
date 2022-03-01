@@ -144,7 +144,12 @@ void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, Accou
                                               std::vector<pid_t> &processes)
 {
     processes.clear();
-    AccountBundleInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+    if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
+        HILOGI("Search account processes failed, accountId = %{public}d.", accountId);
+        return;
+    }
+
+    AccountBundleInfo *accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
     std::map<int, BundlePriorityInfo*>::iterator iter;
     for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
          iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
@@ -175,8 +180,13 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
 {
     for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
         int accountId = switchedAccountIds.at(i);
-        AccountBundleInfo* accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
-        std::map<int, BundlePriorityInfo*>::iterator iter;
+        if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
+            HILOGI("Search account priorityInfo failed, accountId = %{public}d.", accountId);
+            continue;
+        }
+
+        AccountBundleInfo *accountPriorityInfo = &osAccountsInfoMap_.at(accountId);
+        std::map<int, BundlePriorityInfo *>::iterator iter;
         for (iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
              iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
             BundlePriorityInfo *bundleInfo = iter->second;
