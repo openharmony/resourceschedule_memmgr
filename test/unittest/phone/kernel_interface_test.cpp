@@ -371,20 +371,5 @@ HWTEST_F(KernelInterfaceTest, GetCurrentBufferTest, TestSize.Level1)
     printf("buffer=%d", buffer);
     EXPECT_GT(buffer, 0);
 }
-
-HWTEST_F(KernelInterfaceTest, KillOneProcessByPidTest, TestSize.Level1)
-{
-    int pid = -1;
-    printf("please input pid to kill\n");
-    scanf("%d", &pid);
-    ProcInfo procInfo;
-    procInfo.pid = pid;
-    bool ret = KernelInterface::GetInstance().GetPidProcInfo(procInfo);
-    EXPECT_EQ(ret, true);
-
-    int killedSize = KernelInterface::GetInstance().KillOneProcessByPid(pid);
-    printf("killedSize=%d", killedSize);
-    EXPECT_EQ(killedSize, procInfo.size);
-}
 }
 }
