@@ -37,17 +37,45 @@ class ReclaimPriorityManager {
 
 public:
     struct BundleInfoPtrCmp {
-        bool operator()(const BundlePriorityInfo *p1, const BundlePriorityInfo *p2)
+        bool operator() (const BundlePriorityInfo *p1, const BundlePriorityInfo *p2)
         {
-            if (p1->priority_ <= p2->priority_) {
-                return true;
-            } else {
+            if (p1->uid_ == p2->uid_) {
+                // remove duplicate BundlePriorityInfo according to uid_
                 return false;
+            } else {
+                if (p1->priority_ != p2->priority_) {
+                    // in ascending order
+                    return p1->priority_ < p2->priority_;
+                } else {
+                    // when in same priority_, sort by uid_
+                    // it will be sorted by last used time
+                    return p1->uid_ < p2->uid_;
+                }
+            }
+
+        }
+    };
+    struct BundleInfoCmp {
+        bool operator() (const BundlePriorityInfo p1, const BundlePriorityInfo p2)
+        {
+            if (p1.uid_ == p2.uid_) {
+                // remove duplicate BundlePriorityInfo according to uid_
+                return false;
+            } else {
+                if (p1.priority_ != p2.priority_) {
+                    // in descending order
+                    return p1.priority_ > p2.priority_;
+                } else {
+                    // when in same priority_, sort by uid_
+                    // it will be sorted by last used time
+                    return p1.uid_ < p2.uid_;
+                }
             }
         }
     };
 
     using BundlePrioSet = std::set<BundlePriorityInfo*, BundleInfoPtrCmp>;
+    using BunldeCopySet = std::set<BundlePriorityInfo, BundleInfoCmp>;
     // map <bundleUid, BundlePriorityInfo*>
     using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
     using OsAccountsMap = std::map<int, AccountBundleInfo>;
@@ -66,7 +94,7 @@ public:
     };
 
     // for lmkd and memory reclaim
-    void GetBundlePrioSet(std::set<BundlePriorityInfo> &bundleSet);
+    void GetBundlePrioSet(BunldeCopySet &bundleSet);
 
     void SetBundleState(int accountId, int uid, BundleState state);
 
