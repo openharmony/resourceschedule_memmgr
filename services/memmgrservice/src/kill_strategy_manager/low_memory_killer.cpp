@@ -81,14 +81,15 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
             break;
         }
         if (bundle.GetState() == BundleState::STATE_WAITING_FOR_KILL) {
-            HILOGD("bundle uid<%{public}d> <%{public}s> is waiting to kill, skiped.", bundle.uid_, bundle.name_.c_str());
+            HILOGD("bundle uid<%{public}d> <%{public}s> is waiting to kill, skiped.",
+                bundle.uid_, bundle.name_.c_str());
             count++;
             continue;
         }
 
         for (auto itrProcess = bundle.procs_.begin(); itrProcess != bundle.procs_.end(); itrProcess++) {
             HILOGI("killing pid<%{public}d> with uid<%{public}d> of bundle<%{public}s>",
-                   itrProcess->first, bundle.uid_, bundle.name_.c_str());
+                itrProcess->first, bundle.uid_, bundle.name_.c_str());
             freedBuf += KernelInterface::GetInstance().KillOneProcessByPid(itrProcess->first);
         }
 
@@ -155,7 +156,7 @@ out:
     // resume zswapd
     if (totalBuf) {
         HILOGI("[%{public}ld] Reclaimed %{public}dkB when current buffer %{public}dkB below %{public}dkB",
-                calledCount, totalBuf, triBuf, thBuf);
+            calledCount, totalBuf, triBuf, thBuf);
     }
 }
 
@@ -166,7 +167,6 @@ void LowMemoryKiller::PsiHandler()
     }
     std::function<void()> func = std::bind(&LowMemoryKiller::PsiHandlerInner, this);
     handler_->PostImmediateTask(func);
-
 }
 } // namespace Memory
 } // namespace OHOS
