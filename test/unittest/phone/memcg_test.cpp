@@ -66,15 +66,6 @@ HWTEST_F(MemcgTest, CreateMemcgTest, TestSize.Level1)
     memcg = nullptr;
 }
 
-HWTEST_F(MemcgTest, UpdateSwapInfoFromKernelTest, TestSize.Level1)
-{
-    Memcg* memcg = new Memcg();
-    bool ret = memcg->UpdateSwapInfoFromKernel();
-    EXPECT_EQ(ret, true);
-    delete memcg;
-    memcg = nullptr;
-}
-
 HWTEST_F(MemcgTest, UpdateMemInfoFromKernelTest, TestSize.Level1)
 {
     Memcg* memcg = new Memcg();
