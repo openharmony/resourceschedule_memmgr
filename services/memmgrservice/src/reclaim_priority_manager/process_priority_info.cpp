@@ -24,7 +24,6 @@ const std::string TAG = "ProcessPriorityInfo";
 
 ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
 {
-    HILOGI("ProcessPriorityInfo constructed with priority");
     this->uid_ = bundleUid;
     this->pid_ = pid;
     this->priority_ = priority;
