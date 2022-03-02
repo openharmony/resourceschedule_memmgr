@@ -52,7 +52,6 @@ public:
                     return p1->uid_ < p2->uid_;
                 }
             }
-
         }
     };
     struct BundleInfoCmp {

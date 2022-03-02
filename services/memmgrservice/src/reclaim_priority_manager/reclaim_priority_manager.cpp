@@ -137,7 +137,7 @@ void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
     auto ret = totalBundlePrioSet_.insert(bundle);
     if (ret.second) {
         HILOGD("success to insert bundle to set, uid=%{public}d, totalBundlePrioSet_.size=%{public}d",
-                bundle->uid_, totalBundlePrioSet_.size());
+            bundle->uid_, totalBundlePrioSet_.size());
     }
 }
 
