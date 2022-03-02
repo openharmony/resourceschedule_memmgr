@@ -16,6 +16,7 @@
 #ifndef OHOS_MEMORY_MEMMGR_LOW_MEMORY_KILLER_H
 #define OHOS_MEMORY_MEMMGR_LOW_MEMORY_KILLER_H
 
+#include "event_handler.h"
 #include "single_instance.h"
 
 namespace OHOS {
@@ -26,9 +27,15 @@ class  LowMemoryKiller {
 public:
     void PsiHandler();
 private:
-    LowMemoryKiller() = default;
+    LowMemoryKiller();
     ~LowMemoryKiller() = default;
+    void PsiHandlerInner();
     int KillOneBundleByPrio(int minPrio);
+    bool GetEventHandler();
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+
+    bool initialized_ = false;
+    long calledCount = 0;
 };
 } // namespace Memory
 } // namespace OHOS
