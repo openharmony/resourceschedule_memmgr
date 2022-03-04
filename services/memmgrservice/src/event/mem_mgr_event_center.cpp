@@ -14,11 +14,11 @@
  */
 
 #include "mem_mgr_event_center.h"
+#include <string>
 #include "memmgr_log.h"
 #include "mem_mgr_event_observer.h"
 #include "reclaim_priority_manager.h"
 #include "background_task_mgr_helper.h"
-#include <string>
 
 namespace OHOS {
 namespace Memory {
