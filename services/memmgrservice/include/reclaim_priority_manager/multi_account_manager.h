@@ -30,15 +30,15 @@ namespace Memory {
 class MultiAccountManager {
     DECLARE_SINGLE_INSTANCE_BASE(MultiAccountManager);
 public:
-    void Init();
-    void SetAccountPriority(int accountId, std::string accountName, AccountType accountType, bool isActived);
+    bool Init();
+    bool SetAccountPriority(int accountId, std::string accountName, AccountType accountType, bool isActived);
     int RecalcBundlePriority(int accountId, int bundlePriority);
     std::shared_ptr<AccountPriorityInfo> GetAccountPriorityInfo(int accountId);
     void AddAccountPriorityInfo(std::shared_ptr<AccountPriorityInfo> accountPriorityInfo);
     std::shared_ptr<MultiAccountStrategy> GetMultiAccountStratgy();
     void SetMultiAccountStrategy(std::shared_ptr<MultiAccountStrategy> strategy);
-    void GetSwitchedAccountIds(std::vector<int> &accountIds);
-    void UpdateAccountPriorityInfo(int accountId);
+    bool GetSwitchedAccountIds(std::vector<int> &accountIds);
+    bool UpdateAccountPriorityInfo(std::vector<int> &accountIds);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
                                  std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
     bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
