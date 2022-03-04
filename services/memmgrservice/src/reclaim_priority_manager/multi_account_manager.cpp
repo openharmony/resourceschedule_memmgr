@@ -39,18 +39,20 @@ MultiAccountManager::~MultiAccountManager()
     }
 }
 
-void MultiAccountManager::Init()
+bool MultiAccountManager::Init()
 {
     oldActiveAccountIds_.clear();
     AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
-    for (unsigned int i = 0; i < oldActiveAccountIds_.size(); i++) {
-        int accountId = oldActiveAccountIds_.at(i);
-        UpdateAccountPriorityInfo(accountId);
+    if (!UpdateAccountPriorityInfo(oldActiveAccountIds_)) {
+        HILOGI("Multiple account manager initial failed.");
+        return false;
     }
-    HILOGI("Multiple account manager initial completed, accountCount = %{public}d.", oldActiveAccountIds_.size());
+
+    HILOGI("Multiple account manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
+    return true;
 }
 
-void MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
+bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
                                              AccountType accountType, bool isActived)
 {
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
@@ -63,22 +65,33 @@ void MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
         accountInfo->SetIsActived(isActived);
     }
 
+    if (strategy_ == nullptr) {
+        HILOGI("Set account priority failed, strategy is null.");
+        return false;
+    }
+
     int oldPriority = accountInfo->GetPriority();
     strategy_->SetAccountPriority(accountId);
-    HILOGI("Set acccount priority success, accountId = %{public}d, old = %{public}d, new = %{public}d.",
+    HILOGI("Set acccount priority succeed, accountId = %{public}d, old = %{public}d, new = %{public}d.",
            accountId, oldPriority, accountInfo->GetPriority());
     ReclaimStrategyManager::GetInstance().NotifyAccountPriorityChanged(accountId, accountInfo->GetPriority());
+    return true;
 }
 
 int MultiAccountManager::RecalcBundlePriority(int accountId, int bundlePriority)
 {
     if (GetAccountPriorityInfo(accountId) == nullptr) {
-        HILOGI("Repeat calculate bundle priority fail, account non-exist, accountId = %{public}d.", accountId);
+        HILOGI("Repeat calculate bundle priority failed, account non-exist, accountId = %{public}d.", accountId);
+        return -1;
+    }
+
+    if (strategy_ == nullptr) {
+        HILOGI("Repeat calculate bundle priority failed, strategy is null.");
         return -1;
     }
 
     int recalcPriority = strategy_->RecalcBundlePriority(accountId, bundlePriority);
-    HILOGI("Repeat calculate bundle priority success, accountId = %{public}d, old = %{public}d, new = %{public}d.",
+    HILOGI("Repeat calculate bundle priority succeed, accountId = %{public}d, old = %{public}d, new = %{public}d.",
            accountId, bundlePriority, recalcPriority);
     return recalcPriority;
 }
@@ -111,10 +124,15 @@ void MultiAccountManager::SetMultiAccountStrategy(std::shared_ptr<MultiAccountSt
     strategy_ = strategy;
 }
 
-void MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
+bool MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
 {
     std::vector<int> newActiveAccountIds;
-    AccountSA::OsAccountManager::QueryActiveOsAccountIds(newActiveAccountIds);
+    ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(newActiveAccountIds);
+    if (errCode != ERR_OK) {
+        HILOGI("Query active os accountIds failed, err = %{public}d.", static_cast<int>(errCode));
+        return false;
+    }
+
     for (unsigned int i = 0; i < oldActiveAccountIds_.size(); i++) {
         bool isExist = false;
         for (unsigned int j = 0; j < newActiveAccountIds.size(); j++) {
@@ -130,14 +148,27 @@ void MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
     }
 
     oldActiveAccountIds_ = newActiveAccountIds;
+    return true;
 }
 
-void MultiAccountManager::UpdateAccountPriorityInfo(int accountId)
+bool MultiAccountManager::UpdateAccountPriorityInfo(std::vector<int> &accountIds)
 {
-    AccountSA::OsAccountInfo osAccountInfo;
-    AccountSA::OsAccountManager::QueryOsAccountById(accountId, osAccountInfo);
-    SetAccountPriority(accountId, osAccountInfo.GetLocalName(), static_cast<AccountType>(osAccountInfo.GetType()),
-                       osAccountInfo.GetIsActived());
+    for (unsigned int i = 0; i < accountIds.size(); i++) {
+        int accountId = accountIds.at(i);
+        AccountSA::OsAccountInfo osAccountInfo;
+        ErrCode errCode = AccountSA::OsAccountManager::QueryOsAccountById(accountId, osAccountInfo);
+        if (errCode != ERR_OK) {
+            HILOGI("Get os account failed, accountId = %{public}d, err = %{public}d.",
+                   accountId, static_cast<int>(errCode));
+            return false;
+        }
+        if (!SetAccountPriority(accountId, osAccountInfo.GetLocalName(),
+            static_cast<AccountType>(osAccountInfo.GetType()), osAccountInfo.GetIsActived())) {
+            HILOGI("Set account priority failed, accountId = %{public}d.", accountId);
+            return false;
+        }
+    }
+    return true;
 }
 
 void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, AccountBundleInfo> &osAccountsInfoMap_,
@@ -203,12 +234,16 @@ bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_A
                                                   std::map<int, AccountBundleInfo> &osAccountsInfoMap_)
 {
     std::vector<int> switchedAccountIds;
-    GetSwitchedAccountIds(switchedAccountIds);
+    if (!GetSwitchedAccountIds(switchedAccountIds)) {
+        HILOGI("Get switched accountIds failed.");
+        return false;
+    }
 
-    /* Account info update */
-    UpdateAccountPriorityInfo(accountId);
-    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
-        UpdateAccountPriorityInfo(switchedAccountIds.at(i));
+    std::vector<int> updateAccountIds = switchedAccountIds;
+    updateAccountIds.push_back(accountId);
+    if (!UpdateAccountPriorityInfo(updateAccountIds)) {
+        HILOGI("Update account priority information failed.");
+        return false;
     }
 
     /* Handle different switch mode */
