@@ -17,24 +17,19 @@
 #define OHOS_MEMORY_MEMMGR_ACCOUNT_PRIORITY_INFO_H
 
 #include <string>
+#include "os_account_info.h"
 
 namespace OHOS {
 namespace Memory {
-typedef enum {
-    ADMIN = 0,
-    NORMAL,
-    GUEST,
-} AccountType;
-
 class AccountPriorityInfo {
 public:
-    AccountPriorityInfo(int id, std::string name, AccountType type, bool isActived);
+    AccountPriorityInfo(int id, std::string name, AccountSA::OsAccountType type, bool isActived);
     int GetId();
     void SetId(int id);
     std::string GetName();
     void SetName(std::string name);
-    AccountType GetType();
-    void SetType(AccountType type);
+    AccountSA::OsAccountType GetType();
+    void SetType(AccountSA::OsAccountType type);
     bool GetIsActived();
     void SetIsActived(bool isActived);
     int GetPriority();
@@ -43,7 +38,7 @@ public:
 private:
     int id_;
     std::string name_;
-    AccountType type_;
+    AccountSA::OsAccountType type_;
     bool isActived_;
     int priority_;
 };

@@ -28,8 +28,8 @@ enum class DefaultMultiAccountPriority {
 
 class DefaultMultiAccountStrategy : public MultiAccountStrategy {
 public:
-    void SetAccountPriority(int accountId);
-    int RecalcBundlePriority(int accountId, int bundlePriority);
+    void SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo);
+    int RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo, int bundlePriority);
     virtual ~DefaultMultiAccountStrategy() {}
 };
 } // namespace Memory
