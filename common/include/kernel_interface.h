@@ -61,7 +61,6 @@ public:
     bool IsEmptyDir(const std::string& path);
     bool CreateDir(const std::string& path); // create dir recursively 755
     bool RemoveDirRecursively(const std::string& path);
-    bool RemoveItemsInDir(const std::string& dirPath);
     std::string AddDelimiter(const std::string& path); // IncludeTrailingPathDelimiter
     std::string RmDelimiter(const std::string& path); // ExcludeTrailingPathDelimiter
     std::string JoinPath(const std::string& prefixPath, const std::string& subPath);

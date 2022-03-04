@@ -66,14 +66,14 @@ HWTEST_F(KernelInterfaceTest, PathDelimiterAddAndRmTest, TestSize.Level1)
     EXPECT_EQ(pathWithDeli.compare(base + "/"), 0);
 
     std::string pathTmp = KernelInterface::GetInstance().AddDelimiter("");
-    EXPECT_EQ(pathTmp.length(), 0);
+    EXPECT_EQ(pathTmp.length(), 0u);
 
     // rm delimiter test
     pathTmp = KernelInterface::GetInstance().RmDelimiter(pathWithDeli);
     EXPECT_EQ(pathTmp.compare(base), 0);
 
     pathTmp = KernelInterface::GetInstance().RmDelimiter("");
-    EXPECT_EQ(pathTmp.length(), 0);
+    EXPECT_EQ(pathTmp.length(), 0u);
 
     pathTmp = KernelInterface::GetInstance().RmDelimiter(base);
     EXPECT_EQ(pathTmp.compare(base), 0);
@@ -182,9 +182,9 @@ HWTEST_F(KernelInterfaceTest, SingleLineFileReadWriteLinesTest, TestSize.Level1)
     ret = KernelInterface::GetInstance().WriteLinesToFile(path, inputLines); // curr content: "line1\n"
     ret = ret && KernelInterface::GetInstance().ReadLinesFromFile(path, outputLines);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(outputLines.size(), 2);
+    EXPECT_EQ(outputLines.size(), 2u);
     EXPECT_EQ(outputLines[0].compare(line1), 0);
-    EXPECT_EQ(outputLines[1].length(), 0);
+    EXPECT_EQ(outputLines[1].length(), 0u);
     KernelInterface::GetInstance().RemoveFile(path);
 }
 
@@ -233,11 +233,11 @@ HWTEST_F(KernelInterfaceTest, MultLinesFileReadWriteLinesTest, TestSize.Level1)
     ret = KernelInterface::GetInstance().WriteLinesToFile(path, inputLines); // curr content: "line1\nline2\nline3\n"
     ret = ret && KernelInterface::GetInstance().ReadLinesFromFile(path, outputLines);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(outputLines.size(), 4);
+    EXPECT_EQ(outputLines.size(), 4u);
     EXPECT_EQ(outputLines[0].compare(line1), 0);
     EXPECT_EQ(outputLines[1].compare(line2), 0);
     EXPECT_EQ(outputLines[2].compare(line3), 0);
-    EXPECT_EQ(outputLines[3].length(), 0);
+    EXPECT_EQ(outputLines[3].length(), 0u);
     KernelInterface::GetInstance().RemoveFile(path);
 }
 
@@ -333,26 +333,6 @@ HWTEST_F(KernelInterfaceTest, DirRemoveTest, TestSize.Level1)
     EXPECT_EQ(ret, true);
     ret = KernelInterface::GetInstance().IsDirExists(basedir);
     EXPECT_EQ(ret, false);
-}
-
-HWTEST_F(KernelInterfaceTest, RemoveItemsInDirTest, TestSize.Level1)
-{
-    const std::string BASE_PATH = "/data/local/tmp";
-    bool ret = KernelInterface::GetInstance().IsDirExists(BASE_PATH);
-    std::string basedir = KernelInterface::GetInstance().JoinPath(BASE_PATH, "testDir");
-    std::string subDir1 = KernelInterface::GetInstance().JoinPath(basedir, "subDir1");
-    std::string subDir2 = KernelInterface::GetInstance().JoinPath(basedir, "subDir2");
-    std::string file1 = KernelInterface::GetInstance().JoinPath(subDir1, "testFile1");
-    std::string file2 = KernelInterface::GetInstance().JoinPath(subDir2, "testFile2");
-    KernelInterface::GetInstance().CreateDir(subDir1); // ../testDir/subDir1/
-    KernelInterface::GetInstance().CreateDir(subDir2); // ../testDir/subDir2/
-    KernelInterface::GetInstance().CreateFile(file1); // ../testDir/subDir1/testFile1
-    KernelInterface::GetInstance().CreateFile(file2); // ../testDir/subDir2/testFile2
-
-    ret = KernelInterface::GetInstance().RemoveItemsInDir(basedir);
-    ret = ret && KernelInterface::GetInstance().IsEmptyDir(basedir);
-    EXPECT_EQ(ret, true);
-    KernelInterface::GetInstance().RemoveDirRecursively(basedir);
 }
 
 HWTEST_F(KernelInterfaceTest, GetPidProcInfoTest, TestSize.Level1)
