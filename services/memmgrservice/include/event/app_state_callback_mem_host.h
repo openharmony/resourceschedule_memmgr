@@ -34,7 +34,7 @@ public:
     bool Connected();
     bool Register();
 private:
-    bool connected_;
+    bool connected_ = false;
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
     sptr<AppStateObserver> appStateObserver_;
 };
