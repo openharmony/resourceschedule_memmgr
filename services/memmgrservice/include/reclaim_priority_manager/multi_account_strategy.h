@@ -16,12 +16,14 @@
 #ifndef OHOS_MEMORY_MEMMGR_MULTI_ACCOUNT_STRATEGY_H
 #define OHOS_MEMORY_MEMMGR_MULTI_ACCOUNT_STRATEGY_H
 
+#include "account_priority_info.h"
+
 namespace OHOS {
 namespace Memory {
 class MultiAccountStrategy {
 public:
-    virtual void SetAccountPriority(int accountId) = 0;
-    virtual int RecalcBundlePriority(int accountId, int bundlePriority) = 0;
+    virtual void SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo) = 0;
+    virtual int RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo, int bundlePriority) = 0;
     virtual ~MultiAccountStrategy() {}
 };
 } // namespace Memory

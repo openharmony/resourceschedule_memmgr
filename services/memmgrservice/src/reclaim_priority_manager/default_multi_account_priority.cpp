@@ -13,36 +13,34 @@
  * limitations under the License.
  */
 
-#include "multi_account_manager.h"
 #include "default_multi_account_strategy.h"
 
 namespace OHOS {
 namespace Memory {
-void DefaultMultiAccountStrategy::SetAccountPriority(int accountId)
+void DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo)
 {
-    auto accountPriorityInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
-    if (accountPriorityInfo == nullptr) {
+    if (accountInfo == nullptr) {
         return;
     }
 
     int priority;
-    if (accountPriorityInfo->GetIsActived()) {
+    if (accountInfo->GetIsActived()) {
         priority = static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY);
     } else {
         priority = static_cast<int>(DefaultMultiAccountPriority::MID_PRIORITY);
     }
 
-    accountPriorityInfo->SetPriority(priority);
+    accountInfo->SetPriority(priority);
 }
 
-int DefaultMultiAccountStrategy::RecalcBundlePriority(int accountId, int bundlePriority)
+int DefaultMultiAccountStrategy::RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo,
+                                                      int bundlePriority)
 {
-    auto accountPriorityInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
-    if (accountPriorityInfo == nullptr) {
+    if (accountInfo == nullptr) {
         return -1;
     }
 
-    return accountPriorityInfo->GetPriority() + bundlePriority;
+    return accountInfo->GetPriority() + bundlePriority;
 }
 } // namespace Memory
 } // namespace OHOS
