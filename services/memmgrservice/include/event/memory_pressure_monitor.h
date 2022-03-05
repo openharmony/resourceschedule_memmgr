@@ -86,8 +86,8 @@ private:
     int curLevelCount_ = 0;
     int polling_ = 0;
 
-    struct timespec lastTime_;
-    struct timespec currentTime_;
+    struct timespec lastTime_ = {0, 0};
+    struct timespec currentTime_ = {0, 0};
     struct LevelHandler *handlerInfo_;
     struct LevelHandler *pollHandler_ = NULL;
 

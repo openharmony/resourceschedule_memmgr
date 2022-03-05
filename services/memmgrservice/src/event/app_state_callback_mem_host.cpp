@@ -29,7 +29,10 @@ const std::string TAG = "AppStateCallbackMemHost";
 
 AppStateCallbackMemHost::AppStateCallbackMemHost() : appMgrClient_(std::make_unique<AppExecFwk::AppMgrClient>())
 {
-    appStateObserver_ = new AppStateObserver();
+    appStateObserver_ = new (std::nothrow) AppStateObserver();
+    if (appStateObserver_ == NULL) {
+        HILOGE("appStateObserver is NULL");
+    }
 }
 
 AppStateCallbackMemHost::~AppStateCallbackMemHost()
