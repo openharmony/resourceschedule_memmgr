@@ -31,12 +31,13 @@ class MultiAccountManager {
     DECLARE_SINGLE_INSTANCE_BASE(MultiAccountManager);
 public:
     bool Init();
-    bool SetAccountPriority(int accountId, std::string accountName, AccountType accountType, bool isActived);
+    bool SetAccountPriority(int accountId, std::string accountName,
+                            AccountSA::OsAccountType accountType, bool isActived);
     int RecalcBundlePriority(int accountId, int bundlePriority);
     std::shared_ptr<AccountPriorityInfo> GetAccountPriorityInfo(int accountId);
     void AddAccountPriorityInfo(std::shared_ptr<AccountPriorityInfo> accountPriorityInfo);
     std::shared_ptr<MultiAccountStrategy> GetMultiAccountStratgy();
-    void SetMultiAccountStrategy(std::shared_ptr<MultiAccountStrategy> strategy);
+    bool SetMultiAccountStrategy(std::shared_ptr<MultiAccountStrategy> strategy);
     bool GetSwitchedAccountIds(std::vector<int> &accountIds);
     bool UpdateAccountPriorityInfo(std::vector<int> &accountIds);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
