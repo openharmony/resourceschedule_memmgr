@@ -179,49 +179,6 @@ bool KernelInterface::RemoveDirRecursively(const std::string& path)
     return OHOS::ForceRemoveDirectory(path) || (remove(path.c_str()) == 0);
 }
 
-bool KernelInterface::RemoveItemsInDir(const std::string& dirPath)
-{
-    if (!IsDirExists(dirPath)) {
-        return false;
-    }
-    if (IsEmptyFolder(dirPath)) {
-        return true;
-    }
-    DIR* dir = NULL;
-    struct dirent* dirp = NULL;
-    struct stat buf = {};
-    if ((dir = opendir(dirPath.c_str())) == NULL) {
-        HILOGE("opendir failed: %{public}s", dirPath.c_str());
-        return false;
-    }
-    while (true) {
-        dirp = readdir(dir);
-        if (dirp == NULL) {
-            break;
-        }
-        if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0) {
-            continue;
-        }
-        std::string fullPath = JoinPath(std::string(dirPath), std::string(dirp->d_name));
-        if (stat(fullPath.c_str(), &buf) == -1) {
-            HILOGE("stat file failed: %{public}s", fullPath.c_str());
-            continue;
-        }
-        if (S_ISDIR(buf.st_mode)) { // sub dir
-            if (RemoveDirRecursively(fullPath) == false) {
-                remove(fullPath.c_str());
-            }
-            continue;
-        }
-        if (!RemoveFile(fullPath)) { // rm file
-            HILOGE("remove file failed: %{public}s", fullPath.c_str());
-            continue;
-        }
-    }
-    closedir(dir);
-    return IsEmptyFolder(dirPath);
-}
-
 std::string KernelInterface::RmDelimiter(const std::string& path)
 {
     return OHOS::ExcludeTrailingPathDelimiter(path);

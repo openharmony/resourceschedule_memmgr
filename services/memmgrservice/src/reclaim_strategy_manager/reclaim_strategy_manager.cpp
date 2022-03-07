@@ -139,7 +139,6 @@ void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int pri
     handler_->PostImmediateTask(func);
 }
 
-
 bool ReclaimStrategyManager::HandleAccountDied_(int accountId)
 {
     return MemcgMgr::GetInstance().RemoveUserMemcg(accountId);
@@ -152,7 +151,11 @@ bool ReclaimStrategyManager::HandleAccountPriorityChanged_(int accountId, int pr
         return false;
     }
     GetValidScore_(priority);
-    ReclaimRatios* ratios = new ReclaimRatios();
+    ReclaimRatios* ratios = new (std::nothrow) ReclaimRatios();
+    if (ratios == nullptr) {
+        HILOGE("new obj failed!");
+        return false;
+    }
     if (!GetReclaimRatiosByScore_(priority, ratios)) {
         delete ratios;
         ratios = nullptr;

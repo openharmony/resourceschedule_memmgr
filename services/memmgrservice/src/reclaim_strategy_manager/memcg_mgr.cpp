@@ -27,7 +27,10 @@ IMPLEMENT_SINGLE_INSTANCE(MemcgMgr);
 
 MemcgMgr::MemcgMgr()
 {
-    rootMemcg_ = new Memcg();
+    rootMemcg_ = new (std::nothrow) Memcg();
+    if (rootMemcg_ == nullptr) {
+        HILOGE("new obj failed!");
+    }
 }
 
 MemcgMgr::~MemcgMgr()
@@ -73,7 +76,11 @@ UserMemcg* MemcgMgr::GetUserMemcg(unsigned int userId)
 UserMemcg* MemcgMgr::AddUserMemcg(unsigned int userId)
 {
     HILOGI("userId=%{public}d", userId);
-    UserMemcg* memcg = new UserMemcg(userId);
+    UserMemcg* memcg = new (std::nothrow) UserMemcg(userId);
+    if (memcg == nullptr) {
+        HILOGE("new obj failed!");
+        return nullptr;
+    }
     userMemcgsMap_.insert(std::make_pair(userId, memcg));
     memcg->CreateMemcgDir();
     return memcg;
@@ -117,6 +124,10 @@ bool MemcgMgr::AddProcToMemcg(unsigned int pid, unsigned int userId)
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // new user
         memcg = AddUserMemcg(userId);
+    }
+    if (memcg == nullptr) {
+        HILOGE("AddUserMemcg failed %{public}d", userId);
+        return false;
     }
     return memcg->AddProc(pid); // add pid to memcg
 }
