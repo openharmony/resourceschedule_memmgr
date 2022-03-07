@@ -42,7 +42,12 @@ MultiAccountManager::~MultiAccountManager()
 bool MultiAccountManager::Init()
 {
     oldActiveAccountIds_.clear();
-    AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
+    ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
+    if (errCode != ERR_OK) {
+        HILOGI("Multiple account manager initial failed, err = %{public}d.", static_cast<int>(errCode));
+        return false;
+    }
+
     if (!UpdateAccountPriorityInfo(oldActiveAccountIds_)) {
         HILOGI("Multiple account manager initial failed.");
         return false;
