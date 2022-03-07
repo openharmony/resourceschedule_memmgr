@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Memmgr>
+  <reclaimConfig>
+    <availbuffer>
+        <availBuffer>800</availBuffer>
+        <minAvailBuffer>750</minAvailBuffer>
+        <highAvailBuffer>850</highAvailBuffer>
+        <swapReserve>200</swapReserve>
+    </availbuffer>
+    <ZswapdParam id="1">
+        <minScore>0</minScore>
+        <maxScore>1000</maxScore>
+        <mem2zramRatio>60</mem2zramRatio>
+        <zran2ufsRation>10</zran2ufsRation>
+        <refaultThreshold>50</refaultThreshold>
+    </ZswapdParam>
+  </reclaimConfig>
+  <killConfig>
+  </killConfig>
+</Memmgr>

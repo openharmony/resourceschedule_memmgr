@@ -32,25 +32,27 @@ namespace OHOS {
 namespace Memory {
 class AvailBufferSize {
 public:
-    int availBuffer;
-    int minAvailBuffer;
-    int highAvailBuffer;
-    int swapReserve;
-    AvailBufferSize(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve);
+    unsigned int availBuffer;
+    unsigned int minAvailBuffer;
+    unsigned int highAvailBuffer;
+    unsigned int swapReserve;
+    AvailBufferSize(unsigned int availBuffer, unsigned int minAvailBuffer,
+                    unsigned int highAvailBuffer, unsigned int swapReserve);
 };
 
 class ReclaimRatiosConfig {
 public:
     int minScore;
     int maxScore;
-    int mem2zramRatio;
-    int zran2ufsRation;
-    int refaultThreshold;
-    ReclaimRatiosConfig(int minScore, int maxScore, int mem2zramRatio, int zran2ufsRation, int refaultThreshold);
+    unsigned int mem2zramRatio;
+    unsigned int zram2ufsRatio;
+    unsigned int refaultThreshold;
+    ReclaimRatiosConfig(int minScore, int maxScore, unsigned int mem2zramRatio,
+                        unsigned int zram2ufsRatio, unsigned int refaultThreshold);
 };
 
 struct ReclaimRatiosConfigPtrCmp {
-    bool operator()(const ReclaimRatiosConfig *p1, const ReclaimRatiosConfig *p2)
+    bool operator()(const std::shared_ptr<ReclaimRatiosConfig> p1, const std::shared_ptr<ReclaimRatiosConfig> p2)
     {
         if (p1->minScore <= p2->minScore) {
             return true;
@@ -66,17 +68,19 @@ public:
     bool Init();
     bool ReadParamFromXml();
     bool WriteReclaimRatiosConfigToKernel();
-    using ReclaimRatiosConfigSet = std::set<ReclaimRatiosConfig *, ReclaimRatiosConfigPtrCmp>;
+    using ReclaimRatiosConfigSet = std::set<std::shared_ptr<ReclaimRatiosConfig>, ReclaimRatiosConfigPtrCmp>;
     bool GetXmlLoaded();
-    AvailBufferSize *GetAvailBufferSize();
+    std::shared_ptr<AvailBufferSize> GetAvailBufferSize();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
 
 private:
+    void InitDefaultConfig();
     bool ParseXmlRootNode(const xmlNodePtr &rootNodePtr);
     bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
     bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
-    void SetIntParam(std::map<std::string, std::string> &param, std::string key, int* dst);
+    void SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst);
+    void SetUnsignedIntParam(std::map<std::string, std::string> &param, std::string key, unsigned int &dst);
     bool SetReclaimParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     bool SetAvailBufferConfig(std::map<std::string, std::string> &param);
     bool SetZswapdParamConfig (std::map<std::string, std::string> &param);
@@ -84,13 +88,10 @@ private:
     bool HasChild(const xmlNodePtr &rootNodePtr);
     bool CheckPathExist(const char *path);
     void ClearExistConfig();
-    bool XmlLoaded = false;
-    AvailBufferSize *availBufferSize =
-        new AvailBufferSize(AVAIL_BUFFER, MIN_AVAIL_BUFFER, HIGH_AVAIL_BUFFER, SWAP_RESERVE);
-    ReclaimRatiosConfigSet reclaimRatiosConfigSet {
-        new ReclaimRatiosConfig(RECLAIM_PRIORITY_MIN, RECLAIM_PRIORITY_MAX, MEMCG_MEM_2_ZRAM_RATIO,
-                                MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD)};
-    void AddReclaimRatiosConfigToSet(ReclaimRatiosConfig *reclaimRatiosConfig);
+    bool xmlLoaded_ = false;
+    std::shared_ptr<AvailBufferSize> availBufferSize_;
+    ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
+    void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);
     void ClearReclaimRatiosConfigSet();
     MemmgrConfigManager();
     ~MemmgrConfigManager();

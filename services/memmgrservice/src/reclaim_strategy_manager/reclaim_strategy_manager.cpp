@@ -175,20 +175,21 @@ bool ReclaimStrategyManager::GetReclaimRatiosByScore_(int score, ReclaimRatios *
         HILOGE("param ratios nullptr");
         return false;
     }
+
     HILOGI("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
     MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
         MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
     for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
         if ((*i)->minScore <= score && (*i)->maxScore >= score) {
             HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d",
-                (*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
-            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zran2ufsRation, (*i)->refaultThreshold);
-            return true;
+                (*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
+            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
         }
     }
     HILOGW("can not get ratios from MemmgrConfigManager"); // will using default para
     return true;
 }
+
 void ReclaimStrategyManager::GetValidScore_(int& priority)
 {
     if (priority < RECLAIM_SCORE_MIN) {
