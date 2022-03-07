@@ -37,7 +37,8 @@
         "sub_component": [
             "//foundation/resourceschedule/memmgr/sa_profile:memmgr_sa_profile",
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
-            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init"
+            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
+            "//foundation/resourceschedule/memmgr/profile:memmgr_config"
         ],
         "inner_kits": [],
         "test": [

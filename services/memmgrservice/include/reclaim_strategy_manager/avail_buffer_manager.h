@@ -19,6 +19,7 @@
 #include "single_instance.h"
 #include "event_handler.h"
 #include "reclaim_strategy_constants.h"
+#include "memmgr_config_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -27,7 +28,7 @@ DECLARE_SINGLE_INSTANCE_BASE(AvailBufferManager)
 public:
     bool LoadAvailBufferConfig();
     bool WriteAvailBufferToKernel();
-    bool SetAvailBuffer(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve);
+    bool SetAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer);
     bool LoadAvailBufferFromConfig();
     void CloseZswapd();
     void InitAvailBuffer();
@@ -42,16 +43,17 @@ public:
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    int availBuffer = AVAIL_BUFFER; // default availBuffer 800MB
-    int minAvailBuffer = MIN_AVAIL_BUFFER; // default minAvailBuffer 750MB
-    int highAvailBuffer = HIGH_AVAIL_BUFFER; // default highAvailBuffer 850MB
-    int swapReserve = SWAP_RESERVE; // default swapReserve 200MB
-    bool zramEnable = false;
-    int memTotal = 0;
+    unsigned int availBuffer_ = AVAIL_BUFFER; // default availBuffer 800MB
+    unsigned int minAvailBuffer_ = MIN_AVAIL_BUFFER; // default minAvailBuffer 750MB
+    unsigned int highAvailBuffer_ = HIGH_AVAIL_BUFFER; // default highAvailBuffer 850MB
+    unsigned int swapReserve_ = SWAP_RESERVE; // default swapReserve 200MB
+    bool zramEnable_ = false;
+    unsigned int memTotal_ = 0;
     AvailBufferManager();
     ~AvailBufferManager();
     bool GetEventHandler();
     void UpdateZramEnableFromKernel();
+    bool CheckAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer);
     void UpdateMemTotalFromKernel();
 };
 } // namespace Memory

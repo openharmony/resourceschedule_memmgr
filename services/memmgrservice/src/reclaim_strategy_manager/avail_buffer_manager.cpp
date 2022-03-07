@@ -17,7 +17,6 @@
 
 #include "memmgr_log.h"
 #include "kernel_interface.h"
-#include "memmgr_config_manager.h"
 #include "avail_buffer_manager.h"
 
 namespace OHOS {
@@ -39,6 +38,7 @@ AvailBufferManager::~AvailBufferManager()
 bool AvailBufferManager::Init()
 {
     initialized_ = GetEventHandler();
+    UpdateMemTotalFromKernel();
     InitAvailBuffer();
     if (initialized_) {
         HILOGI("init successed");
@@ -62,32 +62,40 @@ bool AvailBufferManager::GetEventHandler()
 
 bool AvailBufferManager::LoadAvailBufferFromConfig()
 {
-    AvailBufferSize *availBuffer = MemmgrConfigManager::GetInstance().GetAvailBufferSize();
-    this->availBuffer = availBuffer->availBuffer;
-    this->minAvailBuffer = availBuffer->minAvailBuffer;
-    this->highAvailBuffer = availBuffer->highAvailBuffer;
-    this->swapReserve = availBuffer->swapReserve;
-    WriteAvailBufferToKernel();
+    std::shared_ptr<AvailBufferSize> availBuffer = MemmgrConfigManager::GetInstance().GetAvailBufferSize();
+    SetAvailBuffer(availBuffer);
     return true;
 }
 
-bool AvailBufferManager::SetAvailBuffer(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve)
+bool AvailBufferManager::CheckAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer)
 {
-    this->availBuffer = availBuffer;
-    this->minAvailBuffer = minAvailBuffer;
-    this->highAvailBuffer = highAvailBuffer;
-    this->swapReserve = swapReserve;
+    if (availBuffer->availBuffer > this->memTotal_ || availBuffer->minAvailBuffer > this->memTotal_ ||
+        availBuffer->highAvailBuffer > this->memTotal_ || availBuffer->swapReserve > this->memTotal_) {
+        return false;
+    }
+    return true;
+}
+
+bool AvailBufferManager::SetAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer)
+{
+    if (!CheckAvailBuffer(availBuffer)) {
+        return false;
+    }
+    this->availBuffer_ = availBuffer->availBuffer;
+    this->minAvailBuffer_ = availBuffer->minAvailBuffer;
+    this->highAvailBuffer_ = availBuffer->highAvailBuffer;
+    this->swapReserve_ = availBuffer->swapReserve;
     HILOGI("=%{public}d,minAvailBuffer = %{public}d,highAvailBuffer = %{public}d,swapReserve = %{public}d",
-           availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
+           this->availBuffer_, this->minAvailBuffer_, this->highAvailBuffer_, this->swapReserve_);
     return WriteAvailBufferToKernel();
 }
 
 inline std::string AvailBufferManager::NumsToString()
 {
-    std::string ret = std::to_string(this->availBuffer) + " "
-        + std::to_string(this->minAvailBuffer) + " "
-        + std::to_string(this->highAvailBuffer) + " "
-        + std::to_string(this->swapReserve);
+    std::string ret = std::to_string(this->availBuffer_) + " "
+        + std::to_string(this->minAvailBuffer_) + " "
+        + std::to_string(this->highAvailBuffer_) + " "
+        + std::to_string(this->swapReserve_);
     return ret;
 }
 
@@ -100,14 +108,15 @@ bool AvailBufferManager::WriteAvailBufferToKernel()
 
 void AvailBufferManager::CloseZswapd()
 {
+    std::shared_ptr<AvailBufferSize> availBuffer = std::make_shared<AvailBufferSize>(0, 0, 0, 0);
     HILOGI("Zswapd close now");
-    SetAvailBuffer(0, 0, 0, 0);
+    SetAvailBuffer(availBuffer);
 }
 
 void AvailBufferManager::InitAvailBuffer()
 {
     UpdateZramEnableFromKernel();
-    if (this->zramEnable) {
+    if (this->zramEnable_) {
         LoadAvailBufferFromConfig();
     } else {
         CloseZswapd();
@@ -117,7 +126,7 @@ void AvailBufferManager::InitAvailBuffer()
 void AvailBufferManager::UpdateZramEnableFromKernel()
 {
     std::string content;
-    int swapTotal = 0;
+    unsigned int swapTotal = 0;
     if (!KernelInterface::GetInstance().ReadFromFile("/proc/meminfo", content)) {
         return;
     }
@@ -125,13 +134,18 @@ void AvailBufferManager::UpdateZramEnableFromKernel()
     std::regex re("SwapTotal:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
     std::smatch res;
     if (std::regex_search(content, res, re)) {
-        swapTotal = std::stoi(res.str(1)); // 1: swapOutCount index
-        HILOGI("success. %{public}d", swapTotal);
+        try {
+        swapTotal = (unsigned int) std::stoi(res.str(1)); // 1: swapTotal index
+        } catch (std::out_of_range&) {
+            HILOGE("stoi() failed: out_of_range");
+        }
+        HILOGI(" : %{public}d", swapTotal);
     }
+
     if (swapTotal != 0) {
-        this->zramEnable = true;
+        this->zramEnable_ = true;
     } else {
-        this->zramEnable = false;
+        this->zramEnable_ = false;
     }
 }
 
@@ -145,8 +159,13 @@ void AvailBufferManager::UpdateMemTotalFromKernel()
     std::regex re("MemTotal:[[:s:]]*([[:d:]]+) kB[[:s:]]*");
     std::smatch res;
     if (std::regex_search(content, res, re)) {
-        this->memTotal = std::stoi(res.str(1)); // 1: swapOutCount index
-        HILOGI("success. %{public}d", this->memTotal);
+        try {
+        this->memTotal_ = (unsigned int) std::stoi(res.str(1)); // 1: memTotal index
+        } catch (std::out_of_range&) {
+            HILOGE("stoi() failed: out_of_range");
+            return;
+        }
+        HILOGI(" : %{public}d", this->memTotal_);
     }
 }
 } // namespace Memory

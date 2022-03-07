@@ -21,6 +21,7 @@
 #define protected public
 #include "kernel_interface.h"
 #include "reclaim_strategy_manager.h"
+#include "reclaim_strategy_constants.h"
 #undef private
 #undef protected
 
@@ -155,21 +156,21 @@ HWTEST_F(ReclaimStrategyManagerTest, GetReclaimRatiosByScoreTest, TestSize.Level
 
 HWTEST_F(ReclaimStrategyManagerTest, GetValidScoreTest, TestSize.Level1)
 {
-    int score = ReclaimStrategyManager::RECLAIM_SCORE_MIN - 1;
+    int score = RECLAIM_SCORE_MIN - 1;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MIN);
+    EXPECT_EQ(score, RECLAIM_SCORE_MIN);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MIN;
+    score = RECLAIM_SCORE_MIN;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MIN);
+    EXPECT_EQ(score, RECLAIM_SCORE_MIN);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MAX;
+    score = RECLAIM_SCORE_MAX;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MAX);
+    EXPECT_EQ(score, RECLAIM_SCORE_MAX);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MAX + 1;
+    score = RECLAIM_SCORE_MAX + 1;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MAX);
+    EXPECT_EQ(score, RECLAIM_SCORE_MAX);
 }
 }
 }
