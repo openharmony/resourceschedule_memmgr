@@ -17,7 +17,7 @@
 
 namespace OHOS {
 namespace Memory {
-AccountPriorityInfo::AccountPriorityInfo(int id, std::string name, AccountType type, bool isActived)
+AccountPriorityInfo::AccountPriorityInfo(int id, std::string name, AccountSA::OsAccountType type, bool isActived)
     : id_(id), name_(name), type_(type), isActived_(isActived)
 {
     priority_ = -1;
@@ -43,12 +43,12 @@ void AccountPriorityInfo::SetName(std::string name)
     name_ = name;
 }
 
-AccountType AccountPriorityInfo::GetType()
+AccountSA::OsAccountType AccountPriorityInfo::GetType()
 {
     return type_;
 }
 
-void AccountPriorityInfo::SetType(AccountType type)
+void AccountPriorityInfo::SetType(AccountSA::OsAccountType type)
 {
     type_ = type;
 }

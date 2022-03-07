@@ -27,18 +27,18 @@ namespace Memory {
 constexpr int RECLAIM_PRIORITY_SYSTEM = -1000;
 // foreground process priority
 constexpr int RECLAIM_PRIORITY_FOREGROUND = 0;
+// visible process priority
+constexpr int RECLAIM_PRIORITY_VISIBLE = 1;
 // perceived suspend delay case
 constexpr int RECLAIM_PRIORITY_BG_SUSPEND_DELAY = 100;
 // perceived background process priority
 constexpr int RECLAIM_PRIORITY_BG_PERCEIVED = 200;
-// backgroud priority
+// background priority
 constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
-// suspend process priority
-constexpr int RECLAIM_PRIORITY_SUSPEND = 800;
-// visible process priority
-constexpr int RECLAIM_PRIORITY_VISIBLE = 1;
 // frozen process priority
 constexpr int RECLAIM_PRIORITY_FROZEN = 600;
+// suspend process priority
+constexpr int RECLAIM_PRIORITY_SUSPEND = 800;
 // empty process priority
 constexpr int RECLAIM_PRIORITY_EMPTY = 900;
 // unknown process priority

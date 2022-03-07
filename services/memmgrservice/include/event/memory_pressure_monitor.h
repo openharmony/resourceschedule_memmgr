@@ -81,13 +81,13 @@ private:
     MemPressCallback callback_;
     // run MainLoop on handler thread
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    int epollfd_;
+    int epollfd_ = -1;
     // current monitor level count
-    int curLevelCount_;
+    int curLevelCount_ = 0;
     int polling_ = 0;
 
-    struct timespec lastTime_;
-    struct timespec currentTime_;
+    struct timespec lastTime_ = {0, 0};
+    struct timespec currentTime_ = {0, 0};
     struct LevelHandler *handlerInfo_;
     struct LevelHandler *pollHandler_ = NULL;
 
