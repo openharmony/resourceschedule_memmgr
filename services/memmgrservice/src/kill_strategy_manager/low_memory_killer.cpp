@@ -41,41 +41,64 @@ static int g_minPrioTable[LOW_MEM_KILL_LEVELS][static_cast<int32_t>(MinPrioField
     {500 * 1024, 400}  // 500M buffer, 400 priority
 };
 
+LowMemoryKiller::LowMemoryKiller()
+{
+    initialized_ = GetEventHandler();
+    if (initialized_) {
+        HILOGI("init successed");
+    } else {
+        HILOGE("init failed");
+    }
+}
+
+bool LowMemoryKiller::GetEventHandler()
+{
+    if (!handler_) {
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
+        if (handler_ == nullptr) {
+            HILOGE("handler init failed");
+            return false;
+        }
+    }
+    return true;
+}
+
 int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 {
-    HILOGD("called");
+    HILOGD("called. minPrio=%{public}d", minPrio);
     int freedBuf = 0;
-    std::set<BundlePriorityInfo> bundles;
+    ReclaimPriorityManager::BunldeCopySet bundles;
 
     ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundles);
-    HILOGD("BundlePrioSet size=%{public}d", bundles.size());
+    HILOGD("get BundlePrioSet size=%{public}d", bundles.size());
 
-    HILOGD("iter bundles begin");
     int count = 0;
     for (auto bundle : bundles) {
-        HILOGD("bundle %{public}d/%{public}d begin", count, bundles.size());
+        HILOGD("iter bundle %{public}d/%{public}d, uid=%{public}d, name=%{public}s, priority=%{public}d",
+               count, bundles.size(), bundle.uid_, bundle.name_.c_str(), bundle.priority_);
         if (bundle.priority_ < minPrio) {
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
             break;
         }
         if (bundle.GetState() == BundleState::STATE_WAITING_FOR_KILL) {
-            HILOGD("bundle <%{publics}s> is waiting to kill, skiped.", bundle.name_.c_str());
+            HILOGD("bundle uid<%{public}d> <%{public}s> is waiting to kill, skiped.",
+                bundle.uid_, bundle.name_.c_str());
+            count++;
             continue;
         }
 
-        HILOGD("iter processes of <%{publics}s> begin", bundle.name_.c_str());
         for (auto itrProcess = bundle.procs_.begin(); itrProcess != bundle.procs_.end(); itrProcess++) {
+            HILOGI("killing pid<%{public}d> with uid<%{public}d> of bundle<%{public}s>",
+                itrProcess->first, bundle.uid_, bundle.name_.c_str());
             freedBuf += KernelInterface::GetInstance().KillOneProcessByPid(itrProcess->first);
         }
-        HILOGD("iter processes of <%{publics}s> end", bundle.name_.c_str());
 
         ReclaimPriorityManager::GetInstance().SetBundleState(bundle.accountId_, bundle.uid_,
                                                              BundleState::STATE_WAITING_FOR_KILL);
         if (freedBuf) {
-            HILOGD("freedBuf = %{public}d, return", freedBuf);
+            HILOGD("freedBuf = %{public}d, break iter", freedBuf);
             break;
         }
-        HILOGD("%{public}d/%{public}d end", count, bundles.size());
         count++;
     }
     HILOGD("iter bundles end");
@@ -83,18 +106,18 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 }
 
 /* Low memory killer core function */
-void LowMemoryKiller::PsiHandler()
+void LowMemoryKiller::PsiHandlerInner()
 {
-    HILOGD("called");
+    HILOGD("[%{public}ld] called", ++calledCount);
     int triBuf, availBuf, thBuf, freedBuf;
     int totalBuf = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
     int killCnt = 0;
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-    HILOGD("current buffer = %{public}d", triBuf);
+    HILOGD("[%{public}ld] current buffer = %{public}d KB", calledCount, triBuf);
     if (triBuf == MAX_BUFFER_KB) {
-        HILOGE("get buffer failed, skiped!");
+        HILOGE("[%{public}ld] get buffer failed, skiped!", calledCount);
         return;
     }
 
@@ -105,26 +128,26 @@ void LowMemoryKiller::PsiHandler()
             break;
         }
     }
-    HILOGD("minPrio = %{public}d", minPrio);
+    HILOGD("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
-        HILOGE("no minPrio, skiped!");
+        HILOGE("[%{public}ld] no minPrio, skiped!", calledCount);
         return;
     }
 
     // stop zswapd
     do {
         if ((freedBuf = KillOneBundleByPrio(minPrio)) == 0) {
-            HILOGE("Noting to kill above score %{public}d!", minPrio);
+            HILOGE("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
             goto out;
         }
         totalBuf += freedBuf;
         killCnt++;
-        HILOGD("killCnt = %{public}d", killCnt);
+        HILOGD("[%{public}ld] killCnt = %{public}d", calledCount, killCnt);
 
         availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
         if (availBuf == MAX_BUFFER_KB) {
-            HILOGE("get buffer failed, go out!");
+            HILOGE("[%{public}ld] get buffer failed, go out!", calledCount);
             goto out;
         }
     } while (availBuf < MAX_BUFFER_KB && killCnt < MAX_KILL_CNT_PER_EVENT);
@@ -132,9 +155,18 @@ void LowMemoryKiller::PsiHandler()
 out:
     // resume zswapd
     if (totalBuf) {
-        HILOGI("Reclaimed %dkB when current buffer %dkB below %dkB",
-                totalBuf, triBuf, thBuf);
+        HILOGI("[%{public}ld] Reclaimed %{public}dkB when current buffer %{public}dkB below %{public}dkB",
+            calledCount, totalBuf, triBuf, thBuf);
     }
+}
+
+void LowMemoryKiller::PsiHandler()
+{
+    if (!initialized_) {
+        HILOGE("is not initialized, return!");
+    }
+    std::function<void()> func = std::bind(&LowMemoryKiller::PsiHandlerInner, this);
+    handler_->PostImmediateTask(func);
 }
 } // namespace Memory
 } // namespace OHOS

@@ -62,20 +62,6 @@ HWTEST_F(UserMemcgTest, CreateMemcgTest, TestSize.Level1)
     EXPECT_EQ(memcg->memInfo_ != nullptr, true);
     EXPECT_EQ(memcg->reclaimRatios_ != nullptr, true);
     delete memcg;
-    EXPECT_EQ(memcg->swapInfo_ == nullptr, true);
-    EXPECT_EQ(memcg->memInfo_ == nullptr, true);
-    EXPECT_EQ(memcg->reclaimRatios_ == nullptr, true);
-    memcg = nullptr;
-}
-
-HWTEST_F(UserMemcgTest, UpdateSwapInfoFromKernelTest, TestSize.Level1)
-{
-    UserMemcg* memcg = new UserMemcg(userId_);
-    memcg->CreateMemcgDir();
-    bool ret = memcg->UpdateSwapInfoFromKernel();
-    EXPECT_EQ(ret, true);
-    delete memcg;
-    memcg->RemoveMemcgDir();
     memcg = nullptr;
 }
 
@@ -85,8 +71,8 @@ HWTEST_F(UserMemcgTest, UpdateMemInfoFromKernelTest, TestSize.Level1)
     memcg->CreateMemcgDir();
     bool ret = memcg->UpdateMemInfoFromKernel();
     EXPECT_EQ(ret, true);
-    delete memcg;
     memcg->RemoveMemcgDir();
+    delete memcg;
     memcg = nullptr;
 }
 

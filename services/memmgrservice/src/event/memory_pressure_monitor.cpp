@@ -132,8 +132,9 @@ int MemoryPressureMonitor::CreateLevelFileFd(StallType stallType, int thresholdI
     return fd;
 
 err:
-    if (fd > 0)
+    if (fd > 0) {
         close(fd);
+    }
     return -1;
 }
 

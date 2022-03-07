@@ -179,49 +179,6 @@ bool KernelInterface::RemoveDirRecursively(const std::string& path)
     return OHOS::ForceRemoveDirectory(path) || (remove(path.c_str()) == 0);
 }
 
-bool KernelInterface::RemoveItemsInDir(const std::string& dirPath)
-{
-    if (!IsDirExists(dirPath)) {
-        return false;
-    }
-    if (IsEmptyFolder(dirPath)) {
-        return true;
-    }
-    DIR* dir = NULL;
-    struct dirent* dirp = NULL;
-    struct stat buf = {};
-    if ((dir = opendir(dirPath.c_str())) == NULL) {
-        HILOGE("opendir failed: %{public}s", dirPath.c_str());
-        return false;
-    }
-    while (true) {
-        dirp = readdir(dir);
-        if (dirp == NULL) {
-            break;
-        }
-        if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0) {
-            continue;
-        }
-        std::string fullPath = JoinPath(std::string(dirPath), std::string(dirp->d_name));
-        if (stat(fullPath.c_str(), &buf) == -1) {
-            HILOGE("stat file failed: %{public}s", fullPath.c_str());
-            continue;
-        }
-        if (S_ISDIR(buf.st_mode)) { // sub dir
-            if (RemoveDirRecursively(fullPath) == false) {
-                remove(fullPath.c_str());
-            }
-            continue;
-        }
-        if (!RemoveFile(fullPath)) { // rm file
-            HILOGE("remove file failed: %{public}s", fullPath.c_str());
-            continue;
-        }
-    }
-    closedir(dir);
-    return IsEmptyFolder(dirPath);
-}
-
 std::string KernelInterface::RmDelimiter(const std::string& path)
 {
     return OHOS::ExcludeTrailingPathDelimiter(path);
@@ -248,7 +205,6 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     HILOGD("called!");
 
     std::string statPath = JoinPath("/proc/", std::to_string(procInfo.pid), "/stat");
-    HILOGD("statPath=%{public}s", statPath.c_str());
 
     // format like:
     // 1 (init) S 0 0 0 0 -1 4210944 1 ...
@@ -256,30 +212,24 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     if (!ReadFromFile(statPath, stat)) {
         return false;
     }
-    HILOGD("stat = [%{public}s]", stat.c_str());
     std::istringstream isStat(stat);
     isStat >> statPid >> procInfo.name >> procInfo.status;
-    HILOGD("pid=[%{public}d], name=[%{public}s], status=[%{public}s]",
-           procInfo.pid, procInfo.name.c_str(), procInfo.status.c_str());
 
     if (statPid != std::to_string(procInfo.pid)) {
         return false;
     }
 
     std::string statmPath = JoinPath("/proc/", std::to_string(procInfo.pid), "/statm");
-    HILOGD("statmPath=%{public}s", statmPath.c_str());
     // format like:
     // 640 472 369 38 0 115 0
     if (!ReadFromFile(statmPath, statm)) {
         return false;
     }
-    HILOGD("statm = [%{public}s]", statm.c_str());
     std::istringstream isStatm(statm);
     isStatm >> vss >> rss; // pages
-    HILOGD("vss=[%{public}s], rss=[%{public}s]", vss.c_str(), rss.c_str());
 
     procInfo.size = atoi(rss.c_str()) * PAGE_TO_KB;
-    HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d",
+    HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d KB",
            procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
     return true;
 }
@@ -308,22 +258,20 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         std::istringstream is(lineStr);
         std::string name, value;
         is >> name >> value;
-        HILOGD("[%{public}s][%{public}s]", name.c_str(), value.c_str());
         result.insert(std::make_pair(name, value));
 
         line = strtok_r(NULL, "\n", &restPtr);
     } while (line);
-    HILOGD("finished!");
     return;
 }
 
 int KernelInterface::GetCurrentBuffer()
 {
-    HILOGD("called!");
     std::map<std::string, std::string> result;
     ReadZswapdPressureShow(result);
     auto value = result.find(ZWAPD_PRESSURE_SHOW_BUFFER_SIZE);
     if (value != result.end()) {
+        HILOGD("buffer_size=%{public}s MB", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
         return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str()) * KB_PER_MB;
     }
     return MAX_BUFFER_KB;

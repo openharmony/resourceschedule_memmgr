@@ -57,7 +57,7 @@ HWTEST_F(MultiAccountManagerTest, SetAccountPrority, TestSize.Level1)
 {
     int accountId = 2;
     std::string accountName = "admin";
-    AccountType accountType = AccountType::ADMIN;
+    AccountSA::OsAccountType accountType = AccountSA::OsAccountType::ADMIN;
     bool isActived = true;
 
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
@@ -74,7 +74,7 @@ HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
 {
     int accountId = 2;
     std::string accountName = "admin";
-    AccountType accountType = AccountType::ADMIN;
+    AccountSA::OsAccountType accountType = AccountSA::OsAccountType::ADMIN;
     bool isActived = false;
     int bundlePriority = RECLAIM_PRIORITY_FOREGROUND;
 
@@ -125,7 +125,7 @@ HWTEST_F(MultiAccountManagerTest, AccountHotSwitch, TestSize.Level1)
     osAccountsInfoMap.insert(std::make_pair(account.id_, account));
 
     std::string accountName = "admin";
-    AccountType accountType = AccountType::ADMIN;
+    AccountSA::OsAccountType accountType = AccountSA::OsAccountType::ADMIN;
     bool isActived = false;
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
 
