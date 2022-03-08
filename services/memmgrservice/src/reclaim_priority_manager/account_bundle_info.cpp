@@ -35,12 +35,12 @@ bool AccountBundleInfo::HasBundle(int bundleUid)
     return true;
 }
 
-BundlePriorityInfo* AccountBundleInfo::FindBundleById(int bundleUid)
+std::shared_ptr<BundlePriorityInfo> AccountBundleInfo::FindBundleById(int bundleUid)
 {
     return bundleIdInfoMapping_.at(bundleUid);
 }
 
-void AccountBundleInfo::AddBundleToOsAccount(BundlePriorityInfo* bundle)
+void AccountBundleInfo::AddBundleToOsAccount(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     bundleIdInfoMapping_.insert(std::make_pair(bundle->uid_, bundle));
 }
