@@ -23,6 +23,8 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MultiAccountManager";
+const int MAX_RETRY_TIMES = 10;
+const int SLEEP_TIME = 3000;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
@@ -30,6 +32,7 @@ IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
 MultiAccountManager::MultiAccountManager()
 {
     strategy_ = std::make_shared<DefaultMultiAccountStrategy>();
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
 }
 
 MultiAccountManager::~MultiAccountManager()
@@ -39,22 +42,37 @@ MultiAccountManager::~MultiAccountManager()
     }
 }
 
-bool MultiAccountManager::Init()
+void MultiAccountManager::Init()
 {
-    oldActiveAccountIds_.clear();
-    ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
-    if (errCode != ERR_OK) {
-        HILOGI("Multiple account manager initial failed, err = %{public}d.", static_cast<int>(errCode));
-        return false;
+    retryTimes_++;
+    initialized_ = false;
+    do {
+        oldActiveAccountIds_.clear();
+        ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
+        if (errCode != ERR_OK) {
+            HILOGI("Multiple account manager initial failed, err = %{public}d.", static_cast<int>(errCode));
+            break;
+        }
+
+        if (!UpdateAccountPriorityInfo(oldActiveAccountIds_)) {
+            HILOGI("Multiple account manager initial failed.");
+            break;
+        }
+
+        initialized_ = true;
+    } while (0);
+
+    if (initialized_) {
+        HILOGI("Multiple account manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
+        return;
     }
 
-    if (!UpdateAccountPriorityInfo(oldActiveAccountIds_)) {
-        HILOGI("Multiple account manager initial failed.");
-        return false;
+    if (retryTimes_ < MAX_RETRY_TIMES) {
+        std::function<void()> initMultiAccountManagerFunc = std::bind(&MultiAccountManager::Init, this);
+        HILOGE("Multiple account manager initial failed, try again after 3s!, retryTimes = %{public}d/10",
+               retryTimes_);
+        handler_->PostTask(initMultiAccountManagerFunc, SLEEP_TIME, AppExecFwk::EventQueue::Priority::LOW);
     }
-
-    HILOGI("Multiple account manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
-    return true;
 }
 
 bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountName,
@@ -240,6 +258,11 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
 bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
                                                   std::map<int, AccountBundleInfo> &osAccountsInfoMap_)
 {
+    if (!initialized_) {
+        HILOGI("The MultiAccountManager uninitialized.");
+        return false;
+    }
+
     std::vector<int> switchedAccountIds;
     if (!GetSwitchedAccountIds(switchedAccountIds)) {
         HILOGI("Get switched accountIds failed.");
