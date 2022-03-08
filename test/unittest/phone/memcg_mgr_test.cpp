@@ -98,7 +98,7 @@ HWTEST_F(MemcgMgrTest, UpdateMemcgScoreAndReclaimRatiosTest, TestSize.Level1)
     EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, -1, ratios), false);
     EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 200, ratios), true);
     ratios->SetRatios(101, 101, 101);
-    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 300, ratios), true);
+    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 300, ratios), false);
     EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(memcgId), true);
     EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 300, ratios), false);
     delete ratios;
