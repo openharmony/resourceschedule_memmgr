@@ -23,6 +23,7 @@
 #include "account_priority_info.h"
 #include "multi_account_strategy.h"
 #include "account_bundle_info.h"
+#include "event_handler.h"
 #include "os_account_manager.h"
 
 namespace OHOS {
@@ -30,7 +31,7 @@ namespace Memory {
 class MultiAccountManager {
     DECLARE_SINGLE_INSTANCE_BASE(MultiAccountManager);
 public:
-    bool Init();
+    void Init();
     bool SetAccountPriority(int accountId, std::string accountName,
                             AccountSA::OsAccountType accountType, bool isActived);
     int RecalcBundlePriority(int accountId, int bundlePriority);
@@ -48,6 +49,9 @@ public:
                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
 
 private:
+    int retryTimes_ = 0;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    bool initialized_ = false;
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
     std::shared_ptr<MultiAccountStrategy> strategy_;
     std::vector<int> oldActiveAccountIds_;
