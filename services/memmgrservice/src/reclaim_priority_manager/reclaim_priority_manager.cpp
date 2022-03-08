@@ -262,7 +262,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
 }
 
 bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
-    std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo>account)
+    std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo> account)
 {
     // clear proc and bundle if needed, delete the object
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
