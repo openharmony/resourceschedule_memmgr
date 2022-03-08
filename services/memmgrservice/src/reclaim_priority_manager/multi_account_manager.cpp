@@ -193,7 +193,7 @@ void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, std::
     std::shared_ptr<AccountBundleInfo> accountPriorityInfo = osAccountsInfoMap_.at(accountId);
     for (auto iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
          iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
-        std::shared_ptr<BundlePriorityInfo>bundleInfo = iter->second;
+        std::shared_ptr<BundlePriorityInfo> bundleInfo = iter->second;
         for (auto iter2 = bundleInfo->procs_.begin(); iter2 != bundleInfo->procs_.end(); iter2++) {
             processes.push_back(iter2->first);
         }
@@ -227,7 +227,7 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
         std::shared_ptr<AccountBundleInfo> accountPriorityInfo = osAccountsInfoMap_.at(accountId);
         for (auto iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
              iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
-            std::shared_ptr<BundlePriorityInfo>bundleInfo = iter->second;
+            std::shared_ptr<BundlePriorityInfo> bundleInfo = iter->second;
             int oldPriority = bundleInfo->priority_;
             bundleInfo->priority_ = RecalcBundlePriority(accountId, oldPriority);
             HILOGI("Account hot switch account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
