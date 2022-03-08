@@ -19,6 +19,7 @@
 #include "mem_mgr_event_center.h"
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
+#include "multi_account_manager.h"
 
 #include <unistd.h>
 
@@ -43,7 +44,8 @@ bool MemMgrService::Init()
         return false;
     }
 
-    // init kill strategy manager
+    // init multiple account manager
+    MultiAccountManager::GetInstance().Init();
 
     // init reclaim strategy manager
     if (!ReclaimStrategyManager::GetInstance().Init()) {
