@@ -31,12 +31,12 @@ public:
 
     explicit AccountBundleInfo(int accountId);
     bool HasBundle(int bundleId);
-    BundlePriorityInfo* FindBundleById(int bundleId);
-    void AddBundleToOsAccount(BundlePriorityInfo* bundle);
+    std::shared_ptr<BundlePriorityInfo> FindBundleById(int bundleId);
+    void AddBundleToOsAccount(std::shared_ptr<BundlePriorityInfo> bundle);
     void RemoveBundleById(int bundleUid);
     int GetBundlesCount();
-    // map <bundleUid, BundlePriorityInfo*>
-    using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
+    // map <bundleUid, std::shared_ptr<BundlePriorityInfo>>
+    using BundlePrioMap = std::map<int, std::shared_ptr<BundlePriorityInfo>>;
     BundlePrioMap bundleIdInfoMapping_;
 };
 } // namespace Memory
