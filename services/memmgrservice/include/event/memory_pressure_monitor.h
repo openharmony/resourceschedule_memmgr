@@ -88,7 +88,7 @@ private:
 
     struct timespec lastTime_ = {0, 0};
     struct timespec currentTime_ = {0, 0};
-    struct LevelHandler *handlerInfo_;
+    struct LevelHandler *handlerInfo_ = nullptr;
     struct LevelHandler *pollHandler_ = NULL;
 
     void Init();
