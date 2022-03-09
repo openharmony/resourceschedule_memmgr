@@ -181,8 +181,8 @@ bool MultiAccountManager::UpdateAccountPriorityInfo(std::vector<int> &accountIds
     return true;
 }
 
-void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_,
-                                              std::vector<pid_t> &processes)
+void MultiAccountManager::GetAccountProcesses(int accountId,
+    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_, std::vector<pid_t> &processes)
 {
     processes.clear();
     if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
