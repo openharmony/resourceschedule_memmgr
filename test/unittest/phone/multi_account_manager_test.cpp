@@ -88,7 +88,8 @@ HWTEST_F(MultiAccountManagerTest, AccountColdSwitch, TestSize.Level1)
 {
     int accountId = 100;
     std::shared_ptr<AccountBundleInfo> account = std::make_shared<AccountBundleInfo>(accountId);
-    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app", accountId * USER_ID_SHIFT + 1, 100);
+    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
     ProcessPriorityInfo proc1(1001, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc2(1002, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc3(1003, bundle->uid_, bundle->priority_);
@@ -110,7 +111,8 @@ HWTEST_F(MultiAccountManagerTest, AccountHotSwitch, TestSize.Level1)
 {
     int accountId = 100;
     std::shared_ptr<AccountBundleInfo> account = std::make_shared<AccountBundleInfo>(accountId);
-    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app", accountId * USER_ID_SHIFT + 1, 100);
+    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
     ProcessPriorityInfo proc1(1001, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc2(1002, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc3(1003, bundle->uid_, bundle->priority_);

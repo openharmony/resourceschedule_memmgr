@@ -229,12 +229,12 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
 {
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account == nullptr) {
-        std::shared_ptr<AccountBundleInfo> newAccount = std::make_shared<AccountBundleInfo>(accountId);
-        if (newAccount == nullptr) {
+        std::shared_ptr<AccountBundleInfo> tmpAccount = std::make_shared<AccountBundleInfo>(accountId);
+        if (tmpAccount == nullptr) {
             HILOGE("cannot new account!!");
             return false;
         }
-        account = newAccount;
+        account = tmpAccount;
         AddOsAccountInfo(account);
     }
     std::shared_ptr<BundlePriorityInfo> bundle;
@@ -354,8 +354,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     return ret;
 }
 
-void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
-    ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
+        std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
 {
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
@@ -407,7 +407,8 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, st
     }
 }
 
-bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action)
+bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle,
+        pid_t pid, AppAction action)
 {
     HILOGD("called");
     if (bundle == nullptr) {
