@@ -127,9 +127,6 @@ HWTEST_F(UserMemcgTest, SetScoreAndReclaimRatiosToKernelTest, TestSize.Level1)
     UserMemcg* memcg = new UserMemcg(userId_);
     memcg->CreateMemcgDir();
     EXPECT_EQ(memcg->SetScoreAndReclaimRatiosToKernel(), true);
-    memcg->SetScore(100);
-    memcg->SetReclaimRatios(101, 101, 101);
-    EXPECT_EQ(memcg->SetScoreAndReclaimRatiosToKernel(), true);
     memcg->RemoveMemcgDir();
     delete memcg;
     memcg = nullptr;

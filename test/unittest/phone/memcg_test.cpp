@@ -122,9 +122,6 @@ HWTEST_F(MemcgTest, SetScoreAndReclaimRatiosToKernelTest, TestSize.Level1)
 {
     Memcg* memcg = new Memcg();
     EXPECT_EQ(memcg->SetScoreAndReclaimRatiosToKernel(), true);
-    memcg->SetScore(100);
-    memcg->SetReclaimRatios(101, 101, 101);
-    EXPECT_EQ(memcg->SetScoreAndReclaimRatiosToKernel(), true);
     delete memcg;
     memcg = nullptr;
 }
