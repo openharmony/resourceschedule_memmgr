@@ -60,13 +60,6 @@ bool ReclaimPriorityManager::Init()
     } else {
         HILOGE("init failed");
     }
-
-    initialized_ = MultiAccountManager::GetInstance().Init();
-    if (initialized_) {
-        HILOGE("init multiple account manager succeed.");
-    } else {
-        HILOGE("init multiple account manager failed.");
-    }
     return initialized_;
 }
 
