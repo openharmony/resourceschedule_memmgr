@@ -15,6 +15,8 @@
 
 #include <fstream>
 #include <kernel_interface.h>
+#include <stdexcept>
+#include <string>
 
 #include "memmgr_log.h"
 #include "memmgr_config_manager.h"
@@ -23,7 +25,7 @@ namespace OHOS {
 namespace Memory {
 namespace {
     const std::string TAG = "MemmgrConfigManager";
-    const std::string XML_PATH = "/etc/xml/";
+    const std::string XML_PATH = "/etc/memmgr/";
     const std::string MEMCG_PATH = KernelInterface::MEMCG_BASE_PATH;
 } // namespace
 IMPLEMENT_SINGLE_INSTANCE(MemmgrConfigManager);
@@ -32,31 +34,47 @@ bool MemmgrConfigManager::Init()
 {
     ReadParamFromXml();
     WriteReclaimRatiosConfigToKernel();
-    return this->XmlLoaded;
+    return this->xmlLoaded_;
 }
 
 MemmgrConfigManager::MemmgrConfigManager()
 {
+    InitDefaultConfig();
 }
 
 MemmgrConfigManager::~MemmgrConfigManager()
 {
+    ClearReclaimRatiosConfigSet();
 }
 
-AvailBufferSize::AvailBufferSize(int availBuffer, int minAvailBuffer, int highAvailBuffer, int swapReserve)
+AvailBufferSize::AvailBufferSize(unsigned int availBuffer, unsigned int minAvailBuffer,
+                                 unsigned int highAvailBuffer, unsigned int swapReserve)
     : availBuffer(availBuffer),
       minAvailBuffer(minAvailBuffer),
       highAvailBuffer(highAvailBuffer),
       swapReserve(swapReserve) {};
-ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, int mem2zramRatio, int zran2ufsRation,
-    int refaultThreshold) : minScore(minScore), maxScore(maxScore), mem2zramRatio(mem2zramRatio),
-    zran2ufsRation(zran2ufsRation), refaultThreshold(refaultThreshold)
+ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, unsigned int mem2zramRatio,
+                                         unsigned int zram2ufsRatio, unsigned int refaultThreshold)
+    : minScore(minScore), maxScore(maxScore), mem2zramRatio(mem2zramRatio),
+      zram2ufsRatio(zram2ufsRatio), refaultThreshold(refaultThreshold)
 {
+}
+
+void MemmgrConfigManager::InitDefaultConfig()
+{
+    this->availBufferSize_ =
+        std::make_shared<AvailBufferSize>(AVAIL_BUFFER, MIN_AVAIL_BUFFER, HIGH_AVAIL_BUFFER, SWAP_RESERVE);
+
+    std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig =
+        std::make_shared<ReclaimRatiosConfig>(RECLAIM_PRIORITY_MIN, RECLAIM_PRIORITY_MAX,
+                                              MEMCG_MEM_2_ZRAM_RATIO, MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD);
+
+    AddReclaimRatiosConfigToSet(reclaimRatiosConfig);
 }
 
 bool MemmgrConfigManager::GetXmlLoaded()
 {
-    return this->XmlLoaded;
+    return this->xmlLoaded_;
 }
 
 void MemmgrConfigManager::ClearExistConfig()
@@ -67,7 +85,12 @@ void MemmgrConfigManager::ClearExistConfig()
 bool MemmgrConfigManager::ReadParamFromXml()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(XML_PATH, "memmgr_config.xml");
+    char absPatch[PATH_MAX] = {0};
     HILOGI(":%{public}s", path.c_str());
+    if (path.length() > PATH_MAX ||
+        realpath(path.c_str(), absPatch) == NULL) {
+            return false;
+    }
     if (!CheckPathExist(path.c_str())) {
         HILOGE("bad profile path! path:%{public}s", path.c_str());
         return false;
@@ -80,8 +103,8 @@ bool MemmgrConfigManager::ReadParamFromXml()
     }
     ClearExistConfig();
     xmlNodePtr rootNodePtr = xmlDocGetRootElement(docPtr.get());
-    XmlLoaded = ParseXmlRootNode(rootNodePtr);
-    return XmlLoaded;
+    this->xmlLoaded_ = ParseXmlRootNode(rootNodePtr);
+    return this->xmlLoaded_;
 }
 
 bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
@@ -96,7 +119,7 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             ParseKillConfig(currNode);
             continue;
         }
-        HILOGW("unknow node :<%{public}s>", name.c_str());
+        HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
     }
     return true;
@@ -117,6 +140,7 @@ bool MemmgrConfigManager::ParseReclaimConfig(const xmlNodePtr &rootNodePtr)
         GetModuleParam(currNode, param);
         SetReclaimParam(currNode, param);
     }
+    HILOGW(" set size :<%{public}d>", this->reclaimRatiosConfigSet_.size());
     return true;
 }
 
@@ -139,20 +163,44 @@ bool MemmgrConfigManager::GetModuleParam(const xmlNodePtr &rootNodePtr, std::map
     return true;
 }
 
-void MemmgrConfigManager::SetIntParam(std::map<std::string, std::string> &param, std::string key, int* dst)
+void MemmgrConfigManager::SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst)
 {
     std::map<std::string, std::string>::iterator iter = param.find(key);
     if (iter != param.end()) {
-        char *endptr;
-            int val = strtol(iter->second.c_str(), &endptr, 10);
-            if (*endptr == '\0') {
-                *dst = val;
-            }
+        try {
+            dst = std::stoi(iter->second);
             return;
+        } catch (std::out_of_range&) {
+            HILOGW("stoi() failed: out_of_range");
+            return;
+        } catch (std::invalid_argument&) {
+            HILOGW("stoi() failed: invalid_argument");
+            return;
+        }
     }
     HILOGW("find param failed key:<%{public}s>", key.c_str());
 }
-
+void MemmgrConfigManager::SetUnsignedIntParam(std::map<std::string, std::string> &param,
+                                              std::string key, unsigned int &dst)
+{
+    std::map<std::string, std::string>::iterator iter = param.find(key);
+    if (iter != param.end()) {
+        try {
+            int src = std::stoi(iter->second);
+            if (src > 0) {
+                dst = (unsigned int) src;
+                return;
+            }
+        } catch (std::out_of_range&) {
+            HILOGW("stoi() failed: out_of_range");
+            return;
+        } catch (std::invalid_argument&) {
+            HILOGW("stoi() failed: invalid_argument");
+            return;
+        }
+    }
+    HILOGW("find param failed key:<%{public}s>", key.c_str());
+}
 bool MemmgrConfigManager::SetReclaimParam(const xmlNodePtr &currNodePtr,
     std::map<std::string, std::string> &param)
 {
@@ -163,23 +211,24 @@ bool MemmgrConfigManager::SetReclaimParam(const xmlNodePtr &currNodePtr,
     if (name.compare("ZswapdParam") == 0) {
         return SetZswapdParamConfig(param);
     }
-    HILOGW("unknow node :<%{public}s>", name.c_str());
+    HILOGW("unknown node :<%{public}s>", name.c_str());
     return false;
 }
 
 bool MemmgrConfigManager::SetAvailBufferConfig(std::map<std::string, std::string> &param)
 {
-    int availBuffer = AVAIL_BUFFER; // default availBuffer 800MB
-    int minAvailBuffer = MIN_AVAIL_BUFFER; // default minAvailBuffer 750MB
-    int highAvailBuffer = HIGH_AVAIL_BUFFER; // default highAvailBuffer 850MB
-    int swapReserve = SWAP_RESERVE; // default swapReserve 200MB
+    unsigned int availBuffer = AVAIL_BUFFER;
+    unsigned int minAvailBuffer = MIN_AVAIL_BUFFER;
+    unsigned int highAvailBuffer = HIGH_AVAIL_BUFFER;
+    unsigned int swapReserve = SWAP_RESERVE;
 
-    SetIntParam(param, "availBuffer", &availBuffer);
-    SetIntParam(param, "minAvailBuffer", &minAvailBuffer);
-    SetIntParam(param, "highAvailBuffer", &highAvailBuffer);
-    SetIntParam(param, "swapReserve", &swapReserve);
-    delete this->availBufferSize;
-    this->availBufferSize = new AvailBufferSize(availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
+    SetUnsignedIntParam(param, "availBuffer", availBuffer);
+    SetUnsignedIntParam(param, "minAvailBuffer", minAvailBuffer);
+    SetUnsignedIntParam(param, "highAvailBuffer", highAvailBuffer);
+    SetUnsignedIntParam(param, "swapReserve", swapReserve);
+
+    this->availBufferSize_ =
+        std::make_shared<AvailBufferSize>(availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
     return true;
 }
 
@@ -187,19 +236,20 @@ bool MemmgrConfigManager::SetZswapdParamConfig(std::map<std::string, std::string
 {
     std::map<std::string, std::string>::iterator iter;
     int minScore = RECLAIM_PRIORITY_MIN;
-    int maxScore = RECLAIM_PRIORITY_MAX; // default maxAppscore 1000
-    int mem2zramRatio = MEMCG_MEM_2_ZRAM_RATIO; // default mem2zramRatio 40%
-    int zran2ufsRation = MEMCG_ZRAM_2_UFS_RATIO;
-    int refaultThreshold = MEMCG_REFAULT_THRESHOLD;
+    int maxScore = RECLAIM_PRIORITY_MAX;
+    unsigned int mem2zramRatio = MEMCG_MEM_2_ZRAM_RATIO;
+    unsigned int zram2ufsRatio = MEMCG_ZRAM_2_UFS_RATIO;
+    unsigned int refaultThreshold = MEMCG_REFAULT_THRESHOLD;
 
-    SetIntParam(param, "minScore", &minScore);
-    SetIntParam(param, "maxScore", &maxScore);
-    SetIntParam(param, "mem2zramRatio", &mem2zramRatio);
-    SetIntParam(param, "zran2ufsRation", &zran2ufsRation);
-    SetIntParam(param, "refaultThreshold", &refaultThreshold);
+    SetIntParam(param, "minScore", minScore);
+    SetIntParam(param, "maxScore", maxScore);
+    SetUnsignedIntParam(param, "mem2zramRatio", mem2zramRatio);
+    SetUnsignedIntParam(param, "zram2ufsRatio", zram2ufsRatio);
+    SetUnsignedIntParam(param, "refaultThreshold", refaultThreshold);
 
-    ReclaimRatiosConfig *reclaimRatiosConfig =
-        new ReclaimRatiosConfig(minScore, maxScore, mem2zramRatio, zran2ufsRation, refaultThreshold);
+    std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig =
+        std::make_shared<ReclaimRatiosConfig>(minScore, maxScore, mem2zramRatio,
+                                               zram2ufsRatio, refaultThreshold);
     AddReclaimRatiosConfigToSet(reclaimRatiosConfig);
     return true;
 }
@@ -224,43 +274,43 @@ bool MemmgrConfigManager::HasChild(const xmlNodePtr &rootNodePtr)
     return xmlChildElementCount(rootNodePtr) > 0;
 }
 
-void MemmgrConfigManager::AddReclaimRatiosConfigToSet(ReclaimRatiosConfig *reclaimRatiosConfig)
+void MemmgrConfigManager::AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig)
 {
-    this->reclaimRatiosConfigSet.insert(reclaimRatiosConfig);
+    this->reclaimRatiosConfigSet_.insert(reclaimRatiosConfig);
 }
 
 void MemmgrConfigManager::ClearReclaimRatiosConfigSet()
 {
-    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
-        delete *i;
-    }
-    this->reclaimRatiosConfigSet.clear();
+    this->reclaimRatiosConfigSet_.clear();
 }
 
 bool MemmgrConfigManager::WriteReclaimRatiosConfigToKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(MEMCG_PATH, "memory.zswapd_memcgs_param");
     std::string content;
-    int paramNum = this->reclaimRatiosConfigSet.size();
-    content += std::to_string(paramNum);
-    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
+    
+    unsigned int paramNum = this->reclaimRatiosConfigSet_.size();
+    content = std::to_string(paramNum);
+    for (auto i = this->reclaimRatiosConfigSet_.begin(); i != this->reclaimRatiosConfigSet_.end(); ++i) {
         content += " " + std::to_string((*i)->minScore);
         content += " " + std::to_string((*i)->maxScore);
         content += " " + std::to_string((*i)->mem2zramRatio);
-        content += " " + std::to_string((*i)->zran2ufsRation);
+        content += " " + std::to_string((*i)->zram2ufsRatio);
         content += " " + std::to_string((*i)->refaultThreshold);
     }
-    return KernelInterface::GetInstance().WriteToFile(path, content, false);
+
+    HILOGI(" : <%{public}s>", content.c_str());
+    return KernelInterface::GetInstance().WriteToFile(path, content);
 }
 
-AvailBufferSize *MemmgrConfigManager::GetAvailBufferSize()
+std::shared_ptr<AvailBufferSize> MemmgrConfigManager::GetAvailBufferSize()
 {
-    return this->availBufferSize;
+    return this->availBufferSize_;
 }
 
 const MemmgrConfigManager::ReclaimRatiosConfigSet MemmgrConfigManager::GetReclaimRatiosConfigSet()
 {
-    return this->reclaimRatiosConfigSet;
+    return this->reclaimRatiosConfigSet_;
 }
 } // namespace Memory
 } // namespace OHOS

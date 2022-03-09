@@ -31,9 +31,12 @@ constexpr int MEMCG_REFAULT_THRESHOLD = 50; // 50 times
 constexpr int ROOT_MEMCG_MEM_2_ZRAM_RATIO = 40; // 60%
 constexpr int ROOT_MEMCG_ZRAM_2_UFS_RATIO = 0; // 0%
 constexpr int ROOT_MEMCG_REFAULT_THRESHOLD = 0; // 0 times
-// default app_score of memcg
+// default score of memcg
 constexpr int APP_SCORE = 300;
 constexpr int PERCENT_100 = 100;
+// default score range
+constexpr int RECLAIM_SCORE_MIN = 0;
+constexpr int RECLAIM_SCORE_MAX = 1000;
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_RECALIM_STRATEGY_CONSTANTS_H
