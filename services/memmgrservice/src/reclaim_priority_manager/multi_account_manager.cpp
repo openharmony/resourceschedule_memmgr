@@ -201,7 +201,7 @@ void MultiAccountManager::GetAccountProcesses(int accountId, std::map<int, std::
 }
 
 bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
-        std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
+    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
     for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
         int accountId = switchedAccountIds.at(i);
@@ -215,7 +215,7 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
 }
 
 bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
-                                                 std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
+    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
     for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
         int accountId = switchedAccountIds.at(i);

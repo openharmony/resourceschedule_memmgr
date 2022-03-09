@@ -355,7 +355,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
 }
 
 void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
-        std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
+    std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
 {
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
@@ -408,7 +408,7 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
 }
 
 bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle,
-        pid_t pid, AppAction action)
+    pid_t pid, AppAction action)
 {
     HILOGD("called");
     if (bundle == nullptr) {
