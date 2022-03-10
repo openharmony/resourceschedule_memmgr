@@ -372,7 +372,16 @@ std::string UserMemcg::GetMemcgPath_()
 bool UserMemcg::AddProc(unsigned int pid)
 {
     std::string fullPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "cgroup.procs");
-    return WriteToFile_(fullPath, std::to_string(pid), false);
+    bool ret = WriteToFile_(fullPath, std::to_string(pid), false);
+    // double check file content
+    bool dirExists = KernelInterface::GetInstance().IsDirExists(GetMemcgPath_());
+    bool fileExists = KernelInterface::GetInstance().IsFileExists(fullPath);
+    std::string content;
+    KernelInterface::GetInstance().ReadFromFile(fullPath, content);
+    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
+    HILOGI("dir:%{public}s exist=%{public}d. file:%{public}s exist=%{public}d content=*%{public}s* ret=%{public}d",
+           GetMemcgPath_().c_str(), dirExists, fullPath.c_str(), fileExists, content.c_str(), ret);
+    return ret;
 }
 } // namespace Memory
 } // namespace OHOS
