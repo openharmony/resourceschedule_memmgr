@@ -75,7 +75,7 @@ UserMemcg* MemcgMgr::GetUserMemcg(unsigned int userId)
 
 UserMemcg* MemcgMgr::AddUserMemcg(unsigned int userId)
 {
-    HILOGI("userId=%{public}d", userId);
+    HILOGI("userId=%{public}u", userId);
     UserMemcg* memcg = new (std::nothrow) UserMemcg(userId);
     if (memcg == nullptr) {
         HILOGE("new obj failed!");
@@ -88,10 +88,10 @@ UserMemcg* MemcgMgr::AddUserMemcg(unsigned int userId)
 
 bool MemcgMgr::RemoveUserMemcg(unsigned int userId)
 {
-    HILOGI("userId=%{public}d", userId);
+    HILOGI("userId=%{public}u", userId);
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) {
-        HILOGI("account %{public}d not exist. cannot remove", userId);
+        HILOGI("account %{public}u not exist. cannot remove", userId);
         return false;
     }
     memcg->RemoveMemcgDir();
@@ -104,15 +104,15 @@ bool MemcgMgr::RemoveUserMemcg(unsigned int userId)
 bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, ReclaimRatios * const ratios)
 {
     if (ratios == nullptr) {
-        HILOGI("parma ratios nullptr. userId=%{public}d score=%{public}d", userId, score);
+        HILOGI("parma ratios nullptr. userId=%{public}u score=%{public}d", userId, score);
         return false;
     }
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) {
-        HILOGI("account %{public}d not exist. cannot update score and ratios", userId);
+        HILOGI("account %{public}u not exist. cannot update score and ratios", userId);
         return false;
     }
-    HILOGI("update reclaim retios userId=%{public}d score=%{public}d, %{public}s",
+    HILOGI("update reclaim retios userId=%{public}u score=%{public}d, %{public}s",
            userId, score, ratios->ToString().c_str());
     memcg->SetScore(score);
     return memcg->SetReclaimRatios(ratios) && memcg->SetScoreAndReclaimRatiosToKernel();
@@ -120,13 +120,14 @@ bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, 
 
 bool MemcgMgr::AddProcToMemcg(unsigned int pid, unsigned int userId)
 {
-    HILOGI("pid=%{public}d userId=%{public}d", pid, userId);
+    HILOGI("pid=%{public}u userId=%{public}u", pid, userId);
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) { // new user
+        HILOGI("no such user. go create %{public}u", userId);
         memcg = AddUserMemcg(userId);
     }
     if (memcg == nullptr) {
-        HILOGE("AddUserMemcg failed %{public}d", userId);
+        HILOGE("AddUserMemcg failed %{public}u", userId);
         return false;
     }
     return memcg->AddProc(pid); // add pid to memcg

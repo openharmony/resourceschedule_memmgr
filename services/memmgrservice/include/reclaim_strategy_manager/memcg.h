@@ -102,7 +102,7 @@ protected:
     virtual std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
     bool ReadScoreAndReclaimRatiosFromKernel_(int& score, unsigned int& mem2zramRatio, unsigned int& zram2ufsRatio,
-                                             unsigned int& refaultThreshold);
+                                              unsigned int& refaultThreshold);
 }; // end class Memcg
 
 class UserMemcg final : public Memcg {
