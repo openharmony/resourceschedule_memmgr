@@ -97,7 +97,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam
         case AppAction::APP_FOREGROUND:
         case AppAction::APP_BACKGROUND:
         case AppAction::OTHERS: {
-            HILOGI("OTHERS app action! %{public}d", reclaimPara->action_);
+            HILOGI("others app action! %{public}s", ReclaimParam::GetAppActionStr(reclaimPara->action_).c_str());
             break;
         }
         default:
