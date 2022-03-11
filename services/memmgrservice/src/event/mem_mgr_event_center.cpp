@@ -107,7 +107,7 @@ void MemMgrEventCenter::RegisterSystemEventObserver()
     MemMgrCaredEventCallback callback = {
         std::bind(&MemMgrEventCenter::OnReceiveCaredEvent, this, std::placeholders::_1),
     };
-    sysEvtOberserver_ = std::make_unique<MemMgrEventObserver>(callback);
+    MEMMGR_MAKE_UNIQUE(sysEvtOberserver_ = std::make_unique<MemMgrEventObserver>(callback));
 
     HILOGI("success to register cared event callback");
 }
@@ -117,7 +117,7 @@ void MemMgrEventCenter::RegisterAccountObserver()
     AccountCallback callback = {
         std::bind(&MemMgrEventCenter::OnOsAccountsChanged, this, std::placeholders::_1),
     };
-    accountOberserver_ = std::make_unique<AccountObserver>(callback);
+    MEMMGR_MAKE_UNIQUE(accountOberserver_ = std::make_unique<AccountObserver>(callback));
     HILOGI("success to register account callback");
 }
 
@@ -127,7 +127,7 @@ void MemMgrEventCenter::RegisterMemPressMonitor()
     MemPressCallback callback = {
         std::bind(&MemMgrEventCenter::OnMemPressLevelUploaded, this, std::placeholders::_1),
     };
-    psiMonitor_ = std::make_unique<MemoryPressureMonitor>(callback);
+    MEMMGR_MAKE_UNIQUE(psiMonitor_ = std::make_unique<MemoryPressureMonitor>(callback));
     HILOGI("success to register memory pressure callback");
 }
 
