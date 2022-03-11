@@ -65,8 +65,8 @@ public:
 
     ReclaimRatios();
     ReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
-    void SetRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
-    bool SetRatios(ReclaimRatios * const ratios);
+    void SetRatiosByValue(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
+    void SetRatios(const ReclaimRatios& ratios);
     std::string NumsToString() const; // only nums, not easy for reading
     std::string ToString() const; // easy for reading
 
@@ -95,14 +95,14 @@ public:
 
     void SetScore(int score);
     void SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold);
-    bool SetReclaimRatios(ReclaimRatios * const ratios);
+    bool SetReclaimRatios(const ReclaimRatios& ratios);
     bool SetScoreAndReclaimRatiosToKernel();
     bool SwapIn(); // 100% load to mem
 protected:
     virtual std::string GetMemcgPath_();
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
     bool ReadScoreAndReclaimRatiosFromKernel_(int& score, unsigned int& mem2zramRatio, unsigned int& zram2ufsRatio,
-                                             unsigned int& refaultThreshold);
+                                              unsigned int& refaultThreshold);
 }; // end class Memcg
 
 class UserMemcg final : public Memcg {
