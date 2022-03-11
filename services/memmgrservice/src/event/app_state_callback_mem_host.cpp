@@ -15,6 +15,7 @@
 
 #include "app_state_callback_mem_host.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "reclaim_priority_manager.h"
 
 #include "app_mgr_interface.h"
