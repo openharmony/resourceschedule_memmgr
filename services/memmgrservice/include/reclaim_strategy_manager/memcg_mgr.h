@@ -37,7 +37,7 @@ public:
     UserMemcg* GetUserMemcg(unsigned int userId);
     UserMemcg* AddUserMemcg(unsigned int userId);
     bool RemoveUserMemcg(unsigned int userId);
-    bool UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, ReclaimRatios * const ratios);
+    bool UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, const ReclaimRatios& ratios);
     bool AddProcToMemcg(unsigned int pid, unsigned int userId);
     bool SwapInMemcg(unsigned int userId); // load memcg data 100% to mem
     SwapInfo* GetMemcgSwapInfo(unsigned int userId);
