@@ -21,6 +21,7 @@
 #define protected public
 #include "kernel_interface.h"
 #include "reclaim_strategy_manager.h"
+#include "reclaim_strategy_constants.h"
 #undef private
 #undef protected
 
@@ -142,34 +143,31 @@ HWTEST_F(ReclaimStrategyManagerTest, HandleProcessCreateTest, TestSize.Level1)
 
 HWTEST_F(ReclaimStrategyManagerTest, GetReclaimRatiosByScoreTest, TestSize.Level1)
 {
-    EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(0, nullptr), false);
-    ReclaimRatios* ratios = new ReclaimRatios();
+    ReclaimRatios ratios(50, 50, 50);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(0, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(100, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(200, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(500, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(1000, ratios), true);
-    delete ratios;
-    ratios = nullptr;
 }
 
 HWTEST_F(ReclaimStrategyManagerTest, GetValidScoreTest, TestSize.Level1)
 {
-    int score = ReclaimStrategyManager::RECLAIM_SCORE_MIN - 1;
+    int score = RECLAIM_SCORE_MIN - 1;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MIN);
+    EXPECT_EQ(score, RECLAIM_SCORE_MIN);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MIN;
+    score = RECLAIM_SCORE_MIN;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MIN);
+    EXPECT_EQ(score, RECLAIM_SCORE_MIN);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MAX;
+    score = RECLAIM_SCORE_MAX;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MAX);
+    EXPECT_EQ(score, RECLAIM_SCORE_MAX);
 
-    score = ReclaimStrategyManager::RECLAIM_SCORE_MAX + 1;
+    score = RECLAIM_SCORE_MAX + 1;
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
-    EXPECT_EQ(score, ReclaimStrategyManager::RECLAIM_SCORE_MAX);
+    EXPECT_EQ(score, RECLAIM_SCORE_MAX);
 }
 }
 }
