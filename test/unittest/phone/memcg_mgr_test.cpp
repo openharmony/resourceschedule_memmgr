@@ -93,16 +93,9 @@ HWTEST_F(MemcgMgrTest, UpdateMemcgScoreAndReclaimRatiosTest, TestSize.Level1)
 {
     unsigned int memcgId = 123456u; // ensure it is a new ID
     EXPECT_EQ(MemcgMgr::GetInstance().AddUserMemcg(memcgId) != nullptr, true);
-    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 100, nullptr), false);
-    ReclaimRatios* ratios = new ReclaimRatios();
-    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, -1, ratios), false);
+    ReclaimRatios ratios;
     EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 200, ratios), true);
-    ratios->SetRatios(101, 101, 101);
-    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 300, ratios), false);
-    EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(memcgId), true);
-    EXPECT_EQ(MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(memcgId, 300, ratios), false);
-    delete ratios;
-    ratios = nullptr;
+    MemcgMgr::GetInstance().RemoveUserMemcg(memcgId);
 }
 
 HWTEST_F(MemcgMgrTest, AddProcToMemcgTest, TestSize.Level1)

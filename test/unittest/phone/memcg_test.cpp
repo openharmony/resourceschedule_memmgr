@@ -99,21 +99,12 @@ HWTEST_F(MemcgTest, SetReclaimRatiosTest, TestSize.Level1)
     EXPECT_EQ(memcg->reclaimRatios_->mem2zramRatio_, 100u);
     EXPECT_EQ(memcg->reclaimRatios_->zram2ufsRatio_, 100u);
     EXPECT_EQ(memcg->reclaimRatios_->refaultThreshold_, 100u);
-    memcg->SetReclaimRatios(101, 101, 101);
-    EXPECT_EQ(memcg->reclaimRatios_->mem2zramRatio_, 100u);
-    EXPECT_EQ(memcg->reclaimRatios_->zram2ufsRatio_, 100u);
-    EXPECT_EQ(memcg->reclaimRatios_->refaultThreshold_, 101u);
 
-    ReclaimRatios* ratios = new ReclaimRatios();
+    ReclaimRatios ratios(50, 50, 50);
     EXPECT_EQ(memcg->SetReclaimRatios(ratios), true);
-    ratios->SetRatios(101, 101, 101);
-    EXPECT_EQ(memcg->SetReclaimRatios(ratios), true);
-    EXPECT_EQ(memcg->reclaimRatios_->mem2zramRatio_, 100u);
-    EXPECT_EQ(memcg->reclaimRatios_->zram2ufsRatio_, 100u);
-    EXPECT_EQ(memcg->reclaimRatios_->refaultThreshold_, 101u);
-    delete ratios;
-    ratios = nullptr;
-    EXPECT_EQ(memcg->SetReclaimRatios(ratios), false);
+    EXPECT_EQ(memcg->reclaimRatios_->mem2zramRatio_, 50u);
+    EXPECT_EQ(memcg->reclaimRatios_->zram2ufsRatio_, 50u);
+    EXPECT_EQ(memcg->reclaimRatios_->refaultThreshold_, 50u);
     delete memcg;
     memcg = nullptr;
 }
