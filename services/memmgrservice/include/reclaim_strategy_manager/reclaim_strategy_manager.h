@@ -51,11 +51,8 @@ private:
     bool HandleAccountPriorityChanged_(int accountId, int priority);
 
     // get param for config_mgr
-    bool GetReclaimRatiosByScore_(int score, ReclaimRatios * const ratios);
+    bool GetReclaimRatiosByScore_(int score, ReclaimRatios& ratios);
     void GetValidScore_(int& priority);
-
-    static constexpr int RECLAIM_SCORE_MIN = 0;
-    static constexpr int RECLAIM_SCORE_MAX = 1000;
 };
 } // namespace Memory
 } // namespace OHOS

@@ -31,7 +31,17 @@ enum class AppAction {
     OTHERS = 5,
 };
 
-struct ReclaimParam {
+const std::map<int, std::string> appActionStrMap_ = {
+    { static_cast<int32_t>(AppAction::CREATE_PROCESS_AND_APP), "CREATE_PROCESS_AND_APP" },
+    { static_cast<int32_t>(AppAction::CREATE_PROCESS_ONLY), "CREATE_PROCESS_ONLY" },
+    { static_cast<int32_t>(AppAction::APP_DIED), "APP_DIED" },
+    { static_cast<int32_t>(AppAction::APP_FOREGROUND), "APP_FOREGROUND" },
+    { static_cast<int32_t>(AppAction::APP_BACKGROUND), "APP_BACKGROUND" },
+    { static_cast<int32_t>(AppAction::OTHERS), "OTHERS" },
+};
+
+class ReclaimParam {
+public:
     pid_t pid_;
     int bundleUid_;
     std::string bundleName_;
@@ -47,6 +57,15 @@ struct ReclaimParam {
           score_(score),
           action_(action) {}
 
+    static std::string GetAppActionStr(const AppAction action)
+    {
+        auto pair = appActionStrMap_.find(static_cast<int32_t>(action));
+        if (pair == appActionStrMap_.end()) {
+            return "none"; // none means no such action
+        }
+        return pair->second;
+    }
+
     inline std::string ToString() const
     {
         std::string ret = "pid:" + std::to_string(pid_)
@@ -54,7 +73,7 @@ struct ReclaimParam {
                         + " " + bundleName_
                         + " userId:" + std::to_string(accountId_)
                         + " score:" + std::to_string(score_)
-                        + " action:" + std::to_string(static_cast<int32_t>(action_));
+                        + " action:" + GetAppActionStr(action_);
         return ret;
     }
 
