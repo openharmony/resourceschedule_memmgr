@@ -15,6 +15,7 @@
 
 #include "mem_mgr_event_observer.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 
 #include "common_event.h"
 #include "common_event_manager.h"
@@ -36,8 +37,11 @@ MemMgrEventObserver::MemMgrEventObserver(const MemMgrCaredEventCallback &callbac
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     EventFwk::CommonEventSubscribeInfo commonEventSubscribeInfo(matchingSkills);
 
-    subscriber_ = std::make_shared<MemMgrEventSubscriber>(commonEventSubscribeInfo,
-                     std::bind(&MemMgrEventObserver::OnReceiveEvent, this, std::placeholders::_1));
+    MEMMGR_MAKE_SHARED(
+        subscriber_ = std::make_shared<MemMgrEventSubscriber>(commonEventSubscribeInfo,
+                        std::bind(&MemMgrEventObserver::OnReceiveEvent, this, std::placeholders::_1)); \
+        EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_)
+    );
     EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
 }
 

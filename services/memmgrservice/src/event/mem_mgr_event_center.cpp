@@ -16,6 +16,7 @@
 #include "mem_mgr_event_center.h"
 #include <string>
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "mem_mgr_event_observer.h"
 #include "reclaim_priority_manager.h"
 #include "background_task_mgr_helper.h"
@@ -28,9 +29,10 @@ const std::string TAG = "MemMgrEventCenter";
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
 
-MemMgrEventCenter::MemMgrEventCenter() : appStateCallback_(std::make_shared<AppStateCallbackMemHost>()),
-                                         subscriber_(std::make_shared<MemMgrBgTaskSubscriber>())
+MemMgrEventCenter::MemMgrEventCenter()
 {
+    MEMMGR_MAKE_SHARED(appStateCallback_ = std::make_shared<AppStateCallbackMemHost>());
+    MEMMGR_MAKE_SHARED(subscriber_ = std::make_shared<MemMgrBgTaskSubscriber>());
     registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
 }
 
@@ -50,11 +52,11 @@ bool MemMgrEventCenter::Init()
 bool MemMgrEventCenter::GetEventHandler()
 {
     if (!handler_) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-        if (handler_ == nullptr) {
-            HILOGI("failed to create event handler");
-            return false;
-        }
+        MEMMGR_MAKE_SHARED_RETURN(
+            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
+            HILOGI("failed to create event handler"); \
+            return false
+        );
     }
     return true;
 }
@@ -106,7 +108,7 @@ void MemMgrEventCenter::RegisterSystemEventObserver()
         std::bind(&MemMgrEventCenter::OnReceiveCaredEvent, this, std::placeholders::_1),
     };
     sysEvtOberserver_ = std::make_unique<MemMgrEventObserver>(callback);
-    
+
     HILOGI("success to register cared event callback");
 }
 
