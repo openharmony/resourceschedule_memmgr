@@ -37,6 +37,8 @@ constexpr int PERCENT_100 = 100;
 // default score range
 constexpr int RECLAIM_SCORE_MIN = 0;
 constexpr int RECLAIM_SCORE_MAX = 1000;
+// min vaule of user id
+constexpr int VALID_USER_ID_MIN = 100;
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_RECALIM_STRATEGY_CONSTANTS_H
