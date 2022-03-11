@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "multi_account_manager.h"
 #include "kernel_interface.h"
 #include "reclaim_strategy_manager.h"
@@ -66,11 +67,11 @@ bool ReclaimPriorityManager::Init()
 bool ReclaimPriorityManager::GetEventHandler()
 {
     if (!handler_) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-        if (handler_ == nullptr) {
-            HILOGE("handler init failed");
-            return false;
-        }
+        MEMMGR_MAKE_SHARED_RETURN(
+            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
+            HILOGI("handler init failed"); \
+            return false
+        );
     }
     return true;
 }
@@ -222,13 +223,13 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
 {
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account == nullptr) {
-        std::shared_ptr<AccountBundleInfo> tmpAccount = std::make_shared<AccountBundleInfo>(accountId);
-        if (tmpAccount == nullptr) {
-            HILOGE("cannot new account!!");
-            return false;
-        }
-        account = tmpAccount;
-        AddOsAccountInfo(account);
+        MEMMGR_MAKE_SHARED_RETURN(
+            std::shared_ptr<AccountBundleInfo> tmpAccount = std::make_shared<AccountBundleInfo>(accountId); \
+            account = tmpAccount; \
+            AddOsAccountInfo(account),
+            HILOGE("cannot new account!!"); \
+            return false
+        );
     }
     std::shared_ptr<BundlePriorityInfo> bundle;
     AppAction action;
@@ -238,9 +239,12 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
         action = AppAction::CREATE_PROCESS_ONLY;
     } else {
         // need to new BundleInfo ,add to list and map
-        bundle = std::make_shared<BundlePriorityInfo>(bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
-        AddBundleInfoToSet(bundle);
-        action = AppAction::CREATE_PROCESS_AND_APP;
+        MEMMGR_MAKE_SHARED_RETURN(
+            bundle = std::make_shared<BundlePriorityInfo>(bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND); \
+            AddBundleInfoToSet(bundle); \
+            action = AppAction::CREATE_PROCESS_AND_APP,
+            return false
+        );
     }
     ProcessPriorityInfo proc(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
     if (IsSystemApp(bundle)) {
@@ -407,9 +411,13 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriority
     if (bundle == nullptr) {
         return false;
     }
-    std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, bundle->uid_, bundle->name_,
-        bundle->accountId_, bundle->priority_, action);
-    ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
+    MEMMGR_MAKE_SHARED_RETURN(
+        std::shared_ptr<ReclaimParam> para =
+            std::make_shared<ReclaimParam>(pid, bundle->uid_, bundle->name_, bundle->accountId_,
+                bundle->priority_, action); \
+        ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para),
+        return false
+    );
     return WriteOomScoreAdjToKernel(bundle);
 }
 

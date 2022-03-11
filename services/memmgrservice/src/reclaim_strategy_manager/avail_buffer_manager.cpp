@@ -16,6 +16,7 @@
 #include <regex>
 
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "kernel_interface.h"
 #include "avail_buffer_manager.h"
 
@@ -51,11 +52,11 @@ bool AvailBufferManager::Init()
 bool AvailBufferManager::GetEventHandler()
 {
     if (!handler_) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-        if (handler_ == nullptr) {
-            HILOGE("handler init failed");
-            return false;
-        }
+        MEMMGR_MAKE_SHARED_RETURN(
+            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
+            HILOGI("handler init failed"); \
+            return false
+        );
     }
     return true;
 }
@@ -108,9 +109,12 @@ bool AvailBufferManager::WriteAvailBufferToKernel()
 
 void AvailBufferManager::CloseZswapd()
 {
-    std::shared_ptr<AvailBufferSize> availBuffer = std::make_shared<AvailBufferSize>(0, 0, 0, 0);
-    HILOGI("Zswapd close now");
-    SetAvailBuffer(availBuffer);
+    MEMMGR_MAKE_SHARED_RETURN(
+        std::shared_ptr<AvailBufferSize> availBuffer = std::make_shared<AvailBufferSize>(0, 0, 0, 0); \
+        HILOGI("Zswapd close now"); \
+        SetAvailBuffer(availBuffer),
+        return
+    );
 }
 
 void AvailBufferManager::InitAvailBuffer()

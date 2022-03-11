@@ -17,6 +17,7 @@
 #include "avail_buffer_manager.h"
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "reclaim_strategy_constants.h"
 #include "reclaim_strategy_manager.h"
 
@@ -58,11 +59,11 @@ bool ReclaimStrategyManager::Init()
 bool ReclaimStrategyManager::GetEventHandler_()
 {
     if (handler_ == nullptr) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-    }
-    if (handler_ == nullptr) {
-        HILOGE("handler init failed");
-        return false;
+        MEMMGR_MAKE_SHARED_RETURN(
+            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
+            HILOGI("handler init failed"); \
+            return false
+        );
     }
     return true;
 }
