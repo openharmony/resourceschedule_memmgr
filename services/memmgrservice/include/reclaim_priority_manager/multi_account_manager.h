@@ -42,11 +42,11 @@ public:
     bool GetSwitchedAccountIds(std::vector<int> &accountIds);
     bool UpdateAccountPriorityInfo(std::vector<int> &accountIds);
     bool HandleOsAccountsChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod,
-                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
+                                 std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
     bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
-                                 std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
+                                 std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
     bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
-                                std::map<int, AccountBundleInfo> &osAccountsInfoMap_);
+                                std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
 
 private:
     int retryTimes_ = 0;
@@ -55,7 +55,7 @@ private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
     std::shared_ptr<MultiAccountStrategy> strategy_;
     std::vector<int> oldActiveAccountIds_;
-    void GetAccountProcesses(int accountId, std::map<int, AccountBundleInfo> &osAccountsInfoMap_,
+    void GetAccountProcesses(int accountId, std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_,
                              std::vector<pid_t> &processes);
     MultiAccountManager();
     ~MultiAccountManager();

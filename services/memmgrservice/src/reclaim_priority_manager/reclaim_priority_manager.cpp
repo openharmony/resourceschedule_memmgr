@@ -29,7 +29,7 @@ const std::string TAG = "ReclaimPriorityManager";
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
-bool WriteOomScoreAdjToKernel(BundlePriorityInfo *bundle)
+bool WriteOomScoreAdjToKernel(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     HILOGD("called");
     if (bundle == nullptr) {
@@ -83,7 +83,7 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
     HILOGD("iter %{public}d bundles begin", totalBundlePrioSet_.size());
     int count = 0;
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle, ++count) {
-        BundlePriorityInfo *bundle = *itrBundle;
+        std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
 
         HILOGD("bundle %{public}d/%{public}d, uid=%{publics}d", count, totalBundlePrioSet_.size(), bundle->uid_);
         BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
@@ -109,10 +109,10 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
 
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
-    if (IsOsAccountExist(accountId)) {
-        AccountBundleInfo* accountPtr = FindOsAccountById(accountId);
-        auto pairPtr = accountPtr->bundleIdInfoMapping_.find(uid);
-        if (pairPtr != accountPtr->bundleIdInfoMapping_.end()) {
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    if (account != nullptr) {
+        auto pairPtr = account->bundleIdInfoMapping_.find(uid);
+        if (pairPtr != account->bundleIdInfoMapping_.end()) {
             if (pairPtr->second != nullptr) {
                 auto bundlePtr = pairPtr->second;
                 bundlePtr->SetState(state);
@@ -130,7 +130,7 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
     return true;
 }
 
-void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
+void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     auto ret = totalBundlePrioSet_.insert(bundle);
@@ -140,7 +140,7 @@ void ReclaimPriorityManager::AddBundleInfoToSet(BundlePriorityInfo *bundle)
     }
 }
 
-void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo *bundle)
+void ReclaimPriorityManager::DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     int delCount = totalBundlePrioSet_.erase(bundle);
@@ -148,9 +148,14 @@ void ReclaimPriorityManager::DeleteBundleInfoFromSet(BundlePriorityInfo *bundle)
            delCount, bundle->uid_, totalBundlePrioSet_.size());
 }
 
-AccountBundleInfo* ReclaimPriorityManager::FindOsAccountById(int accountId)
+std::shared_ptr<AccountBundleInfo> ReclaimPriorityManager::FindOsAccountById(int accountId)
 {
-    return &(osAccountsInfoMap_.at(accountId));
+    auto iter = osAccountsInfoMap_.find(accountId);
+    if (iter != osAccountsInfoMap_.end()) {
+        return iter->second;
+    }
+    HILOGI("not found the account info");
+    return nullptr;
 }
 
 void ReclaimPriorityManager::RemoveOsAccountById(int accountId)
@@ -159,9 +164,9 @@ void ReclaimPriorityManager::RemoveOsAccountById(int accountId)
     osAccountsInfoMap_.erase(accountId);
 }
 
-void ReclaimPriorityManager::AddOsAccountInfo(AccountBundleInfo account)
+void ReclaimPriorityManager::AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account)
 {
-    osAccountsInfoMap_.insert(std::make_pair(account.id_, account));
+    osAccountsInfoMap_.insert(std::make_pair(account->id_, account));
 }
 
 bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId)
@@ -169,15 +174,12 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
     if (pid == IGNORE_PID) {
         return true;
     }
-    if (!IsOsAccountExist(accountId)) {
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    if (account == nullptr || !account->HasBundle(bundleUid)) {
+        HILOGE("account or bundle name not exist");
         return false;
     }
-    AccountBundleInfo *account = FindOsAccountById(accountId);
-    if (!account->HasBundle(bundleUid)) {
-        HILOGE("bundle name not exist");
-        return false;
-    }
-    BundlePriorityInfo *bundle = account->FindBundleById(bundleUid);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     if (!bundle->HasProc(pid)) {
         HILOGE("pid not exist");
         return false;
@@ -197,7 +199,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid,
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
-bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo *bundle)
+bool ReclaimPriorityManager::IsSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     // special case: launcher and system ui bundle
     if (bundle != nullptr && (bundle->name_.compare(LAUNCHER_BUNDLE_NAME) == 0 ||
@@ -207,7 +209,7 @@ bool ReclaimPriorityManager::IsSystemApp(BundlePriorityInfo *bundle)
     return false;
 }
 
-void ReclaimPriorityManager::UpdateBundlePriority(BundlePriorityInfo *bundle)
+void ReclaimPriorityManager::UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     HILOGD("begin-------------------------");
     DeleteBundleInfoFromSet(bundle);
@@ -218,12 +220,17 @@ void ReclaimPriorityManager::UpdateBundlePriority(BundlePriorityInfo *bundle)
 
 bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::string bundleName, int accountId)
 {
-    if (!IsOsAccountExist(accountId)) {
-        AccountBundleInfo newAccount(accountId);
-        AddOsAccountInfo(newAccount);
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    if (account == nullptr) {
+        std::shared_ptr<AccountBundleInfo> tmpAccount = std::make_shared<AccountBundleInfo>(accountId);
+        if (tmpAccount == nullptr) {
+            HILOGE("cannot new account!!");
+            return false;
+        }
+        account = tmpAccount;
+        AddOsAccountInfo(account);
     }
-    AccountBundleInfo* account = FindOsAccountById(accountId);
-    BundlePriorityInfo *bundle;
+    std::shared_ptr<BundlePriorityInfo> bundle;
     AppAction action;
     if (account->HasBundle(bundleUid)) {
         // insert new ProcessInfo and update new priority
@@ -231,7 +238,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
         action = AppAction::CREATE_PROCESS_ONLY;
     } else {
         // need to new BundleInfo ,add to list and map
-        bundle = new BundlePriorityInfo(bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
+        bundle = std::make_shared<BundlePriorityInfo>(bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
         AddBundleInfoToSet(bundle);
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
@@ -248,7 +255,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
 }
 
 bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
-    BundlePriorityInfo *bundle, AccountBundleInfo *account)
+    std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo> account)
 {
     // clear proc and bundle if needed, delete the object
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
@@ -260,8 +267,6 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
         ret = ApplyReclaimPriority(bundle, proc.pid_, AppAction::APP_DIED);
         account->RemoveBundleById(bundle->uid_);
         DeleteBundleInfoFromSet(bundle);
-        delete bundle;
-        bundle = nullptr;
     } else {
         if (removedProcessPrio <= bundle->priority_) {
             UpdateBundlePriority(bundle);
@@ -273,7 +278,7 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
     return ret;
 }
 
-bool ReclaimPriorityManager::HandleApplicationSuspend(BundlePriorityInfo *bundle)
+bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     if (bundle == nullptr) {
         return false;
@@ -304,9 +309,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         HILOGE("process not exist and not to create it!!");
         return false;
     }
-
-    AccountBundleInfo *account = FindOsAccountById(accountId);
-    BundlePriorityInfo *bundle = account->FindBundleById(bundleUid);
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     if (bundle->priority_ == RECLAIM_PRIORITY_SYSTEM) {
         HILOGI("%{public}s is system app, skip!", bundleName.c_str());
         return true;
@@ -343,8 +347,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     return ret;
 }
 
-void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, BundlePriorityInfo *bundle,
-    ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
+    std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
 {
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
@@ -396,7 +400,8 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason, Bu
     }
 }
 
-bool ReclaimPriorityManager::ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action)
+bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle,
+    pid_t pid, AppAction action)
 {
     HILOGD("called");
     if (bundle == nullptr) {

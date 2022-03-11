@@ -37,7 +37,7 @@ class ReclaimPriorityManager {
 
 public:
     struct BundleInfoPtrCmp {
-        bool operator() (const BundlePriorityInfo *p1, const BundlePriorityInfo *p2)
+        bool operator() (const std::shared_ptr<BundlePriorityInfo> p1, const std::shared_ptr<BundlePriorityInfo> p2)
         {
             if (p1->uid_ == p2->uid_) {
                 // remove duplicate BundlePriorityInfo according to uid_
@@ -73,19 +73,19 @@ public:
         }
     };
 
-    using BundlePrioSet = std::set<BundlePriorityInfo*, BundleInfoPtrCmp>;
+    using BundlePrioSet = std::set<std::shared_ptr<BundlePriorityInfo>, BundleInfoPtrCmp>;
     using BunldeCopySet = std::set<BundlePriorityInfo, BundleInfoCmp>;
-    // map <bundleUid, BundlePriorityInfo*>
-    using BundlePrioMap = std::map<int, BundlePriorityInfo*>;
-    using OsAccountsMap = std::map<int, AccountBundleInfo>;
+    // map <bundleUid, std::shared_ptr<BundlePriorityInfo>>
+    using BundlePrioMap = std::map<int, std::shared_ptr<BundlePriorityInfo>>;
+    using OsAccountsMap = std::map<int, std::shared_ptr<AccountBundleInfo>>;
     bool Init();
     bool UpdateReclaimPriority(pid_t pid, int bundleUid, std::string bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
-    void AddBundleInfoToSet(BundlePriorityInfo *bundle);
-    void UpdateBundlePriority(BundlePriorityInfo *bundle);
-    void DeleteBundleInfoFromSet(BundlePriorityInfo *bundle);
+    void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
+    void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
+    void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
 
     inline bool Initailized()
     {
@@ -116,19 +116,19 @@ private:
             AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
-    bool ApplyReclaimPriority(BundlePriorityInfo *bundle, pid_t pid, AppAction action);
+    bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
-    bool HandleTerminateProcess(ProcessPriorityInfo &proc, BundlePriorityInfo *bundle,
-            AccountBundleInfo *account);
-    void HandleUpdateProcess(AppStateUpdateReason reason, BundlePriorityInfo *bundle,
+    bool HandleTerminateProcess(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle,
+            std::shared_ptr<AccountBundleInfo> account);
+    void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
             ProcessPriorityInfo &proc, AppAction &action);
-    bool HandleApplicationSuspend(BundlePriorityInfo *bundle);
-    AccountBundleInfo* FindOsAccountById(int accountId);
+    bool HandleApplicationSuspend(std::shared_ptr<BundlePriorityInfo> bundle);
+    std::shared_ptr<AccountBundleInfo> FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
-    void AddOsAccountInfo(AccountBundleInfo account);
-    bool IsSystemApp(BundlePriorityInfo *bundle);
+    void AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account);
+    bool IsSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
