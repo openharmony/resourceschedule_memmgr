@@ -101,19 +101,15 @@ bool MemcgMgr::RemoveUserMemcg(unsigned int userId)
     return GetUserMemcg(userId) == nullptr;
 }
 
-bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, ReclaimRatios * const ratios)
+bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, const ReclaimRatios& ratios)
 {
-    if (ratios == nullptr) {
-        HILOGI("parma ratios nullptr. userId=%{public}u score=%{public}d", userId, score);
-        return false;
-    }
     UserMemcg* memcg = GetUserMemcg(userId);
     if (memcg == nullptr) {
         HILOGI("account %{public}u not exist. cannot update score and ratios", userId);
         return false;
     }
     HILOGI("update reclaim retios userId=%{public}u score=%{public}d, %{public}s",
-           userId, score, ratios->ToString().c_str());
+           userId, score, ratios.ToString().c_str());
     memcg->SetScore(score);
     return memcg->SetReclaimRatios(ratios) && memcg->SetScoreAndReclaimRatiosToKernel();
 }

@@ -85,20 +85,17 @@ ReclaimRatios::ReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRa
     zram2ufsRatio_ = (zram2ufsRatio > PERCENT_100) ? PERCENT_100 : zram2ufsRatio;
 }
 
-void ReclaimRatios::SetRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRatio, unsigned int refaultThreshold)
+void ReclaimRatios::SetRatiosByValue(unsigned int mem2zramRatio, unsigned int zram2ufsRatio,
+                                     unsigned int refaultThreshold)
 {
     mem2zramRatio_ = (mem2zramRatio > PERCENT_100) ? PERCENT_100 : mem2zramRatio;
     zram2ufsRatio_ = (zram2ufsRatio > PERCENT_100) ? PERCENT_100 : zram2ufsRatio;
     refaultThreshold_ = refaultThreshold;
 }
 
-bool ReclaimRatios::SetRatios(ReclaimRatios * const ratios)
+void ReclaimRatios::SetRatios(const ReclaimRatios& ratios)
 {
-    if (ratios == nullptr) {
-        return false;
-    }
-    SetRatios(ratios->mem2zramRatio_, ratios->zram2ufsRatio_, ratios->refaultThreshold_);
-    return true;
+    SetRatiosByValue(ratios.mem2zramRatio_, ratios.zram2ufsRatio_, ratios.refaultThreshold_);
 }
 
 inline std::string ReclaimRatios::NumsToString() const
@@ -230,13 +227,14 @@ void Memcg::SetReclaimRatios(unsigned int mem2zramRatio, unsigned int zram2ufsRa
     reclaimRatios_->refaultThreshold_ = refaultThreshold;
 }
 
-bool Memcg::SetReclaimRatios(ReclaimRatios * const ratios)
+bool Memcg::SetReclaimRatios(const ReclaimRatios& ratios)
 {
-    if (reclaimRatios_ == nullptr || ratios == nullptr) {
-        HILOGE("reclaimRatios_ or input nullptr");
+    if (reclaimRatios_ == nullptr) {
+        HILOGE("reclaimRatios_ nullptr");
         return false;
     }
-    return reclaimRatios_->SetRatios(ratios);
+    reclaimRatios_->SetRatios(ratios);
+    return true;
 }
 
 bool Memcg::SetScoreAndReclaimRatiosToKernel()
