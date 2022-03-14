@@ -17,6 +17,7 @@
 #include "avail_buffer_manager.h"
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
+#include "reclaim_priority_constants.h"
 #include "reclaim_strategy_constants.h"
 #include "reclaim_strategy_manager.h"
 
@@ -47,11 +48,12 @@ bool ReclaimStrategyManager::Init()
         initialized_ = true;
     } while (0);
 
-    if (initialized_) {
-        HILOGI("init successed");
-    } else {
+    if (!initialized_) {
         HILOGE("init failed");
+        return false;
     }
+    InitProcessBeforeMemmgr(); // add process (which started before memmgr) to memcg
+    HILOGI("init successed");
     return initialized_;
 }
 
@@ -65,6 +67,29 @@ bool ReclaimStrategyManager::GetEventHandler_()
         return false;
     }
     return true;
+}
+
+void ReclaimStrategyManager::InitProcessBeforeMemmgr()
+{
+    std::vector<unsigned int> pids;
+    if (!KernelInterface::GetInstance().GetAllProcPids(pids)) {
+        HILOGI("GetAllProcPids failed");
+        return;
+    }
+    unsigned int uid =  0;
+    unsigned int userId = 0;
+    bool ret = false;
+    for (auto pid : pids) {
+        if (!KernelInterface::GetInstance().GetUidByPid(pid, uid)) {
+            continue;
+        }
+        userId = GET_OS_ACCOUNT_ID_BY_UID(uid);
+        if (userId < VALID_USER_ID_MIN) { // invalid userId
+            continue;
+        }
+        ret = MemcgMgr::GetInstance().AddProcToMemcg(pid, userId);
+        HILOGD("add pid=%{public}u to userId=%{public}u, %{public}s", pid, userId, ret ? "succ" : "fail");
+    }
 }
 
 void ReclaimStrategyManager::NotifyAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara)
