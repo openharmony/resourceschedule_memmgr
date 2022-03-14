@@ -43,6 +43,7 @@ private:
 
     ReclaimStrategyManager();
     bool GetEventHandler_();
+    void InitProcessBeforeMemmgr();
 
     // handle app and os user event
     bool HandleAppStateChanged_(std::shared_ptr<ReclaimParam> reclaimPara);

@@ -25,7 +25,7 @@
 #include <dirent.h>
 
 #include <fstream>
-
+#include <regex>
 #include <sstream>
 #include <csignal>
 
@@ -37,6 +37,7 @@ const std::string TAG = "KernelInterface";
 
 IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
+const std::string KernelInterface::ROOT_PROC_PATH = "/proc";
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
 
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
@@ -303,6 +304,57 @@ int KernelInterface::KillOneProcessByPid(int pid)
     freedBuffer = procInfo.size;
 out:
     return freedBuffer;
+}
+
+bool KernelInterface::GetAllProcPids(std::vector<unsigned int> &pids)
+{
+    pids.clear();
+    DIR *dir = opendir(ROOT_PROC_PATH.c_str());
+    if (dir == nullptr) {
+        HILOGE("dir %{public}s is not exsit", ROOT_PROC_PATH.c_str());
+        return false;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            // current dir OR parent dir
+            continue;
+        } else if (ptr->d_type == DT_DIR) {
+            int pid = atoi(ptr->d_name);
+            if (pid > 0) {
+                pids.push_back((unsigned int)pid);
+            }
+        }
+    }
+    if (dir) {
+        closedir(dir);
+    }
+    HILOGD("there are %{public}u pids under %{public}s", pids.size(), ROOT_PROC_PATH.c_str());
+    return true;
+}
+
+bool KernelInterface::GetUidByPid(unsigned int pid, unsigned int& uid)
+{
+    std::string path = JoinPath(ROOT_PROC_PATH, std::to_string(pid), "status");
+    std::string content;
+    if (!ReadFromFile(path, content)) {
+        HILOGE("read file failed. %{public}s", path.c_str());
+        return false;
+    }
+    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
+    std::regex re(".*Uid:[[:s:]]*([[:d:]]+)[[:s:]]*([[:d:]]+)[[:s:]]*([[:d:]]+)[[:s:]]*([[:d:]]+).*");
+    std::smatch res;
+    if (!std::regex_match(content, res, re)) {
+        HILOGD("re not match. %{public}s", content.c_str());
+        return false;
+    }
+    try {
+        uid = (unsigned int)std::stoi(res.str(1)); // 1: Uid index
+    } catch (...) {
+        HILOGE("stoi(%{public}s) failed", res.str(1).c_str());
+        return false;
+    }
+    return true;
 }
 } // namespace Memory
 } // namespace OHOS
