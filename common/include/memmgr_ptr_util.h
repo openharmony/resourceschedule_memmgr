@@ -24,16 +24,16 @@ namespace Memory {
 
 #define DECLARE_UNIQUE_POINTER(classType, ptrName) std::unique_ptr<classType> ptrName = nullptr
 
-#define MAKE_POINTER(ptrSelf, ptrType, classType, errLog, exec_expr0, ...)       \
+#define MAKE_POINTER(ptrSelf, ptrType, classType, errLog, errAction, ...)       \
     do {                                                                         \
         ptrSelf = nullptr;                                                       \
         try {                                                                    \
-            returnValue = std::make_##ptrType<classType>(__VA_ARGS__);           \
+            ptrSelf = std::make_##ptrType<classType>(__VA_ARGS__);           \
         } catch (...) {                                                          \
             HILOGE(errLog);                                                      \
         };                                                                       \
         if (ptrSelf == nullptr) {                                                \
-            exec_expr0;                                                          \
+            errAction;                                                          \
         }                                                                        \
     } while (0)
 } // namespace MemMgr
