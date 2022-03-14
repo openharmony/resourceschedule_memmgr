@@ -24,8 +24,6 @@
 │   └── src
 │       └── kernel_interface.cpp
 │
-├── interfaces
-│   └── innerkits    						# 对内接口目录
 |
 ├── sa_profile       						# 组件服务配置
 |
