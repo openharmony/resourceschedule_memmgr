@@ -24,6 +24,7 @@ namespace Memory {
 
 #define DECLARE_UNIQUE_POINTER(classType, ptrName) std::unique_ptr<classType> ptrName = nullptr
 
+// ptrType: shared / unique
 #define MAKE_POINTER(ptrSelf, ptrType, classType, errLog, errAction, ...)   \
     do {                                                                    \
         ptrSelf = nullptr;                                                  \
