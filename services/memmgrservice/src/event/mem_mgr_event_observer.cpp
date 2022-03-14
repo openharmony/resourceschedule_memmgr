@@ -37,10 +37,8 @@ MemMgrEventObserver::MemMgrEventObserver(const MemMgrCaredEventCallback &callbac
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     EventFwk::CommonEventSubscribeInfo commonEventSubscribeInfo(matchingSkills);
 
-    MEMMGR_MAKE_SHARED(
-        subscriber_ = std::make_shared<MemMgrEventSubscriber>(commonEventSubscribeInfo,
-                        std::bind(&MemMgrEventObserver::OnReceiveEvent, this, std::placeholders::_1)); \
-        EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_)
+    MAKE_POINTER(subscriber_, shared, MemMgrEventSubscriber, "make MemMgrEventSubscriber failed", return,
+        commonEventSubscribeInfo, std::bind(&MemMgrEventObserver::OnReceiveEvent, this, std::placeholders::_1)
     );
     EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
 }

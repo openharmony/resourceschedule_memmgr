@@ -30,7 +30,8 @@ const std::string TAG = "AppStateCallbackMemHost";
 
 AppStateCallbackMemHost::AppStateCallbackMemHost()
 {
-    MEMMGR_MAKE_UNIQUE(appMgrClient_ = std::make_unique<AppExecFwk::AppMgrClient>());
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make shared failed", /* no return */,
+        /* no param */);
     appStateObserver_ = new (std::nothrow) AppStateObserver();
     if (appStateObserver_ == NULL) {
         HILOGE("appStateObserver is NULL");

@@ -39,11 +39,8 @@ AccountObserver::AccountObserver(const AccountCallback &callback) : callback_(ca
 bool AccountObserver::GetEventHandler()
 {
     if (!handler_) {
-        MEMMGR_MAKE_SHARED_RETURN(
-            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
-            HILOGI("failed to create event handler"); \
-            return false
-        );
+        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
+            AppExecFwk::EventRunner::Create());
     }
     return true;
 }
@@ -68,11 +65,8 @@ void AccountObserver::Register()
     osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
     osAccountSubscribeInfo.SetName("MemMgrAccountActivedSubscriber");
 
-    MEMMGR_MAKE_SHARED_RETURN(
-        subscriber_ = std::make_shared<AccountSubscriber>(osAccountSubscribeInfo,
-                        std::bind(&AccountObserver::OnAccountsChanged, this, std::placeholders::_1)),
-        return
-    );
+    MAKE_POINTER(subscriber_, shared, AccountSubscriber, "make shared failed", return,
+        osAccountSubscribeInfo, std::bind(&AccountObserver::OnAccountsChanged, this, std::placeholders::_1));
     ErrCode errCode2 = AccountSA::OsAccountManager::SubscribeOsAccount(subscriber_);
     HILOGI("SubscribeOsAccount errCode=%{public}d", errCode2);
 
