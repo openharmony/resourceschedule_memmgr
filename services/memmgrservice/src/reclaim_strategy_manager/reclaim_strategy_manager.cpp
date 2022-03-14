@@ -59,11 +59,8 @@ bool ReclaimStrategyManager::Init()
 bool ReclaimStrategyManager::GetEventHandler_()
 {
     if (handler_ == nullptr) {
-        MEMMGR_MAKE_SHARED_RETURN(
-            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
-            HILOGI("handler init failed"); \
-            return false
-        );
+        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
+            AppExecFwk::EventRunner::Create());
     }
     return true;
 }

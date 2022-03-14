@@ -20,42 +20,22 @@
 
 namespace OHOS {
 namespace Memory {
-#define MEMMGR_MAKE_SHARED(exec_expr0)                       \
-    do {                                                     \
-        try {                                                \
-            exec_expr0;                                      \
-        } catch (...) {                                      \
-            HILOGE("make shared failed");                    \
-        }                                                    \
-    } while (0)
 
-#define MEMMGR_MAKE_SHARED_RETURN(exec_expr0, exec_expr1)    \
-    do {                                                     \
-        try {                                                \
-            exec_expr0;                                      \
-        } catch (...) {                                      \
-            HILOGE("make shared failed");                    \
-            exec_expr1;                                      \
-        }                                                    \
-    } while (0)
+#define DECLARE_SHARED_POINTER(classType, ptrName) std::shared_ptr<classType> ptrName = nullptr
 
-#define MEMMGR_MAKE_UNIQUE(exec_expr0)                       \
-    do {                                                     \
-        try {                                                \
-            exec_expr0;                                      \
-        } catch (...) {                                      \
-            HILOGE("make unique failed");                    \
-        }                                                    \
-    } while (0)
+#define DECLARE_UNIQUE_POINTER(classType, ptrName) std::unique_ptr<classType> ptrName = nullptr
 
-#define MEMMGR_MAKE_UNIQUE_RETURN(exec_expr0, exec_expr1)    \
-    do {                                                     \
-        try {                                                \
-            exec_expr0;                                      \
-        } catch (...) {                                      \
-            HILOGE("make unique failed");                    \
-            exec_expr1;                                      \
-        }                                                    \
+#define MAKE_POINTER(returnValue, ptrType, classType, errLog, exec_expr0, ...)   \
+    do {                                                                         \
+        returnValue = nullptr;                                                   \
+        try {                                                                    \
+            returnValue = std::make_##ptrType<classType>(__VA_ARGS__);           \
+        } catch (...) {                                                          \
+            HILOGE(errLog);                                                      \
+        };                                                                       \
+        if (returnValue == nullptr) {                                            \
+            exec_expr0;                                                          \
+        }                                                                        \
     } while (0)
 } // namespace MemMgr
 } // namespace OHOS

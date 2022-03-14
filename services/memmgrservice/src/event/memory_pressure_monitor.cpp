@@ -34,10 +34,8 @@ const int MAX_CMD_LINE_LENGTH = 256;
 MemoryPressureMonitor::MemoryPressureMonitor(const MemPressCallback &callback) : callback_(callback)
 {
     HILOGI("called");
-    MEMMGR_MAKE_SHARED_RETURN(
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
-        return
-    );
+    MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return,
+        AppExecFwk::EventRunner::Create());
     HILOGE("handler init success!");
     std::function<void()> initFunc = std::bind(&MemoryPressureMonitor::Init, this);
     handler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s

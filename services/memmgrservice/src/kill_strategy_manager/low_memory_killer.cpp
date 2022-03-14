@@ -55,11 +55,8 @@ LowMemoryKiller::LowMemoryKiller()
 bool LowMemoryKiller::GetEventHandler()
 {
     if (!handler_) {
-        MEMMGR_MAKE_SHARED_RETURN(
-            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
-            HILOGI("handler init failed"); \
-            return false
-        );
+        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
+            AppExecFwk::EventRunner::Create());
     }
     return true;
 }

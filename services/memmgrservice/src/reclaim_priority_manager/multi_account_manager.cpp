@@ -32,8 +32,10 @@ IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
 
 MultiAccountManager::MultiAccountManager()
 {
-    MEMMGR_MAKE_SHARED(strategy_ = std::make_shared<DefaultMultiAccountStrategy>());
-    MEMMGR_MAKE_SHARED(handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()));
+    MAKE_POINTER(strategy_, shared, DefaultMultiAccountStrategy, "make shared failed", return,
+        /* no param*/);
+    MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return,
+        AppExecFwk::EventRunner::Create());
 }
 
 MultiAccountManager::~MultiAccountManager()
@@ -81,11 +83,9 @@ bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
 {
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
     if (accountInfo == nullptr) {
-        MEMMGR_MAKE_SHARED_RETURN(
-            accountInfo = std::make_shared<AccountPriorityInfo>(accountId, accountName, accountType, isActived); \
-            AddAccountPriorityInfo(accountInfo),
-            return false
-        );
+        MAKE_POINTER(accountInfo, shared, AccountPriorityInfo, "failed to create event handler", return false,
+            accountId, accountName, accountType, isActived);
+        AddAccountPriorityInfo(accountInfo);
     } else {
         accountInfo->SetName(accountName);
         accountInfo->SetType(accountType);

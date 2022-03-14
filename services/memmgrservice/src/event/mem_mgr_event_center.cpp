@@ -31,8 +31,10 @@ IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
 
 MemMgrEventCenter::MemMgrEventCenter()
 {
-    MEMMGR_MAKE_SHARED(appStateCallback_ = std::make_shared<AppStateCallbackMemHost>());
-    MEMMGR_MAKE_SHARED(subscriber_ = std::make_shared<MemMgrBgTaskSubscriber>());
+    MAKE_POINTER(appStateCallback_, shared, AppStateCallbackMemHost, "make AppStateCallbackMemHost failed",
+        /* no return */, /* no param */);
+    MAKE_POINTER(subscriber_, shared, MemMgrBgTaskSubscriber, "make MemMgrBgTaskSubscriber failed", /* no return */,
+        /* no param */);
     registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
 }
 
@@ -52,11 +54,8 @@ bool MemMgrEventCenter::Init()
 bool MemMgrEventCenter::GetEventHandler()
 {
     if (!handler_) {
-        MEMMGR_MAKE_SHARED_RETURN(
-            handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create()),
-            HILOGI("failed to create event handler"); \
-            return false
-        );
+        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
+            AppExecFwk::EventRunner::Create());
     }
     return true;
 }
@@ -107,8 +106,7 @@ void MemMgrEventCenter::RegisterSystemEventObserver()
     MemMgrCaredEventCallback callback = {
         std::bind(&MemMgrEventCenter::OnReceiveCaredEvent, this, std::placeholders::_1),
     };
-    MEMMGR_MAKE_UNIQUE(sysEvtOberserver_ = std::make_unique<MemMgrEventObserver>(callback));
-
+    MAKE_POINTER(sysEvtOberserver_, unique, MemMgrEventObserver, "make unique failed", return, callback);
     HILOGI("success to register cared event callback");
 }
 
@@ -117,7 +115,7 @@ void MemMgrEventCenter::RegisterAccountObserver()
     AccountCallback callback = {
         std::bind(&MemMgrEventCenter::OnOsAccountsChanged, this, std::placeholders::_1),
     };
-    MEMMGR_MAKE_UNIQUE(accountOberserver_ = std::make_unique<AccountObserver>(callback));
+    MAKE_POINTER(accountOberserver_, unique, AccountObserver, "make unique failed", return, callback);
     HILOGI("success to register account callback");
 }
 
@@ -127,7 +125,7 @@ void MemMgrEventCenter::RegisterMemPressMonitor()
     MemPressCallback callback = {
         std::bind(&MemMgrEventCenter::OnMemPressLevelUploaded, this, std::placeholders::_1),
     };
-    MEMMGR_MAKE_UNIQUE(psiMonitor_ = std::make_unique<MemoryPressureMonitor>(callback));
+    MAKE_POINTER(psiMonitor_, unique, MemoryPressureMonitor, "make unique failed", return, callback);
     HILOGI("success to register memory pressure callback");
 }
 
