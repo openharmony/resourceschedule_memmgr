@@ -11,7 +11,7 @@
         <minScore>0</minScore>
         <maxScore>1000</maxScore>
         <mem2zramRatio>60</mem2zramRatio>
-        <zran2ufsRation>10</zran2ufsRation>
+        <zram2ufsRatio>10</zram2ufsRatio>
         <refaultThreshold>50</refaultThreshold>
     </ZswapdParam>
   </reclaimConfig>

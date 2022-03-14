@@ -51,6 +51,7 @@ constexpr std::string_view SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr std::string_view LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 const int USER_ID_SHIFT = 200000;
+#define GET_OS_ACCOUNT_ID_BY_UID(bundleUid) ((bundleUid) / USER_ID_SHIFT)
 
 const int IGNORE_PID = -1;
 
