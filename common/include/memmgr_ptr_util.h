@@ -20,7 +20,6 @@
 
 namespace OHOS {
 namespace Memory {
-
 #define DECLARE_SHARED_POINTER(classType, ptrName) std::shared_ptr<classType> ptrName = nullptr
 
 #define DECLARE_UNIQUE_POINTER(classType, ptrName) std::unique_ptr<classType> ptrName = nullptr

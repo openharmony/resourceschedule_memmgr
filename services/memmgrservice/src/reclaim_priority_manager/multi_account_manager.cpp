@@ -32,8 +32,7 @@ IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
 
 MultiAccountManager::MultiAccountManager()
 {
-    MAKE_POINTER(strategy_, shared, DefaultMultiAccountStrategy, "make shared failed", return,
-        /* no param*/);
+    MAKE_POINTER(strategy_, shared, DefaultMultiAccountStrategy, "make shared failed", return, /* no param */);
     MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return,
         AppExecFwk::EventRunner::Create());
 }
