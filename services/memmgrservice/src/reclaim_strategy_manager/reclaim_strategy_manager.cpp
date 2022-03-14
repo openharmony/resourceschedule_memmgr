@@ -18,6 +18,7 @@
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
+#include "reclaim_priority_constants.h"
 #include "reclaim_strategy_constants.h"
 #include "reclaim_strategy_manager.h"
 
@@ -48,11 +49,12 @@ bool ReclaimStrategyManager::Init()
         initialized_ = true;
     } while (0);
 
-    if (initialized_) {
-        HILOGI("init successed");
-    } else {
+    if (!initialized_) {
         HILOGE("init failed");
+        return false;
     }
+    InitProcessBeforeMemmgr(); // add process (which started before memmgr) to memcg
+    HILOGI("init successed");
     return initialized_;
 }
 
@@ -63,6 +65,29 @@ bool ReclaimStrategyManager::GetEventHandler_()
             AppExecFwk::EventRunner::Create());
     }
     return true;
+}
+
+void ReclaimStrategyManager::InitProcessBeforeMemmgr()
+{
+    std::vector<unsigned int> pids;
+    if (!KernelInterface::GetInstance().GetAllProcPids(pids)) {
+        HILOGI("GetAllProcPids failed");
+        return;
+    }
+    unsigned int uid =  0;
+    unsigned int userId = 0;
+    bool ret = false;
+    for (auto pid : pids) {
+        if (!KernelInterface::GetInstance().GetUidByPid(pid, uid)) {
+            continue;
+        }
+        userId = GET_OS_ACCOUNT_ID_BY_UID(uid);
+        if (userId < VALID_USER_ID_MIN) { // invalid userId
+            continue;
+        }
+        ret = MemcgMgr::GetInstance().AddProcToMemcg(pid, userId);
+        HILOGD("add pid=%{public}u to userId=%{public}u, %{public}s", pid, userId, ret ? "succ" : "fail");
+    }
 }
 
 void ReclaimStrategyManager::NotifyAppStateChanged(std::shared_ptr<ReclaimParam> reclaimPara)
@@ -80,6 +105,11 @@ bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam
 {
     if (reclaimPara == nullptr) {
         HILOGE("reclaimPara nullptr");
+        return false;
+    }
+    if (reclaimPara->accountId_ < VALID_USER_ID_MIN) {
+        HILOGE("invalid userId %{public}d, less than MIN_VALUE(%{public}d)",
+               reclaimPara->accountId_, VALID_USER_ID_MIN);
         return false;
     }
     HILOGI("%{public}s", reclaimPara->ToString().c_str());
@@ -111,7 +141,7 @@ bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam
 bool ReclaimStrategyManager::HandleProcessCreate_(std::shared_ptr<ReclaimParam> reclaimPara)
 {
     bool ret = MemcgMgr::GetInstance().AddProcToMemcg(reclaimPara->pid_, reclaimPara->accountId_);
-    HILOGI("%{public}s. %{public}s", ret ? "succ" : "fail",  reclaimPara->ToString().c_str());
+    HILOGI("%{public}s, %{public}s", ret ? "succ" : "fail",  reclaimPara->ToString().c_str());
     return ret;
 }
 
@@ -119,6 +149,11 @@ void ReclaimStrategyManager::NotifyAccountDied(int accountId)
 {
     if (!Initailized()) {
         HILOGE("has not been initialized, skiped! accountId=%{public}d", accountId);
+        return;
+    }
+    if (accountId < VALID_USER_ID_MIN) {
+        HILOGE("invalid userId %{public}d, less than MIN_VALUE(%{public}d)",
+               accountId, VALID_USER_ID_MIN);
         return;
     }
     std::function<bool()> func = std::bind(
@@ -130,6 +165,11 @@ void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int pri
 {
     if (!Initailized()) {
         HILOGE("has not been initialized, skiped! accountId=%{public}d, priority=%{public}d", accountId, priority);
+        return;
+    }
+    if (accountId < VALID_USER_ID_MIN) {
+        HILOGE("invalid userId %{public}d, less than MIN_VALUE(%{public}d)",
+               accountId, VALID_USER_ID_MIN);
         return;
     }
     std::function<bool()> func = std::bind(
@@ -149,43 +189,39 @@ bool ReclaimStrategyManager::HandleAccountPriorityChanged_(int accountId, int pr
         return false;
     }
     GetValidScore_(priority);
-    ReclaimRatios* ratios = new (std::nothrow) ReclaimRatios();
-    if (ratios == nullptr) {
-        HILOGE("new obj failed!");
+    std::unique_ptr<ReclaimRatios> ratios = nullptr;
+    try {
+        ratios = std::make_unique<ReclaimRatios>();
+    } catch (...) {
+        HILOGE("new ratios obj failed!");
         return false;
     }
-    if (!GetReclaimRatiosByScore_(priority, ratios)) {
-        delete ratios;
+    if (ratios == nullptr || !GetReclaimRatiosByScore_(priority, *ratios)) {
+        HILOGE("get config ratios failed, will not update memcg ratio, userId=%{public}d", accountId);
         ratios = nullptr;
         return false;
     }
-    bool ret = MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(accountId, priority, ratios);
-    HILOGI("update user reclaim retios %{public}s. userId=%{public}d score=%{public}d %{public}s",
+    bool ret = MemcgMgr::GetInstance().UpdateMemcgScoreAndReclaimRatios(accountId, priority, *ratios);
+    HILOGI("UpdateMemcgScoreAndReclaimRatios %{public}s, userId=%{public}d score=%{public}d %{public}s",
            ret ? "succ" : "fail", accountId, priority, ratios->ToString().c_str());
-    delete ratios;
     ratios = nullptr;
     return ret;
 }
 
-bool ReclaimStrategyManager::GetReclaimRatiosByScore_(int score, ReclaimRatios * const ratios)
+bool ReclaimStrategyManager::GetReclaimRatiosByScore_(int score, ReclaimRatios& ratios)
 {
-    if (ratios == nullptr) {
-        HILOGE("param ratios nullptr");
-        return false;
-    }
-
-    HILOGI("before get ratios from MemmgrConfigManager %{public}s", ratios->NumsToString().c_str());
+    HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios.NumsToString().c_str());
     MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
         MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
     for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
         if ((*i)->minScore <= score && (*i)->maxScore >= score) {
-            HILOGI("get ratios from MemmgrConfigManager %{public}d %{public}d %{public}d",
-                (*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
-            ratios->SetRatios((*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
+            ratios.SetRatiosByValue((*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
+            HILOGI("get ratios from MemmgrConfigManager %{public}s", ratios.NumsToString().c_str());
+            return true;
         }
     }
-    HILOGW("can not get ratios from MemmgrConfigManager"); // will using default para
-    return true;
+    HILOGD("can not get ratios from MemmgrConfigManager");
+    return false;
 }
 
 void ReclaimStrategyManager::GetValidScore_(int& priority)

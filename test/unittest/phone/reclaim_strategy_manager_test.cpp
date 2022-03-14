@@ -143,15 +143,12 @@ HWTEST_F(ReclaimStrategyManagerTest, HandleProcessCreateTest, TestSize.Level1)
 
 HWTEST_F(ReclaimStrategyManagerTest, GetReclaimRatiosByScoreTest, TestSize.Level1)
 {
-    EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(0, nullptr), false);
-    ReclaimRatios* ratios = new ReclaimRatios();
+    ReclaimRatios ratios(50, 50, 50);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(0, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(100, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(200, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(500, ratios), true);
     EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetReclaimRatiosByScore_(1000, ratios), true);
-    delete ratios;
-    ratios = nullptr;
 }
 
 HWTEST_F(ReclaimStrategyManagerTest, GetValidScoreTest, TestSize.Level1)

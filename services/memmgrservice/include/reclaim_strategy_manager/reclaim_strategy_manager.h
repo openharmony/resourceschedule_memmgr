@@ -43,6 +43,7 @@ private:
 
     ReclaimStrategyManager();
     bool GetEventHandler_();
+    void InitProcessBeforeMemmgr();
 
     // handle app and os user event
     bool HandleAppStateChanged_(std::shared_ptr<ReclaimParam> reclaimPara);
@@ -51,7 +52,7 @@ private:
     bool HandleAccountPriorityChanged_(int accountId, int priority);
 
     // get param for config_mgr
-    bool GetReclaimRatiosByScore_(int score, ReclaimRatios * const ratios);
+    bool GetReclaimRatiosByScore_(int score, ReclaimRatios& ratios);
     void GetValidScore_(int& priority);
 };
 } // namespace Memory

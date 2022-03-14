@@ -70,7 +70,10 @@ public:
     void ReadZswapdPressureShow(std::map<std::string, std::string>& result);
     int GetCurrentBuffer();
     int KillOneProcessByPid(int pid);
+    bool GetAllProcPids(std::vector<unsigned int>& pids);
+    bool GetUidByPid(unsigned int pid, unsigned int& uid);
 
+    static const std::string ROOT_PROC_PATH;
     static const std::string MEMCG_BASE_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_BUFFER_SIZE;
