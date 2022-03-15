@@ -15,6 +15,7 @@
 
 #include "memory_pressure_monitor.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "low_memory_killer.h"
 
 #include <string>
@@ -33,11 +34,8 @@ const int MAX_CMD_LINE_LENGTH = 256;
 MemoryPressureMonitor::MemoryPressureMonitor(const MemPressCallback &callback) : callback_(callback)
 {
     HILOGI("called");
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-    if (handler_ == nullptr) {
-        HILOGE("handler init failed");
-        return;
-    }
+    MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return,
+        AppExecFwk::EventRunner::Create());
     HILOGE("handler init success!");
     std::function<void()> initFunc = std::bind(&MemoryPressureMonitor::Init, this);
     handler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s

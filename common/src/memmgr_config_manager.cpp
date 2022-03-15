@@ -19,6 +19,7 @@
 #include <string>
 
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "memmgr_config_manager.h"
 
 namespace OHOS {
@@ -62,13 +63,13 @@ ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, unsigned in
 
 void MemmgrConfigManager::InitDefaultConfig()
 {
-    this->availBufferSize_ =
-        std::make_shared<AvailBufferSize>(AVAIL_BUFFER, MIN_AVAIL_BUFFER, HIGH_AVAIL_BUFFER, SWAP_RESERVE);
+    MAKE_POINTER(this->availBufferSize_, shared, AvailBufferSize, "make AvailBufferSize failed", return,
+        AVAIL_BUFFER, MIN_AVAIL_BUFFER, HIGH_AVAIL_BUFFER, SWAP_RESERVE);
 
-    std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig =
-        std::make_shared<ReclaimRatiosConfig>(RECLAIM_PRIORITY_MIN, RECLAIM_PRIORITY_MAX,
-                                              MEMCG_MEM_2_ZRAM_RATIO, MEMCG_ZRAM_2_UFS_RATIO, MEMCG_REFAULT_THRESHOLD);
-
+    DECLARE_SHARED_POINTER(ReclaimRatiosConfig, reclaimRatiosConfig);
+    MAKE_POINTER(reclaimRatiosConfig, shared, ReclaimRatiosConfig, "make ReclaimRatiosConfig failed", return,
+        RECLAIM_PRIORITY_MIN, RECLAIM_PRIORITY_MAX, MEMCG_MEM_2_ZRAM_RATIO, MEMCG_ZRAM_2_UFS_RATIO,
+        MEMCG_REFAULT_THRESHOLD);
     AddReclaimRatiosConfigToSet(reclaimRatiosConfig);
 }
 
@@ -227,8 +228,8 @@ bool MemmgrConfigManager::SetAvailBufferConfig(std::map<std::string, std::string
     SetUnsignedIntParam(param, "highAvailBuffer", highAvailBuffer);
     SetUnsignedIntParam(param, "swapReserve", swapReserve);
 
-    this->availBufferSize_ =
-        std::make_shared<AvailBufferSize>(availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
+    MAKE_POINTER(this->availBufferSize_, shared, AvailBufferSize, "make AvailBufferSize failed", return false,
+        availBuffer, minAvailBuffer, highAvailBuffer, swapReserve);
     return true;
 }
 
@@ -247,9 +248,9 @@ bool MemmgrConfigManager::SetZswapdParamConfig(std::map<std::string, std::string
     SetUnsignedIntParam(param, "zram2ufsRatio", zram2ufsRatio);
     SetUnsignedIntParam(param, "refaultThreshold", refaultThreshold);
 
-    std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig =
-        std::make_shared<ReclaimRatiosConfig>(minScore, maxScore, mem2zramRatio,
-                                               zram2ufsRatio, refaultThreshold);
+    DECLARE_SHARED_POINTER(ReclaimRatiosConfig, reclaimRatiosConfig);
+    MAKE_POINTER(reclaimRatiosConfig, shared, ReclaimRatiosConfig, "make ReclaimRatiosConfig failed", return false,
+        minScore, maxScore, mem2zramRatio, zram2ufsRatio, refaultThreshold);
     AddReclaimRatiosConfigToSet(reclaimRatiosConfig);
     return true;
 }
@@ -288,7 +289,7 @@ bool MemmgrConfigManager::WriteReclaimRatiosConfigToKernel()
 {
     std::string path = KernelInterface::GetInstance().JoinPath(MEMCG_PATH, "memory.zswapd_memcgs_param");
     std::string content;
-    
+
     unsigned int paramNum = this->reclaimRatiosConfigSet_.size();
     content = std::to_string(paramNum);
     for (auto i = this->reclaimRatiosConfigSet_.begin(); i != this->reclaimRatiosConfigSet_.end(); ++i) {

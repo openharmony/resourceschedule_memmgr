@@ -15,6 +15,7 @@
 
 #include "app_state_callback_mem_host.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "reclaim_priority_manager.h"
 
 #include "app_mgr_interface.h"
@@ -27,8 +28,10 @@ namespace {
 const std::string TAG = "AppStateCallbackMemHost";
 }
 
-AppStateCallbackMemHost::AppStateCallbackMemHost() : appMgrClient_(std::make_unique<AppExecFwk::AppMgrClient>())
+AppStateCallbackMemHost::AppStateCallbackMemHost()
 {
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make shared failed", /* no return */,
+        /* no param */);
     appStateObserver_ = new (std::nothrow) AppStateObserver();
     if (appStateObserver_ == NULL) {
         HILOGE("appStateObserver is NULL");

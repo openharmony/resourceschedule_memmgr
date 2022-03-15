@@ -14,6 +14,7 @@
  */
 #include "low_memory_killer.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
 #include "kernel_interface.h"
 #include "reclaim_priority_manager.h"
 
@@ -54,11 +55,8 @@ LowMemoryKiller::LowMemoryKiller()
 bool LowMemoryKiller::GetEventHandler()
 {
     if (!handler_) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create());
-        if (handler_ == nullptr) {
-            HILOGE("handler init failed");
-            return false;
-        }
+        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
+            AppExecFwk::EventRunner::Create());
     }
     return true;
 }
