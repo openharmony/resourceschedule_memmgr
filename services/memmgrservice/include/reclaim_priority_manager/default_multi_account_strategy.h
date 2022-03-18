@@ -28,7 +28,7 @@ enum class DefaultMultiAccountPriority {
 
 class DefaultMultiAccountStrategy : public MultiAccountStrategy {
 public:
-    void SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo);
+    bool SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo);
     int RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo, int bundlePriority);
     virtual ~DefaultMultiAccountStrategy() {}
 };

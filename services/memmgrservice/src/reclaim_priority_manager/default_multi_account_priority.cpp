@@ -13,14 +13,21 @@
  * limitations under the License.
  */
 
+#include "memmgr_log.h"
 #include "default_multi_account_strategy.h"
 
 namespace OHOS {
 namespace Memory {
-void DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo)
+namespace {
+const std::string TAG = "DefaultMultiAccountStrategy";
+const int INVALID_BUNDLE_PRIORITY = -1;
+}
+
+bool DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo)
 {
     if (accountInfo == nullptr) {
-        return;
+        HILOGI("Set the account priority failed because the accountInfo is null.");
+        return false;
     }
 
     int priority;
@@ -31,13 +38,14 @@ void DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPrio
     }
 
     accountInfo->SetPriority(priority);
+    return true;
 }
 
 int DefaultMultiAccountStrategy::RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo,
                                                       int bundlePriority)
 {
     if (accountInfo == nullptr) {
-        return -1;
+        return INVALID_BUNDLE_PRIORITY;
     }
 
     return accountInfo->GetPriority() + bundlePriority;
