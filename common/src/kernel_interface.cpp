@@ -45,7 +45,7 @@ const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_siz
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
-    int fd = open(path, O_RDWR, 0666);
+    int fd = open(path, O_RDWR, FILE_MODE_666);
     if (fd == -1) {
         HILOGE("echo %{public}s > %{public}s failed: file is not open", content, path);
         return false;
