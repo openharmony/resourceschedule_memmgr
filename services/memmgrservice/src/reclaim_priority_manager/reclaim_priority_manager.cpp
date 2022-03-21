@@ -82,6 +82,10 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
     int count = 0;
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle, ++count) {
         std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
+        if (bundle == nullptr) {
+            HILOGD("bundle %{public}d/%{public}d is nullptr", count, totalBundlePrioSet_.size());
+            continue;
+        }
 
         HILOGD("bundle %{public}d/%{public}d, uid=%{publics}d", count, totalBundlePrioSet_.size(), bundle->uid_);
         BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
