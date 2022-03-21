@@ -245,7 +245,7 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
     char *contentPtr = new char[contentStr.size() + 1];
     if (contentPtr == nullptr) {
         HILOGE("alloc buffer fail");
-        return
+        return;
     }
     if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
         HILOGE("copy fail");
