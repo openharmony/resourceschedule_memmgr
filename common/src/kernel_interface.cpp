@@ -243,6 +243,10 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         return;
     }
     char *contentPtr = new char[contentStr.size() + 1];
+    if (contentPtr == nullptr) {
+        HILOGE("alloc buffer fail");
+	return
+    }
     if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
         HILOGE("copy fail");
         return;
@@ -263,6 +267,12 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
 
         line = strtok_r(NULL, "\n", &restPtr);
     } while (line);
+    if (restPtr) {
+	delete [] restPtr;
+    }
+    if (contentPtr) {
+	delete [] contentPtr;
+    }
     return;
 }
 
