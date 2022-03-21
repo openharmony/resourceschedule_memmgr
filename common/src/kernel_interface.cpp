@@ -268,10 +268,10 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         line = strtok_r(NULL, "\n", &restPtr);
     } while (line);
     if (restPtr) {
-	delete [] restPtr;
+        delete [] restPtr;
     }
     if (contentPtr) {
-	delete [] contentPtr;
+        delete [] contentPtr;
     }
     return;
 }
