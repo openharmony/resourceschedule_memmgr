@@ -55,8 +55,9 @@ private:
     std::map<int, std::shared_ptr<AccountPriorityInfo>> accountMap_;
     std::shared_ptr<MultiAccountStrategy> strategy_;
     std::vector<int> oldActiveAccountIds_;
-    void GetAccountProcesses(int accountId, std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_,
-                             std::vector<pid_t> &processes);
+    std::shared_ptr<AccountBundleInfo> GetAccountBundleInfo(int accountId,
+        std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
+    void KillProcessesOfAccount(int accountId, std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
     MultiAccountManager();
     ~MultiAccountManager();
 };

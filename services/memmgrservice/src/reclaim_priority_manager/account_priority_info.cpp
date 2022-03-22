@@ -17,10 +17,14 @@
 
 namespace OHOS {
 namespace Memory {
+namespace {
+const int INVALID_PRIORITY = -1;
+}
+
 AccountPriorityInfo::AccountPriorityInfo(int id, std::string name, AccountSA::OsAccountType type, bool isActived)
     : id_(id), name_(name), type_(type), isActived_(isActived)
 {
-    priority_ = -1;
+    priority_ = INVALID_PRIORITY;
 }
 
 int AccountPriorityInfo::GetId()
