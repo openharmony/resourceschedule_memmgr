@@ -49,30 +49,19 @@ void AccountObserver::Register()
 {
     retryTimes_++;
 
-    std::vector<AccountSA::OsAccountInfo> osAccountInfos;
-    ErrCode errCode = AccountSA::OsAccountManager::QueryAllCreatedOsAccounts(osAccountInfos);
-    if (errCode == ERR_OK) {
-        HILOGI("--------------------");
-        for (size_t i = 0; i < osAccountInfos.size(); ++i) {
-            AccountSA::OsAccountInfo &osAccountInfo = osAccountInfos[i];
-            HILOGI("OsAccount: id=%{public}d, name=%{public}s, toString=%{public}s",
-                osAccountInfo.GetLocalId(), osAccountInfo.GetLocalName().c_str(), osAccountInfo.ToString().c_str());
-        }
-        HILOGI("--------------------");
-    }
-
-    AccountSA::OsAccountSubscribeInfo  osAccountSubscribeInfo;
+    AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
     osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
     osAccountSubscribeInfo.SetName("MemMgrAccountActivedSubscriber");
 
     MAKE_POINTER(subscriber_, shared, AccountSubscriber, "make shared failed", return,
         osAccountSubscribeInfo, std::bind(&AccountObserver::OnAccountsChanged, this, std::placeholders::_1));
-    ErrCode errCode2 = AccountSA::OsAccountManager::SubscribeOsAccount(subscriber_);
-    HILOGI("SubscribeOsAccount errCode=%{public}d", errCode2);
-
-    if (errCode2 == ERR_OK)
+    ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(subscriber_);
+    if (errCode == ERR_OK) {
+        HILOGI("Subscribe osAccount succeed.");
         return;
+    }
 
+    HILOGI("Subscribe osAccount failed, retCode = %{public}d.", errCode);
     if (retryTimes_ < MAX_RETRY_TIMES) {
         std::function<void()> RegisterEventListenerFunc = std::bind(&AccountObserver::Register, this);
         HILOGE("failed to SubscribeOsAccount, try again after 3s!, retryTimes=%{public}d/10", retryTimes_);

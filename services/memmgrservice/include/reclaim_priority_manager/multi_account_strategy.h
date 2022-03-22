@@ -22,7 +22,7 @@ namespace OHOS {
 namespace Memory {
 class MultiAccountStrategy {
 public:
-    virtual void SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo) = 0;
+    virtual bool SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo) = 0;
     virtual int RecalcBundlePriority(std::shared_ptr<AccountPriorityInfo> accountInfo, int bundlePriority) = 0;
     virtual ~MultiAccountStrategy() {}
 };

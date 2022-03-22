@@ -15,9 +15,9 @@
 
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
-#include "multi_account_kill.h"
 #include "default_multi_account_strategy.h"
 #include "reclaim_strategy_manager.h"
+#include "kernel_interface.h"
 #include "multi_account_manager.h"
 
 namespace OHOS {
@@ -26,6 +26,7 @@ namespace {
 const std::string TAG = "MultiAccountManager";
 const int MAX_RETRY_TIMES = 10;
 const int SLEEP_TIME = 3000;
+const int INVALID_BUNDLE_PRIORITY = -1;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
@@ -52,12 +53,12 @@ void MultiAccountManager::Init()
         oldActiveAccountIds_.clear();
         ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(oldActiveAccountIds_);
         if (errCode != ERR_OK) {
-            HILOGI("Multiple account manager initial failed, err = %{public}d.", static_cast<int>(errCode));
+            HILOGI("The manager initial failed, err = %{public}d.", static_cast<int>(errCode));
             break;
         }
 
         if (!UpdateAccountPriorityInfo(oldActiveAccountIds_)) {
-            HILOGI("Multiple account manager initial failed.");
+            HILOGI("The manager initial failed.");
             break;
         }
 
@@ -65,15 +66,19 @@ void MultiAccountManager::Init()
     } while (0);
 
     if (initialized_) {
-        HILOGI("Multiple account manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
+        HILOGI("The manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
         return;
     }
 
     if (retryTimes_ < MAX_RETRY_TIMES) {
+        if (handler_ == nullptr) {
+            HILOGE("The manager initial failed and couldn't retry, because the handler is null.");
+            return;
+        }
+
         std::function<void()> initMultiAccountManagerFunc = std::bind(&MultiAccountManager::Init, this);
-        HILOGE("Multiple account manager initial failed, try again after 3s!, retryTimes = %{public}d/10",
-               retryTimes_);
         handler_->PostTask(initMultiAccountManagerFunc, SLEEP_TIME, AppExecFwk::EventQueue::Priority::LOW);
+        HILOGE("Manager initial failed, try again after 3s!, retryTimes = %{public}d/10", retryTimes_);
     }
 }
 
@@ -82,7 +87,7 @@ bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
 {
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
     if (accountInfo == nullptr) {
-        MAKE_POINTER(accountInfo, shared, AccountPriorityInfo, "failed to create event handler", return false,
+        MAKE_POINTER(accountInfo, shared, AccountPriorityInfo, "make shared failed", return false,
             accountId, accountName, accountType, isActived);
         AddAccountPriorityInfo(accountInfo);
     } else {
@@ -97,7 +102,11 @@ bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
     }
 
     int oldPriority = accountInfo->GetPriority();
-    strategy_->SetAccountPriority(accountInfo);
+    if (!strategy_->SetAccountPriority(accountInfo)) {
+        HILOGI("Set account priority failed, accountId = %{public}d.", accountId);
+        return false;
+    }
+
     HILOGI("Set acccount priority succeed, accountId = %{public}d, old = %{public}d, new = %{public}d.",
            accountId, oldPriority, accountInfo->GetPriority());
     ReclaimStrategyManager::GetInstance().NotifyAccountPriorityChanged(accountId, accountInfo->GetPriority());
@@ -109,12 +118,12 @@ int MultiAccountManager::RecalcBundlePriority(int accountId, int bundlePriority)
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
     if (accountInfo == nullptr) {
         HILOGI("Repeat calculate bundle priority failed, account non-exist, accountId = %{public}d.", accountId);
-        return -1;
+        return INVALID_BUNDLE_PRIORITY;
     }
 
     if (strategy_ == nullptr) {
         HILOGI("Repeat calculate bundle priority failed, strategy is null.");
-        return -1;
+        return INVALID_BUNDLE_PRIORITY;
     }
 
     int recalcPriority = strategy_->RecalcBundlePriority(accountInfo, bundlePriority);
@@ -127,7 +136,7 @@ void MultiAccountManager::AddAccountPriorityInfo(std::shared_ptr<AccountPriority
 {
     accountMap_.insert(std::pair<int, std::shared_ptr<AccountPriorityInfo>>(accountPriorityInfo->GetId(),
                                                                             accountPriorityInfo));
-    HILOGI("Add account information success, accountId = %{public}d.", accountPriorityInfo->GetId());
+    HILOGI("Add account information succeed, accountId = %{public}d.", accountPriorityInfo->GetId());
 }
 
 std::shared_ptr<AccountPriorityInfo> MultiAccountManager::GetAccountPriorityInfo(int accountId)
@@ -164,17 +173,10 @@ bool MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
         return false;
     }
 
-    for (unsigned int i = 0; i < oldActiveAccountIds_.size(); i++) {
-        bool isExist = false;
-        for (unsigned int j = 0; j < newActiveAccountIds.size(); j++) {
-            if (oldActiveAccountIds_.at(i) == newActiveAccountIds.at(j)) {
-                isExist = true;
-                break;
-            }
-        }
-        if (!isExist) {
-            accountIds.push_back(oldActiveAccountIds_.at(i));
-            HILOGI("Get switch account success, accountId = %{public}d.", oldActiveAccountIds_.at(i));
+    for (int oldId : oldActiveAccountIds_) {
+        if (std::find(newActiveAccountIds.begin(), newActiveAccountIds.end(), oldId) == newActiveAccountIds.end()) {
+            accountIds.push_back(oldId);
+            HILOGI("Get the switched account succeed, accountId = %{public}d.", oldId);
         }
     }
 
@@ -184,8 +186,7 @@ bool MultiAccountManager::GetSwitchedAccountIds(std::vector<int> &accountIds)
 
 bool MultiAccountManager::UpdateAccountPriorityInfo(std::vector<int> &accountIds)
 {
-    for (unsigned int i = 0; i < accountIds.size(); i++) {
-        int accountId = accountIds.at(i);
+    for (int accountId : accountIds) {
         AccountSA::OsAccountInfo osAccountInfo;
         ErrCode errCode = AccountSA::OsAccountManager::QueryOsAccountById(accountId, osAccountInfo);
         if (errCode != ERR_OK) {
@@ -202,21 +203,33 @@ bool MultiAccountManager::UpdateAccountPriorityInfo(std::vector<int> &accountIds
     return true;
 }
 
-void MultiAccountManager::GetAccountProcesses(int accountId,
-    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_, std::vector<pid_t> &processes)
+std::shared_ptr<AccountBundleInfo> MultiAccountManager::GetAccountBundleInfo(int accountId,
+    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
-    processes.clear();
-    if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
-        HILOGI("Search account processes failed, accountId = %{public}d.", accountId);
+    std::map<int, std::shared_ptr<AccountBundleInfo>>::iterator iter = osAccountsInfoMap_.find(accountId);
+    if (iter != osAccountsInfoMap_.end()) {
+        return iter->second;
+    }
+    return nullptr;
+}
+
+void MultiAccountManager::KillProcessesOfAccount(int accountId,
+    std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
+{
+    std::shared_ptr<AccountBundleInfo> accountBundleInfo = GetAccountBundleInfo(accountId, osAccountsInfoMap_);
+    if (accountBundleInfo == nullptr) {
+        HILOGI("Kill proccess of the account failed because the account non-exist, accountId = %{public}d.", accountId);
         return;
     }
 
-    std::shared_ptr<AccountBundleInfo> accountPriorityInfo = osAccountsInfoMap_.at(accountId);
-    for (auto iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
-         iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
-        std::shared_ptr<BundlePriorityInfo> bundleInfo = iter->second;
-        for (auto iter2 = bundleInfo->procs_.begin(); iter2 != bundleInfo->procs_.end(); iter2++) {
-            processes.push_back(iter2->first);
+    for (auto iter1 : accountBundleInfo->bundleIdInfoMapping_) {
+        for (auto iter2 : iter1.second->procs_) {
+            pid_t pid = iter2.first;
+            if (!KernelInterface::GetInstance().KillOneProcessByPid(pid)) {
+                HILOGI("Kill the process failed, pid = %{public}d.", pid);
+                continue;
+            }
+            HILOGI("Kill the process succeed, pid = %{public}d.", pid);
         }
     }
 }
@@ -224,12 +237,9 @@ void MultiAccountManager::GetAccountProcesses(int accountId,
 bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
     std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
-    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
-        int accountId = switchedAccountIds.at(i);
+    for (int accountId : switchedAccountIds) {
         HILOGI("Account cold switch account = %{public}d.", accountId);
-        std::vector<pid_t> processes;
-        GetAccountProcesses(accountId, osAccountsInfoMap_, processes);
-        MultiAccountKill::GetInstance().KillAccountProccesses(processes);
+        KillProcessesOfAccount(accountId, osAccountsInfoMap_);
         ReclaimStrategyManager::GetInstance().NotifyAccountDied(accountId);
     }
     return true;
@@ -238,21 +248,19 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
 bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
     std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
-    for (unsigned int i = 0; i < switchedAccountIds.size(); i++) {
-        int accountId = switchedAccountIds.at(i);
-        if (osAccountsInfoMap_.find(accountId) == osAccountsInfoMap_.end()) {
-            HILOGI("Search account priorityInfo failed, accountId = %{public}d.", accountId);
+    for (int accountId : switchedAccountIds) {
+        std::shared_ptr<AccountBundleInfo> accountBundleInfo = GetAccountBundleInfo(accountId, osAccountsInfoMap_);
+        if (accountBundleInfo == nullptr) {
+            HILOGI("Search account bundle info failed, accountId = %{public}d.", accountId);
             continue;
         }
 
-        std::shared_ptr<AccountBundleInfo> accountPriorityInfo = osAccountsInfoMap_.at(accountId);
-        for (auto iter = accountPriorityInfo->bundleIdInfoMapping_.begin();
-             iter != accountPriorityInfo->bundleIdInfoMapping_.end(); iter++) {
-            std::shared_ptr<BundlePriorityInfo> bundleInfo = iter->second;
+        for (auto iter : accountBundleInfo->bundleIdInfoMapping_) {
+            std::shared_ptr<BundlePriorityInfo> bundleInfo = iter.second;
             int oldPriority = bundleInfo->priority_;
             bundleInfo->priority_ = RecalcBundlePriority(accountId, oldPriority);
             HILOGI("Account hot switch account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
-                   accountId, iter->first, oldPriority, bundleInfo->priority_);
+                   accountId, iter.first, oldPriority, bundleInfo->priority_);
         }
     }
     return true;
@@ -279,7 +287,6 @@ bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_A
         return false;
     }
 
-    /* Handle different switch mode */
     switch (switchMod) {
         case AccountSA::COLD_SWITCH:
             return HandleAccountColdSwitch(switchedAccountIds, osAccountsInfoMap_);
