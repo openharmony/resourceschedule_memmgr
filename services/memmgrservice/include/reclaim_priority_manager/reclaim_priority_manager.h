@@ -55,7 +55,7 @@ public:
         }
     };
     struct BundleInfoCmp {
-        bool operator() (const BundlePriorityInfo p1, const BundlePriorityInfo p2)
+        bool operator() (const BundlePriorityInfo &p1, const BundlePriorityInfo &p2)
         {
             if (p1.uid_ == p2.uid_) {
                 // remove duplicate BundlePriorityInfo according to uid_
