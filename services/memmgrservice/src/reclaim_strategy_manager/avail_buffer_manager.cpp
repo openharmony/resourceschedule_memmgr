@@ -73,12 +73,17 @@ bool AvailBufferManager::CheckAvailBuffer(std::shared_ptr<AvailBufferSize> avail
         availBuffer->highAvailBuffer > this->memTotal_ || availBuffer->swapReserve > this->memTotal_) {
         return false;
     }
+    if (availBuffer->availBuffer < availBuffer->minAvailBuffer ||
+        availBuffer->availBuffer > availBuffer->highAvailBuffer) {
+        return false;
+    }
     return true;
 }
 
 bool AvailBufferManager::SetAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer)
 {
     if (!CheckAvailBuffer(availBuffer)) {
+        HILOGI("size invalid, set failed");
         return false;
     }
     this->availBuffer_ = availBuffer->availBuffer;
