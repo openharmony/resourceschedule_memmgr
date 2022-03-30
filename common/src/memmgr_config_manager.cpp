@@ -167,7 +167,7 @@ bool MemmgrConfigManager::GetModuleParam(const xmlNodePtr &rootNodePtr, std::map
 void MemmgrConfigManager::SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst)
 {
     std::map<std::string, std::string>::iterator iter = param.find(key);
-    if (iter != param.end()) {
+    if (iter != param.end() && (iter->second).size() > 0) {
         try {
             dst = std::stoi(iter->second);
             return;
@@ -185,7 +185,7 @@ void MemmgrConfigManager::SetUnsignedIntParam(std::map<std::string, std::string>
                                               std::string key, unsigned int &dst)
 {
     std::map<std::string, std::string>::iterator iter = param.find(key);
-    if (iter != param.end()) {
+    if (iter != param.end() && (iter->second).size() > 0) {
         try {
             int src = std::stoi(iter->second);
             if (src > 0) {
@@ -206,7 +206,7 @@ bool MemmgrConfigManager::SetReclaimParam(const xmlNodePtr &currNodePtr,
     std::map<std::string, std::string> &param)
 {
     std::string name = std::string(reinterpret_cast<const char *>(currNodePtr->name));
-    if (name.compare("availbuffer") == 0) {
+    if (name.compare("availbufferSize") == 0) {
         return SetAvailBufferConfig(param);
     }
     if (name.compare("ZswapdParam") == 0) {
@@ -236,7 +236,7 @@ bool MemmgrConfigManager::SetAvailBufferConfig(std::map<std::string, std::string
 bool MemmgrConfigManager::SetZswapdParamConfig(std::map<std::string, std::string> &param)
 {
     std::map<std::string, std::string>::iterator iter;
-    int minScore = RECLAIM_PRIORITY_MIN;
+    int minScore = 0;
     int maxScore = RECLAIM_PRIORITY_MAX;
     unsigned int mem2zramRatio = MEMCG_MEM_2_ZRAM_RATIO;
     unsigned int zram2ufsRatio = MEMCG_ZRAM_2_UFS_RATIO;
