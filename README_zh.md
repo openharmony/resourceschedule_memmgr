@@ -107,6 +107,77 @@
 
 ` "resourceschedule:memmgr":{} `
 
+## 参数配置说明<a name="section_usage"></a>
+
+产品可通过memmgr_config.xml来配置本模块相关参数，路径为/etc/memmgr/memmgr_config.xml
+xml样例:
+<?xml version="1.0" encoding="UTF-8"?>
+<Memmgr>
+	<reclaimConfig>
+		<availbufferSize>
+			<availBuffer>800</availBuffer>
+			<minAvailBuffer>750</minAvailBuffer>
+			<highAvailBuffer>850</highAvailBuffer>
+			<swapReserve>200</swapReserve>
+		</availbufferiSize>
+		<ZswapdParam id="1">
+			<minScore>0</minScore>
+			<maxScore>500</maxScore>
+			<mem2zramRatio>60</mem2zramRatio>
+			<zran2ufsRation>10</zran2ufsRation>
+			<refaultThreshold>50</refaultThreshold>
+	</ZswapdParam>
+		<ZswapdParam id="2">
+			<minScore>501</minScore>
+			<maxScore>1000</maxScore>
+			<mem2zramRatio>70</mem2zramRatio>
+			<zran2ufsRation>20</zran2ufsRation>
+			<refaultThreshold>60</refaultThreshold>
+		</ZswapdParam>
+	</reclaimConfig>
+	<killConfig>
+	</killConfig>
+</Memmgr>
+
+功能参考:
+	详见Enhanced SWAP特性介绍
+	https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/kernel/kernel-standard-mm-eswap.mdV
+
+节点介绍:
+Memmgr			Memmgr相关配置
+	reclaimConfig		内存回收相关配置
+		availbufferSize 	系统水线相关配置
+			节点功能:avail_buffers接口用于设置buffer区间[min_avail_buffers, high_avail_buffers]，当检测到当前的buffer低于min_avail_buffers时则会唤醒zswapd进行匿名页回收，期望的回收量为high_avail_buffers与当前系统buffer值的差值，实际可能会因为无法回收等原因而未回收那么多内存。avail_buffers为期望的内存正常状态buffer值，free_swap_threshold则是设置交换分区空闲容量的阈值
+			默认值(未开启zram时):
+				avail_buffers: 0
+				min_avail_buffers: 0
+				high_avail_buffers: 0
+				free_swap_threshold: 0
+			默认值:
+				avail_buffers: 800
+				min_avail_buffers: 750
+				high_avail_buffers: 850
+				free_swap_threshold: 200
+
+			限制:
+				0<=min_avail_buffers<=avail_buffers<=high_avail_buffers<=memTotal
+				0<=free_swap_threashold<=memTotal
+		ZswapdParam:		memcg相关配置
+			节点功能:设置memcg的相关配置。memcg的appScore发生变化时，根据新的appScore找到minScore和maxScore对应区间的ratio值，ub_mem2zram_ratio为内存压缩到ZRAM的比率，ub_zram2ufs_ratio为ZRAM换出到ESwap的比率，refault_threshold为refault的阈值，可通过调整比率来控制ZRAM压缩以及ESwap换出情况。
+			默认值:
+				minScore: 0
+				maxScore: 1000
+				mem2zramRatio: 60
+				zran2ufsRation: 10
+				refaultThreshold: 50
+			限制:
+				0<=minScore<=1000
+				0<=maxScore<=1000
+				0<=ub_mem2zram_ratio<=100
+				0<=ub_zram2ufs_ratio<=100
+				0<=refault_threshold<=100
+	killConfig:		内存查杀相关配置
+
 ## 相关仓<a name="section_projects"></a>
 
 全局资源调度子系统

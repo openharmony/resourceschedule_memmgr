@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Memmgr>
   <reclaimConfig>
-    <availbuffer>
+    <availbufferSize>
         <availBuffer>800</availBuffer>
         <minAvailBuffer>750</minAvailBuffer>
         <highAvailBuffer>850</highAvailBuffer>
         <swapReserve>200</swapReserve>
-    </availbuffer>
+    </availbufferSize>
     <ZswapdParam id="1">
         <minScore>0</minScore>
         <maxScore>1000</maxScore>
