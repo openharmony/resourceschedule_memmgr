@@ -40,10 +40,6 @@ void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppState
     // no pid here !
     HILOGI("uid=%{public}d, bundleName=%{public}s, state=%{public}d, ",
         appStateData.uid, appStateData.bundleName.c_str(), appStateData.state);
-    if (appStateData.state == static_cast<int32_t>(AppExecFwk::ApplicationState::APP_STATE_SUSPENDED)) {
-        ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-            IGNORE_PID, appStateData.uid, appStateData.bundleName, AppStateUpdateReason::APPLICATION_SUSPEND);
-    }
 }
 
 void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData)
