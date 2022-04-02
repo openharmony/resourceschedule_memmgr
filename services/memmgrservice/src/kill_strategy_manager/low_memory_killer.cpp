@@ -68,11 +68,11 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
     ReclaimPriorityManager::BunldeCopySet bundles;
 
     ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundles);
-    HILOGD("get BundlePrioSet size=%{public}d", bundles.size());
+    HILOGD("get BundlePrioSet size=%{public}zu", bundles.size());
 
     int count = 0;
     for (auto bundle : bundles) {
-        HILOGD("iter bundle %{public}d/%{public}d, uid=%{public}d, name=%{public}s, priority=%{public}d",
+        HILOGD("iter bundle %{public}d/%{public}zu, uid=%{public}d, name=%{public}s, priority=%{public}d",
                count, bundles.size(), bundle.uid_, bundle.name_.c_str(), bundle.priority_);
         if (bundle.priority_ < minPrio) {
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
