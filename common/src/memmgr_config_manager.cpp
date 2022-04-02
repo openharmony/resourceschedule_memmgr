@@ -141,7 +141,7 @@ bool MemmgrConfigManager::ParseReclaimConfig(const xmlNodePtr &rootNodePtr)
         GetModuleParam(currNode, param);
         SetReclaimParam(currNode, param);
     }
-    HILOGW(" set size :<%{public}d>", this->reclaimRatiosConfigSet_.size());
+    HILOGW(" set size :<%{public}zu>", this->reclaimRatiosConfigSet_.size());
     return true;
 }
 
