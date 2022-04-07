@@ -339,7 +339,7 @@ bool KernelInterface::GetAllProcPids(std::vector<unsigned int> &pids)
     if (dir) {
         closedir(dir);
     }
-    HILOGD("there are %{public}u pids under %{public}s", pids.size(), ROOT_PROC_PATH.c_str());
+    HILOGD("there are %{public}zu pids under %{public}s", pids.size(), ROOT_PROC_PATH.c_str());
     return true;
 }
 

@@ -78,16 +78,16 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
     // add lock
     std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
 
-    HILOGD("iter %{public}d bundles begin", totalBundlePrioSet_.size());
+    HILOGD("iter %{public}zu bundles begin", totalBundlePrioSet_.size());
     int count = 0;
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle, ++count) {
         std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
         if (bundle == nullptr) {
-            HILOGD("bundle %{public}d/%{public}d is nullptr", count, totalBundlePrioSet_.size());
+            HILOGD("bundle %{public}d/%{public}zu is nullptr", count, totalBundlePrioSet_.size());
             continue;
         }
 
-        HILOGD("bundle %{public}d/%{public}d, uid=%{publics}d", count, totalBundlePrioSet_.size(), bundle->uid_);
+        HILOGD("bundle %{public}d/%{public}zu, uid=%{publics}d", count, totalBundlePrioSet_.size(), bundle->uid_);
         BundlePriorityInfo tmpBundleInfo(bundle->name_, bundle->uid_, bundle->priority_,
                                          bundle->accountId_, bundle->state_);
 
@@ -137,7 +137,7 @@ void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityIn
     std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     auto ret = totalBundlePrioSet_.insert(bundle);
     if (ret.second) {
-        HILOGD("success to insert bundle to set, uid=%{public}d, totalBundlePrioSet_.size=%{public}d",
+        HILOGD("success to insert bundle to set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
             bundle->uid_, totalBundlePrioSet_.size());
     }
 }
@@ -146,7 +146,7 @@ void ReclaimPriorityManager::DeleteBundleInfoFromSet(std::shared_ptr<BundlePrior
 {
     std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     int delCount = totalBundlePrioSet_.erase(bundle);
-    HILOGD("delete %{public}d bundles from set, uid=%{public}d, totalBundlePrioSet_.size=%{public}d",
+    HILOGD("delete %{public}d bundles from set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
            delCount, bundle->uid_, totalBundlePrioSet_.size());
 }
 
