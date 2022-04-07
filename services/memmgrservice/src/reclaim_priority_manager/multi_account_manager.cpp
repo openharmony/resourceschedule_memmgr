@@ -66,7 +66,7 @@ void MultiAccountManager::Init()
     } while (0);
 
     if (initialized_) {
-        HILOGI("The manager initial succeed, accountCount = %{public}d.", oldActiveAccountIds_.size());
+        HILOGI("The manager initial succeed, accountCount = %{public}zu.", oldActiveAccountIds_.size());
         return;
     }
 
