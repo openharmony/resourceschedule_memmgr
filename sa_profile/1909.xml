@@ -15,11 +15,11 @@
 <info>
     <process>memmgrservice</process>
     <loadlibs>
-        <libpath>/system/lib/libmemmgrservice.z.so</libpath>
+        <libpath>libmemmgrservice.z.so</libpath>
     </loadlibs>
     <systemability>
         <name>1909</name>
-        <libpath>/system/lib/libmemmgrservice.z.so</libpath>
+        <libpath>libmemmgrservice.z.so</libpath>
         <run-on-create>true</run-on-create>
         <distributed>false</distributed>
         <dump-level>1</dump-level>
