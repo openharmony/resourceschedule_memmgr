@@ -13,31 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_SERVICE_H
-#define OHOS_MEMORY_MEMMGR_SERVICE_H
+#ifndef OHOS_MEMORY_MEMMGR_INNERKITS_BUNDLE_INFO_H
+#define OHOS_MEMORY_MEMMGR_INNERKITS_BUNDLE_INFO_H
 
-#include "mem_mgr_stub.h"
-#include "single_instance.h"
-#include "system_ability.h"
+#include <string>
+
+#include "parcel.h"
 
 namespace OHOS {
 namespace Memory {
-class MemMgrService : public SystemAbility, public MemMgrStub {
-    DECLARE_SYSTEM_ABILITY(MemMgrService);
-    DECLARE_SINGLE_INSTANCE_BASE(MemMgrService);
-
+class BundlePriority {
 public:
-    MemMgrService();
-    ~MemMgrService() = default;
-    virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
-
-protected:
-    void OnStart() override;
-    void OnStop() override;
-
-private:
-    bool Init();
+    BundlePriority();
+    BundlePriority(int32_t uid, std::string name, int32_t priority, int32_t accountId) : uid_(uid), name_(name),
+        priority_(priority), accountId_(accountId) {};
+    int32_t uid_ {0};
+    std::string name_ {""};
+    int32_t priority_ {0};
+    int32_t accountId_ {0};
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_SERVICE_H
+#endif // OHOS_MEMORY_MEMMGR_INNERKITS_BUNDLE_INFO_H

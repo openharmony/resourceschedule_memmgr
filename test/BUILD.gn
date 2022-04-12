@@ -31,6 +31,7 @@ memmgr_deps = [
 memmgr_external_deps = [
   "hiviewdfx_hilog_native:libhilog",
   "ipc:ipc_core",
+  "memmgr:memmgrclient",
   "os_account_standard:os_account_innerkits",
 ]
 
@@ -148,9 +149,26 @@ ohos_unittest("reclaim_strategy_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("innerkits_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/innerkits_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 group("memmgr_unittest") {
   testonly = true
   deps = [
+    ":innerkits_test",
     ":kernel_interface_test",
     ":memcg_mgr_test",
     ":memcg_test",

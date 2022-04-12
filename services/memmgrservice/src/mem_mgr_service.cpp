@@ -69,11 +69,32 @@ void MemMgrService::OnStart()
         HILOGE("init failed");
         return;
     }
+    if (!Publish(this)) {
+        HILOGE("publish SA failed");
+        return;
+    }
+    HILOGI("publish SA successed");
 }
 
 void MemMgrService::OnStop()
 {
     HILOGI("called");
+}
+
+// implements of innerkits list below
+
+int32_t MemMgrService::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
+{
+    HILOGI("called");
+    ReclaimPriorityManager::BunldeCopySet bundleSet;
+    ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundleSet);
+    for (auto bundlePriorityInfo : bundleSet) {
+        Memory::BundlePriority *bi = new Memory::BundlePriority(bundlePriorityInfo.uid_,
+            bundlePriorityInfo.name_, bundlePriorityInfo.priority_, bundlePriorityInfo.accountId_);
+        bundlePrioList.AddBundleInfo(*bi);
+    }
+    bundlePrioList.SetCount(bundlePrioList.Size());
+    return 0;
 }
 } // namespace Memory
 } // namespace OHOS

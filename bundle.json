@@ -40,7 +40,19 @@
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
             "//foundation/resourceschedule/memmgr/profile:memmgr_config"
         ],
-        "inner_kits": [],
+        "inner_kits": [
+          {
+            "name": "//foundation/resourceschedule/memmgr/interface/innerkits:memmgrclient",
+            "header": {
+              "header_files": [
+                "mem_mgr_client.h",
+                "i_mem_mgr.h",
+                "mem_mgr_proxy.h"
+              ],
+              "header_base": "//foundation/resourceschedule/memmgr/interface/innerkits/include/"
+            }
+          }
+        ],
         "test": [
             "//foundation/resourceschedule/memmgr/test:memmgr_unittest"
         ]
