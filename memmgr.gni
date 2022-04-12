@@ -20,3 +20,5 @@ memmgr_root_path = "//foundation/resourceschedule/${memmgr_part_name}"
 memmgr_common_path = "${memmgr_root_path}/common"
 
 memmgr_service_path = "${memmgr_root_path}/services/memmgrservice"
+
+memgr_innerkits_path = "${memmgr_root_path}/interface/innerkits"
