@@ -254,7 +254,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::
     return ret;
 }
 
-bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo &proc,
+bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
     std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo> account)
 {
     // clear proc and bundle if needed, delete the object
