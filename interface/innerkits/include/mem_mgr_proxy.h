@@ -12,32 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_PROXY_H
+#define OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_PROXY_H
 
-#ifndef OHOS_MEMORY_MEMMGR_SERVICE_H
-#define OHOS_MEMORY_MEMMGR_SERVICE_H
-
-#include "mem_mgr_stub.h"
-#include "single_instance.h"
-#include "system_ability.h"
+#include "i_mem_mgr.h"
+#include "iremote_proxy.h"
 
 namespace OHOS {
 namespace Memory {
-class MemMgrService : public SystemAbility, public MemMgrStub {
-    DECLARE_SYSTEM_ABILITY(MemMgrService);
-    DECLARE_SINGLE_INSTANCE_BASE(MemMgrService);
-
+class MemMgrProxy : public IRemoteProxy<IMemMgr> {
 public:
-    MemMgrService();
-    ~MemMgrService() = default;
-    virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
-
-protected:
-    void OnStart() override;
-    void OnStop() override;
-
+    explicit MemMgrProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<IMemMgr>(impl) {}
+    ~MemMgrProxy() = default;
+    int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
 private:
-    bool Init();
+    static inline BrokerDelegator<MemMgrProxy> delegator_;
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_SERVICE_H
+#endif // OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_PROXY_H

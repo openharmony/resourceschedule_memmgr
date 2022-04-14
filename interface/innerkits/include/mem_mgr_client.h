@@ -13,31 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_SERVICE_H
-#define OHOS_MEMORY_MEMMGR_SERVICE_H
+#ifndef OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_CLIENT_H
+#define OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_CLIENT_H
 
-#include "mem_mgr_stub.h"
+#include "i_mem_mgr.h"
 #include "single_instance.h"
-#include "system_ability.h"
 
 namespace OHOS {
 namespace Memory {
-class MemMgrService : public SystemAbility, public MemMgrStub {
-    DECLARE_SYSTEM_ABILITY(MemMgrService);
-    DECLARE_SINGLE_INSTANCE_BASE(MemMgrService);
+class MemMgrClient {
+    DECLARE_SINGLE_INSTANCE(MemMgrClient);
 
 public:
-    MemMgrService();
-    ~MemMgrService() = default;
-    virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
-
-protected:
-    void OnStart() override;
-    void OnStop() override;
+    int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList);
 
 private:
-    bool Init();
+    sptr<IMemMgr> GetMemMgrService();
+    std::mutex mutex_;
+    sptr<IMemMgr> dpProxy_;
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_SERVICE_H
+#endif // OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_CLIENT_H
