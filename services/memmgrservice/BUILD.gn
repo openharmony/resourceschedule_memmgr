@@ -33,6 +33,7 @@ config("memory_memmgr_config") {
   include_dirs = [
     "include",
     "${memmgr_root_path}/common/include",
+    "${memgr_innerkits_path}/include",
     "include/event/",
     "include/reclaim_priority_manager/",
     "include/kill_strategy_manager/",
@@ -58,6 +59,7 @@ ohos_shared_library("memmgrservice") {
     "src/event/memory_pressure_monitor.cpp",
     "src/kill_strategy_manager/low_memory_killer.cpp",
     "src/mem_mgr_service.cpp",
+    "src/mem_mgr_stub.cpp",
     "src/reclaim_priority_manager/account_bundle_info.cpp",
     "src/reclaim_priority_manager/account_priority_info.cpp",
     "src/reclaim_priority_manager/bundle_priority_info.cpp",
@@ -87,6 +89,7 @@ ohos_shared_library("memmgrservice") {
     "hisysevent_native:libhisysevent",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "memmgr:memmgrclient",
     "os_account_standard:libaccountkits",
     "os_account_standard:os_account_innerkits",
     "safwk:system_ability_fwk",
