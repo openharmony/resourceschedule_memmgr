@@ -120,7 +120,7 @@ private:
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
     bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
-    bool HandleTerminateProcess(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle,
+    bool HandleTerminateProcess(ProcessPriorityInfo proc, std::shared_ptr<BundlePriorityInfo> bundle,
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
             ProcessPriorityInfo &proc, AppAction &action);
