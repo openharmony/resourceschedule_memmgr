@@ -23,12 +23,12 @@ memmgr_service_configs = [ "${memmgr_service}:memory_memmgr_config" ]
 
 memmgr_deps = [
   "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-  "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
   "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
   "//utils/native/base:utils",
 ]
 
 memmgr_external_deps = [
+  "eventhandler:libeventhandler",
   "hiviewdfx_hilog_native:libhilog",
   "ipc:ipc_core",
   "memmgr:memmgrclient",
