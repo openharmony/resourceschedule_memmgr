@@ -141,7 +141,7 @@ xml样例:
 
 功能参考:
 	详见Enhanced SWAP特性介绍
-	https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/kernel/kernel-standard-mm-eswap.mdV
+	https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/kernel/kernel-standard-mm-eswap.md
 
 节点介绍:
 Memmgr			Memmgr相关配置
