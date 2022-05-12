@@ -22,21 +22,21 @@ namespace {
 const std::string TAG = "BundlePriorityInfo";
 } // namespace
 
-BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid):name_(name), uid_(bundleUid)
+BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid):name_(name), uid_(bundleUid)
 {
     this->priority_ = RECLAIM_PRIORITY_UNKNOWN;
     this->accountId_ = bundleUid / USER_ID_SHIFT;
     this->state_ = BundleState::STATE_DEFAULT;
 }
 
-BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority):name_(name),
+BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid, int priority):name_(name),
     uid_(bundleUid), priority_(priority)
 {
     this->accountId_ = bundleUid / USER_ID_SHIFT;
     this->state_ = BundleState::STATE_DEFAULT;
 }
 
-BundlePriorityInfo::BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId,
+BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid, int priority, int accountId,
     BundleState state) : name_(name), uid_(bundleUid), priority_(priority), accountId_(accountId), state_(state)
 {
 }
