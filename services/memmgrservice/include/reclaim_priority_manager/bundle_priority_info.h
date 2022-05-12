@@ -29,9 +29,9 @@ namespace Memory {
 class BundlePriorityInfo {
 public:
     using ProcessesInfoMap = std::map<pid_t, ProcessPriorityInfo>;
-    explicit BundlePriorityInfo(std::string name, int bundleUid);
-    explicit BundlePriorityInfo(std::string name, int bundleUid, int priority);
-    explicit BundlePriorityInfo(std::string name, int bundleUid, int priority, int accountId, BundleState state);
+    explicit BundlePriorityInfo(const std::string &name, int bundleUid);
+    explicit BundlePriorityInfo(const std::string &name, int bundleUid, int priority);
+    explicit BundlePriorityInfo(const std::string &name, int bundleUid, int priority, int accountId, BundleState state);
     BundlePriorityInfo(const BundlePriorityInfo &copyBundle);
     inline bool operator<(const BundlePriorityInfo &tmp) const
     {
