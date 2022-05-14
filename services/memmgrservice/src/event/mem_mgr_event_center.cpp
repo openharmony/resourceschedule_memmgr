@@ -79,7 +79,7 @@ void MemMgrEventCenter::RegisterAppStateCallback()
 {
     HILOGI("called");
     retryTimes_++;
-    if (!appStateCallback_->ConnectAppMgrService() && retryTimes_ < 10) { // 10 : max retry times
+    while (!appStateCallback_->ConnectAppMgrService()) {
         HILOGE("failed to ConnectAppMgrService, try again after 3s!, retryTimes=%{public}d/10", retryTimes_);
         handler_->PostTask(registerEventListenerFunc_, 3000, AppExecFwk::EventQueue::Priority::HIGH); // 3000 means 3s
         return;
