@@ -21,6 +21,7 @@
 #define protected public
 #include "mem_mgr_client.h"
 #include "bundle_priority_list.h"
+#include "mem_mgr_constant.h"
 #undef private
 #undef protected
 
@@ -59,6 +60,12 @@ HWTEST_F(InnerkitsTest, GetBundlePriorityList_Test, TestSize.Level1)
     int32_t ret = MemMgrClient::GetInstance().GetBundlePriorityList(bundlePrioList);
     EXPECT_EQ(ret, 0);
     bundlePrioList.Show();
+}
+
+HWTEST_F(InnerkitsTest, GetPriorityDescTest, TestSize.Level1)
+{
+    auto ptr = ReclaimPriorityMapping.find(RECLAIM_PRIORITY_SYSTEM);
+    EXPECT_EQ(ptr->second, "system");
 }
 }
 }
