@@ -62,5 +62,5 @@ sptr<IMemMgr> MemMgrClient::GetMemMgrService()
     dpProxy_ = iface_cast<IMemMgr>(object);
     return dpProxy_;
 }
-} // namespace DeviceProfile
+} // namespace Memory
 } // namespace OHOS
