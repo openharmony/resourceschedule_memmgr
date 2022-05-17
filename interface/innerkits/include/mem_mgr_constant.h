@@ -34,14 +34,14 @@ constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
 constexpr int RECLAIM_PRIORITY_UNKNOWN = 1000;
 
 const std::map<int, std::string> ReclaimPriorityMapping = {
-    { RECLAIM_PRIORITY_SYSTEM, "system" },
-    { RECLAIM_PRIORITY_FOREGROUND, "foreground" },
-    { RECLAIM_PRIORITY_BG_SUSPEND_DELAY, "suspend-delay" },
-    { RECLAIM_PRIORITY_BG_PERCEIVED, "perceived" },
-    { RECLAIM_PRIORITY_BACKGROUND, "background" },
+    { RECLAIM_PRIORITY_SYSTEM, "System" },
+    { RECLAIM_PRIORITY_FOREGROUND, "Foreground" },
+    { RECLAIM_PRIORITY_BG_SUSPEND_DELAY, "Suspend-delay" },
+    { RECLAIM_PRIORITY_BG_PERCEIVED, "Perceived" },
+    { RECLAIM_PRIORITY_BACKGROUND, "Background" },
 };
 
-const std::string RECLAIM_PRIORITY_UNKNOWN_DESC = "undefined";
+const std::string RECLAIM_PRIORITY_UNKNOWN_DESC = "Undefined";
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_INNERKITS_MEM_MGR_CONSTANT_H

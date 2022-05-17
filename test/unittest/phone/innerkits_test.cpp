@@ -65,7 +65,7 @@ HWTEST_F(InnerkitsTest, GetBundlePriorityList_Test, TestSize.Level1)
 HWTEST_F(InnerkitsTest, GetPriorityDescTest, TestSize.Level1)
 {
     auto ptr = ReclaimPriorityMapping.find(RECLAIM_PRIORITY_SYSTEM);
-    EXPECT_EQ(ptr->second, "system");
+    EXPECT_EQ(ptr->second, "System");
 }
 }
 }
