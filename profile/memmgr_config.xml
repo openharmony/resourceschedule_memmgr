@@ -17,4 +17,9 @@
   </reclaimConfig>
   <killConfig>
   </killConfig>
+  <systemMemoryLevelConfig>
+    <moderate>819200</moderate>
+    <low>716800</low>
+    <critical>614400</critical>
+  </systemMemoryLevelConfig>
 </Memmgr>
