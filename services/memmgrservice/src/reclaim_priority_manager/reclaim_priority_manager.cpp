@@ -117,7 +117,7 @@ void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bu
 
     HILOGD("iter %{public}zu bundles begin", totalBundlePrioSet_.size());
     int count = 0;
-    for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle, ++count) {
+    for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle) {
         std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
         if (bundle == nullptr) {
             HILOGD("bundle %{public}d/%{public}zu is nullptr", count, totalBundlePrioSet_.size());
