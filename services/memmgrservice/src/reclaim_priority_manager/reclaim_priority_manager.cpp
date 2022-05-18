@@ -129,6 +129,7 @@ void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bu
         }
         if (bundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
             HILOGD("bundle<%{public}d, %{public}s}> is waiting to kill, skiped!", bundle->uid_, bundle->name_.c_str());
+            continue;
         }
 
         try {
