@@ -109,6 +109,50 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
     HILOGD("iter bundles end");
 }
 
+void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bundleSet)
+{
+    HILOGD("called, minPrio=%{public}d", minPrio);
+    // add lock
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    HILOGD("iter %{public}zu bundles begin", totalBundlePrioSet_.size());
+    int count = 0;
+    for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle) {
+        std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
+        if (bundle == nullptr) {
+            HILOGD("bundle %{public}d/%{public}zu is nullptr", count, totalBundlePrioSet_.size());
+            continue;
+        }
+        if (bundle->priority_ < minPrio) {
+            HILOGD("there is no bundle with priority bigger than %{public}d, break!", minPrio);
+            break;
+        }
+        if (bundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
+            HILOGD("bundle<%{public}d, %{public}s}> is waiting to kill, skiped!", bundle->uid_, bundle->name_.c_str());
+            continue;
+        }
+
+        try {
+            BundlePriorityInfo *tmpBundleInfo = new BundlePriorityInfo(*bundle);
+            auto ret = bundleSet.insert(*tmpBundleInfo);
+            if (ret.second) {
+                HILOGI("insert bundle<%{public}d, %{public}s}> to set, priority=%{public}d", tmpBundleInfo->uid_,
+                    tmpBundleInfo->name_.c_str(), tmpBundleInfo->priority_);
+                ++count;
+                break;
+            }
+        } catch (...) {
+            HILOGE("new BundlePriorityInfo failed, need kill quickly!");
+            for (auto procEntry : bundle->procs_) {
+                HILOGE("quick killing bundle<%{public}d, %{public}s}>, pid=%{public}d", bundle->uid_,
+                    bundle->name_.c_str(), procEntry.second.pid_);
+                KernelInterface::GetInstance().KillOneProcessByPid(procEntry.second.pid_);
+            }
+        }
+    }
+    HILOGD("iter bundles end");
+}
+
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
@@ -189,8 +233,8 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
     return true;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid,
-    std::string name, AppStateUpdateReason reason)
+bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, const std::string &name,
+    AppStateUpdateReason reason)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
@@ -220,7 +264,7 @@ void ReclaimPriorityManager::UpdateBundlePriority(std::shared_ptr<BundlePriority
     HILOGD("end----------------------------");
 }
 
-bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, std::string bundleName, int accountId)
+bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const std::string &bundleName, int accountId)
 {
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account == nullptr) {
@@ -292,8 +336,8 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePrio
     return ret;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid,
-    std::string bundleName, AppStateUpdateReason reason)
+bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason reason)
 {
     HILOGD("called");
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
