@@ -79,7 +79,8 @@ public:
     using BundlePrioMap = std::map<int, std::shared_ptr<BundlePriorityInfo>>;
     using OsAccountsMap = std::map<int, std::shared_ptr<AccountBundleInfo>>;
     bool Init();
-    bool UpdateReclaimPriority(pid_t pid, int bundleUid, std::string bundleName, AppStateUpdateReason priorityReason);
+    bool UpdateReclaimPriority(pid_t pid, int bundleUid, const std::string &bundleName,
+        AppStateUpdateReason priorityReason);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
@@ -94,6 +95,8 @@ public:
 
     // for lmkd and memory reclaim
     void GetBundlePrioSet(BunldeCopySet &bundleSet);
+
+    void GetOneKillableBundle(int minPrio, BunldeCopySet &bundleSet);
 
     void SetBundleState(int accountId, int uid, BundleState state);
 
@@ -112,14 +115,14 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     ReclaimPriorityManager();
     bool GetEventHandler();
-    bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, std::string bundleName,
+    bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
             AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
-    bool HandleCreateProcess(int pid, int bundleUid, std::string bundleName, int accountId);
+    bool HandleCreateProcess(int pid, int bundleUid, const std::string &bundleName, int accountId);
     bool HandleTerminateProcess(ProcessPriorityInfo proc, std::shared_ptr<BundlePriorityInfo> bundle,
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,

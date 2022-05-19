@@ -63,11 +63,11 @@ bool LowMemoryKiller::GetEventHandler()
 
 int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 {
-    HILOGD("called. minPrio=%{public}d", minPrio);
+    HILOGE("called. minPrio=%{public}d", minPrio);
     int freedBuf = 0;
     ReclaimPriorityManager::BunldeCopySet bundles;
 
-    ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundles);
+    ReclaimPriorityManager::GetInstance().GetOneKillableBundle(minPrio, bundles);
     HILOGD("get BundlePrioSet size=%{public}zu", bundles.size());
 
     int count = 0;
