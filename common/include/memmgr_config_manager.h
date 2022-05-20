@@ -27,6 +27,7 @@
 #include "single_instance.h"
 #include "reclaim_strategy_constants.h"
 #include "reclaim_priority_constants.h"
+#include "memory_level_constants.h"
 
 namespace OHOS {
 namespace Memory {
@@ -38,6 +39,14 @@ public:
     unsigned int swapReserve;
     AvailBufferSize(unsigned int availBuffer, unsigned int minAvailBuffer,
                     unsigned int highAvailBuffer, unsigned int swapReserve);
+};
+
+class SystemMemoryLevelConfig {
+public:
+    int moderate;
+    int low;
+    int critical;
+    SystemMemoryLevelConfig(int moderate, int low, int critical);
 };
 
 class ReclaimRatiosConfig {
@@ -71,6 +80,7 @@ public:
     using ReclaimRatiosConfigSet = std::set<std::shared_ptr<ReclaimRatiosConfig>, ReclaimRatiosConfigPtrCmp>;
     bool GetXmlLoaded();
     std::shared_ptr<AvailBufferSize> GetAvailBufferSize();
+    std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
 
 private:
@@ -78,6 +88,7 @@ private:
     bool ParseXmlRootNode(const xmlNodePtr &rootNodePtr);
     bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr);
     bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     void SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst);
     void SetUnsignedIntParam(std::map<std::string, std::string> &param, std::string key, unsigned int &dst);
@@ -90,6 +101,7 @@ private:
     void ClearExistConfig();
     bool xmlLoaded_ = false;
     std::shared_ptr<AvailBufferSize> availBufferSize_;
+    std::shared_ptr<SystemMemoryLevelConfig> systemMemoryLevelConfig_;
     ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
     void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);
     void ClearReclaimRatiosConfigSet();

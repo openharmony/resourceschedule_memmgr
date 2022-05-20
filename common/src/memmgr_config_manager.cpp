@@ -61,6 +61,11 @@ ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, unsigned in
 {
 }
 
+SystemMemoryLevelConfig::SystemMemoryLevelConfig(int moderate, int low, int critical)
+    : moderate(moderate), low(low), critical(critical)
+{
+}
+
 void MemmgrConfigManager::InitDefaultConfig()
 {
     MAKE_POINTER(this->availBufferSize_, shared, AvailBufferSize, "make AvailBufferSize failed", return,
@@ -120,9 +125,45 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             ParseKillConfig(currNode);
             continue;
         }
+        if (name.compare("systemMemoryLevelConfig") == 0) {
+            ParseSystemMemoryLevelConfig(currNode);
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
     }
+    return true;
+}
+
+bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr)
+{
+    if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
+        return true;
+    }
+
+    std::map<std::string, std::string> param;
+    if (!GetModuleParam(rootNodePtr, param)) {
+        HILOGW("Get moudle param failed.");
+        return false;
+    }
+
+    int moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
+    int low = MEMORY_LEVEL_LOW_DEFAULT;
+    int critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+
+    SetIntParam(param, "moderate", moderate);
+    SetIntParam(param, "low", low);
+    SetIntParam(param, "critical", critical);
+
+    if (!((moderate <= low) && (low <= critical))) {
+        moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
+        low = MEMORY_LEVEL_LOW_DEFAULT;
+        critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+        HILOGW("Use default values instead of invalid values.");
+    }
+
+    MAKE_POINTER(systemMemoryLevelConfig_, shared, SystemMemoryLevelConfig,
+        "make SystemMemoryLevelConfig failed", return false, moderate, low, critical);
     return true;
 }
 
@@ -312,6 +353,11 @@ std::shared_ptr<AvailBufferSize> MemmgrConfigManager::GetAvailBufferSize()
 const MemmgrConfigManager::ReclaimRatiosConfigSet MemmgrConfigManager::GetReclaimRatiosConfigSet()
 {
     return this->reclaimRatiosConfigSet_;
+}
+
+std::shared_ptr<SystemMemoryLevelConfig> MemmgrConfigManager::GetSystemMemoryLevelConfig()
+{
+    return systemMemoryLevelConfig_;
 }
 } // namespace Memory
 } // namespace OHOS
