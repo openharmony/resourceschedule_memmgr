@@ -162,6 +162,7 @@ void LowMemoryKiller::PsiHandler()
 {
     if (!initialized_) {
         HILOGE("is not initialized, return!");
+        return;
     }
     std::function<void()> func = std::bind(&LowMemoryKiller::PsiHandlerInner, this);
     handler_->PostImmediateTask(func);
