@@ -51,6 +51,37 @@ bool WriteOomScoreAdjToKernel(std::shared_ptr<BundlePriorityInfo> bundle)
 
 ReclaimPriorityManager::ReclaimPriorityManager()
 {
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::CREATE_PROCESS)] = "CREATE_PROCESS";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::PROCESS_READY)] = "PROCESS_READY";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::FOREGROUND)] = "FOREGROUND";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BACKGROUND)] = "BACKGROUND";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::SUSPEND_DELAY_START)] = "SUSPEND_DELAY_START";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::SUSPEND_DELAY_END)] = "SUSPEND_DELAY_END";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BACKGROUND_RUNNING_START)] =
+        "BACKGROUND_RUNNING_START";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BACKGROUND_RUNNING_END)] =
+        "BACKGROUND_RUNNING_END";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::EVENT_START)] = "EVENT_START";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::EVENT_END)] = "EVENT_END";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DATA_ABILITY_START)] = "DATA_ABILITY_START";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DATA_ABILITY_END)] = "DATA_ABILITY_END";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::APPLICATION_SUSPEND)] = "APPLICATION_SUSPEND";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::PROCESS_TERMINATED)] = "PROCESS_TERMINATED";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::OS_ACCOUNT_CHANGED)] = "OS_ACCOUNT_CHANGED";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DIST_DEVICE_CONNECTED)] =
+        "DIST_DEVICE_CONNECTED";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DIST_DEVICE_DISCONNECTED)] =
+        "DIST_DEVICE_DISCONNECTED";
+}
+
+std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateReason reason)
+{
+    auto ptr = updateReasonStrMapping_.find(static_cast<int32_t>(reason));
+    if (ptr != updateReasonStrMapping_.end()) {
+        return ptr->second;
+    } else {
+        return unkown_reason;
+    }
 }
 
 bool ReclaimPriorityManager::Init()
@@ -93,11 +124,7 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
 
         for (auto itrProcess = bundle->procs_.begin(); itrProcess != bundle->procs_.end(); itrProcess++) {
             ProcessPriorityInfo processInfo = itrProcess->second;
-            ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);
-            tmpProcess.isBackgroundRunning = processInfo.isBackgroundRunning;
-            tmpProcess.isSuspendDelay = processInfo.isSuspendDelay;
-            tmpProcess.isEventStart = processInfo.isEventStart;
-            tmpProcess.isDataAbilityStart = processInfo.isDataAbilityStart;
+            ProcessPriorityInfo tmpProcess(processInfo);
 
             tmpBundleInfo.procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
         }
@@ -339,7 +366,8 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePrio
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
     AppStateUpdateReason reason)
 {
-    HILOGD("called");
+    HILOGI("called, pid=%{public}d, bundleUid=%{public}d, bundleName=%{public}s, reason=%{public}s",
+        pid, bundleUid, bundleName.c_str(), AppStateUpdateResonToString(reason).c_str());
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
     HILOGD("accountId=%{public}d", accountId);
 
@@ -377,49 +405,82 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
         HILOGD("call HandleUpdateProcess");
         HandleUpdateProcess(reason, bundle, proc, action);
     }
-    // if the priority is smaller than RECLAIM_PRIORITY_BACKGROUND, it shouldn't update
-    if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
-        if (bundle->priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
-            proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
-            UpdateBundlePriority(bundle);
-        }
-    } else if (bundle->priority_ == RECLAIM_PRIORITY_BG_PERCEIVED) {
-        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
-        UpdateBundlePriority(bundle);
-    }
     ret = ApplyReclaimPriority(bundle, pid, action);
     return ret;
+}
+
+void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
+                                                        ProcessPriorityInfo &proc)
+{
+    HILOGD("enter, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
+        "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
+        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, priority=%{public}d]",
+        bundle->uid_, bundle->name_.c_str(), bundle->priority_,
+        proc.pid_, proc.uid_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
+        proc.isDataAbilityStart, proc.isDistDeviceConnected, proc.priority_);
+
+    if (bundle->priority_ < RECLAIM_PRIORITY_FOREGROUND) { // is a system process
+        HILOGD("%{public}d is a system process, skiped!", proc.pid_);
+        return;
+    }
+    if (proc.isFreground) { // is a freground process
+        HILOGD("%{public}d is a freground process", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_FOREGROUND) {
+            proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
+        }
+    } else { // is a background process
+        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
+        HILOGD("%{public}d is a background process, set process priority to %{public}d first", proc.pid_,
+            proc.priority_);
+    }
+    if (proc.isSuspendDelay) { // is a background process with transient task
+        HILOGD("%{public}d is a background process with transient task", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
+            proc.SetPriority(RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
+            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
+        }
+    } else if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
+        // is a background perceived process
+        if (proc.priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
+            proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
+            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
+        }
+    } else if (proc.isDistDeviceConnected) { // is a background process connected by distribute device
+        if (proc.priority_ > RECLAIM_PRIORITY_BG_DIST_DEVICE) {
+            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
+            proc.SetPriority(RECLAIM_PRIORITY_BG_DIST_DEVICE);
+        }
+    } else {
+        // is a plain background process
+    }
+    UpdateBundlePriority(bundle);
 }
 
 void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
     std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
 {
+    HILOGD("called, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
+        "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
+        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, priority=%{public}d], case:%{public}s",
+        bundle->uid_, bundle->name_.c_str(), bundle->priority_, proc.pid_, proc.uid_, proc.isFreground,
+        proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDataAbilityStart,
+        proc.isDistDeviceConnected, proc.priority_, AppStateUpdateResonToString(reason).c_str());
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
-            proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
-            UpdateBundlePriority(bundle);
+            proc.isFreground = true;
             action = AppAction::APP_FOREGROUND;
             break;
         }
         case AppStateUpdateReason::BACKGROUND: {
-            proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
-            UpdateBundlePriority(bundle);
+            proc.isFreground = false;
             action = AppAction::APP_BACKGROUND;
             break;
         }
         case AppStateUpdateReason::SUSPEND_DELAY_START:
             proc.isSuspendDelay = true;
-            if (bundle->priority_ > RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
-                proc.SetPriority(RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
-                UpdateBundlePriority(bundle);
-            }
             break;
         case AppStateUpdateReason::SUSPEND_DELAY_END:
             proc.isSuspendDelay = false;
-            if (bundle->priority_ == RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
-                proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
-                UpdateBundlePriority(bundle);
-            }
             break;
         case AppStateUpdateReason::BACKGROUND_RUNNING_START:
             proc.isBackgroundRunning = true;
@@ -439,9 +500,16 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
         case AppStateUpdateReason::DATA_ABILITY_END:
             proc.isDataAbilityStart = false;
             break;
+        case AppStateUpdateReason::DIST_DEVICE_CONNECTED:
+            proc.isDistDeviceConnected = true;
+            break;
+        case AppStateUpdateReason::DIST_DEVICE_DISCONNECTED:
+            proc.isDistDeviceConnected = false;
+            break;
         default:
             break;
     }
+    UpdatePriorityByProcStatus(bundle, proc);
 }
 
 bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle,
