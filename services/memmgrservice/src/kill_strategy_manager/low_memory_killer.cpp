@@ -106,14 +106,14 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandlerInner()
 {
-    HILOGD("[%{public}ld] called", ++calledCount);
+    HILOGI("[%{public}ld] called", ++calledCount);
     int triBuf, availBuf, thBuf, freedBuf;
     int totalBuf = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
     int killCnt = 0;
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-    HILOGD("[%{public}ld] current buffer = %{public}d KB", calledCount, triBuf);
+    HILOGE("[%{public}ld] current buffer = %{public}d KB", calledCount, triBuf);
     if (triBuf == MAX_BUFFER_KB) {
         HILOGE("[%{public}ld] get buffer failed, skiped!", calledCount);
         return;
@@ -126,7 +126,7 @@ void LowMemoryKiller::PsiHandlerInner()
             break;
         }
     }
-    HILOGD("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
+    HILOGE("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
         HILOGE("[%{public}ld] no minPrio, skiped!", calledCount);
