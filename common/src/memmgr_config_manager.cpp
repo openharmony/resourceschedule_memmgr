@@ -176,18 +176,19 @@ bool MemmgrConfigManager::ParseReclaimPriorityKillableSystemAppsConfig(const xml
         std::string name = std::string(reinterpret_cast<const char *>(currNode->name));
         if (name.compare("killableSysApp") == 0) {
             auto contentPtr = xmlNodeGetContent(currNode);
-            std::string value;
-            if (contentPtr != nullptr) {
-                value = std::string(reinterpret_cast<char *>(contentPtr));
-                xmlFree(contentPtr);
-                HILOGW("read a killable app: %{public}s", value.c_str());
-                if (value.size() == 0) {
-                    HILOGE("read a empty killable app: %{public}s, ignore it!", value.c_str());
-                    continue;
-                }
-                reclaimPriorityConfig_.killalbeSystemApps_.insert(value);
+            if (contentPtr == nullptr) {
+                continue;
             }
-            continue;
+            std::string value;
+            value = std::string(reinterpret_cast<char *>(contentPtr));
+            xmlFree(contentPtr);
+            HILOGW("read a killable app: %{public}s", value.c_str());
+            if (value.size() == 0) {
+                HILOGE("read a empty killable app: %{public}s, ignore it!", value.c_str());
+                continue;
+            }
+            reclaimPriorityConfig_.killalbeSystemApps_.insert(value);
+
         }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
