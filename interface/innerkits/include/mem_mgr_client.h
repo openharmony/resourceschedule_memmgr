@@ -26,6 +26,7 @@ class MemMgrClient {
 
 public:
     int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList);
+    int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected);
 
 private:
     sptr<IMemMgr> GetMemMgrService();

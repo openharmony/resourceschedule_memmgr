@@ -50,5 +50,34 @@ int32_t MemMgrProxy::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
     bundlePrioList = *list;
     return ERR_OK;
 }
+
+int32_t MemMgrProxy::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
+        connected);
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid) || !data.WriteInt32(uid) || !data.WriteString(name) || !data.WriteBool(connected)) {
+        HILOGE("write params failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_NOTIFY_DIST_DEV_STATUS, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
 } // namespace Memory
 } // namespace OHOS

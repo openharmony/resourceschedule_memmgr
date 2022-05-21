@@ -27,10 +27,25 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->uid_ = bundleUid;
     this->pid_ = pid;
     this->priority_ = priority;
+    this->isFreground = (priority == RECLAIM_PRIORITY_FOREGROUND) ? true : false;
     this->isBackgroundRunning = false;
     this->isSuspendDelay = false;
     this->isEventStart = false;
     this->isDataAbilityStart = false;
+    this->isDistDeviceConnected = false;
+}
+
+ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
+{
+    this->uid_ = copyProcess.uid_;
+    this->pid_ = copyProcess.pid_;
+    this->priority_ = copyProcess.priority_;
+    this->isFreground = copyProcess.isFreground;
+    this->isBackgroundRunning = copyProcess.isBackgroundRunning;
+    this->isSuspendDelay = copyProcess.isSuspendDelay;
+    this->isEventStart = copyProcess.isEventStart;
+    this->isDataAbilityStart = copyProcess.isDataAbilityStart;
+    this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
 }
 
 void ProcessPriorityInfo::SetPriority(int targetPriority)
