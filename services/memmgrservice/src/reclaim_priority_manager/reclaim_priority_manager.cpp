@@ -165,7 +165,7 @@ void ReclaimPriorityManager::HandlePreStartedProcs()
             WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
         }
         HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
-                pid, uid, name.c_str(), killable);
+            pid, uid, name.c_str(), killable);
     }
 }
 
