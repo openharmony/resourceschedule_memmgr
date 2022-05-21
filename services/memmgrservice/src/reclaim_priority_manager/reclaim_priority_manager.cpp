@@ -467,12 +467,12 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
         proc.isDistDeviceConnected, proc.priority_, AppStateUpdateResonToString(reason).c_str());
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
-            proc.isFreground  = true;
+            proc.isFreground = true;
             action = AppAction::APP_FOREGROUND;
             break;
         }
         case AppStateUpdateReason::BACKGROUND: {
-            proc.isFreground  = false;
+            proc.isFreground = false;
             action = AppAction::APP_BACKGROUND;
             break;
         }
