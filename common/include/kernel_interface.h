@@ -67,6 +67,7 @@ public:
     std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
 
     bool GetPidProcInfo(struct ProcInfo &procInfo);
+    bool GetProcNameByPid(int pid, std::string &name);
     void ReadZswapdPressureShow(std::map<std::string, std::string>& result);
     int GetCurrentBuffer();
     int KillOneProcessByPid(int pid);

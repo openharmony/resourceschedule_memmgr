@@ -49,6 +49,11 @@ public:
     SystemMemoryLevelConfig(int moderate, int low, int critical);
 };
 
+class ReclaimPriorityConfig {
+public:
+    std::set<std::string> killalbeSystemApps_;
+};
+
 class ReclaimRatiosConfig {
 public:
     int minScore;
@@ -82,6 +87,7 @@ public:
     std::shared_ptr<AvailBufferSize> GetAvailBufferSize();
     std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
+    const ReclaimPriorityConfig& GetReclaimPriorityConfig();
 
 private:
     void InitDefaultConfig();
@@ -89,6 +95,8 @@ private:
     bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
     bool ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseReclaimPriorityKillableSystemAppsConfig(const xmlNodePtr &rootNodePtr);
     bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     void SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst);
     void SetUnsignedIntParam(std::map<std::string, std::string> &param, std::string key, unsigned int &dst);
@@ -103,6 +111,7 @@ private:
     std::shared_ptr<AvailBufferSize> availBufferSize_;
     std::shared_ptr<SystemMemoryLevelConfig> systemMemoryLevelConfig_;
     ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
+    ReclaimPriorityConfig reclaimPriorityConfig_;
     void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);
     void ClearReclaimRatiosConfigSet();
     MemmgrConfigManager();
