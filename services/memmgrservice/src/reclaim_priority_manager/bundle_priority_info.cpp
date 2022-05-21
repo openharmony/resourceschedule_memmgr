@@ -46,11 +46,7 @@ BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) : n
 {
     for (auto itrProcess = copyBundle.procs_.begin(); itrProcess != copyBundle.procs_.end(); itrProcess++) {
         ProcessPriorityInfo processInfo = itrProcess->second;
-        ProcessPriorityInfo tmpProcess(processInfo.pid_, processInfo.uid_, processInfo.priority_);
-        tmpProcess.isBackgroundRunning = processInfo.isBackgroundRunning;
-        tmpProcess.isSuspendDelay = processInfo.isSuspendDelay;
-        tmpProcess.isEventStart = processInfo.isEventStart;
-        tmpProcess.isDataAbilityStart = processInfo.isDataAbilityStart;
+        ProcessPriorityInfo tmpProcess(processInfo);
 
         this->procs_.insert(std::make_pair(tmpProcess.pid_, tmpProcess));
     }
@@ -97,7 +93,7 @@ int BundlePriorityInfo::GetMinProcPriority()
 
 void BundlePriorityInfo::SetPriority(int targetPriority)
 {
-    priority_  = targetPriority;
+    priority_ = targetPriority;
 }
 
 void BundlePriorityInfo::UpdatePriority()

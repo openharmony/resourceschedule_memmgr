@@ -100,6 +100,7 @@ public:
 
     void SetBundleState(int accountId, int uid, BundleState state);
 
+    std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
 private:
     bool initialized_ = false;
 
@@ -113,6 +114,8 @@ private:
     std::mutex totalBundlePrioSetLock_;
 
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::map<int32_t, std::string> updateReasonStrMapping_;
+    std::string unkown_reason = "UNKOWN_REASON";
     ReclaimPriorityManager();
     bool GetEventHandler();
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
@@ -127,6 +130,7 @@ private:
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
             ProcessPriorityInfo &proc, AppAction &action);
+    void UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc);
     bool HandleApplicationSuspend(std::shared_ptr<BundlePriorityInfo> bundle);
     std::shared_ptr<AccountBundleInfo> FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);

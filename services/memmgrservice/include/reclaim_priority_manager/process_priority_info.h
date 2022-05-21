@@ -25,13 +25,16 @@ namespace Memory {
 class ProcessPriorityInfo {
 public:
     explicit ProcessPriorityInfo(pid_t pid, int bundleUid, int priority);
+    ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess);
     int uid_;
     pid_t pid_;
     int priority_;
+    bool isFreground; // true means freground, false means background
     bool isBackgroundRunning;
     bool isSuspendDelay;
     bool isEventStart;
     bool isDataAbilityStart;
+    bool isDistDeviceConnected;
     void SetPriority(int targetPriority);
 };
 } // namespace Memory

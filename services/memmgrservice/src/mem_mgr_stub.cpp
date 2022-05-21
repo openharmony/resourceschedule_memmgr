@@ -26,6 +26,8 @@ MemMgrStub::MemMgrStub()
 {
     memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_BUNDLE_PRIORITY_LIST)] =
         &MemMgrStub::HandleGetBunldePriorityList;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_NOTIFY_DIST_DEV_STATUS)] =
+        &MemMgrStub::HandleNotifyDistDevStatus;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -65,6 +67,27 @@ int32_t MemMgrStub::HandleGetBunldePriorityList(MessageParcel &data, MessageParc
     }
     int32_t ret = GetBundlePriorityList(*list);
     reply.WriteParcelable(list.get());
+    return ret;
+}
+
+int32_t MemMgrStub::HandleNotifyDistDevStatus(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t pid = 0;
+    int32_t uid = 0;
+    std::string name;
+    bool connected;
+    if (!data.ReadInt32(pid) || !data.ReadInt32(uid) || !data.ReadString(name) || !data.ReadBool(connected)) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+    HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
+        connected);
+
+    int32_t ret = NotifyDistDevStatus(pid, uid, name, connected);
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
     return ret;
 }
 } // namespace Memory

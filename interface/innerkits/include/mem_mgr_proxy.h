@@ -25,6 +25,7 @@ public:
     explicit MemMgrProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<IMemMgr>(impl) {}
     ~MemMgrProxy() = default;
     int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
+    int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) override;
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;
 };
