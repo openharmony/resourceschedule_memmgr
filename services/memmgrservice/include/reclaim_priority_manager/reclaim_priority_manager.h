@@ -24,6 +24,7 @@
 #include "account_bundle_info.h"
 #include "os_account_manager.h"
 #include "reclaim_param.h"
+#include "memmgr_config_manager.h"
 
 #include <map>
 #include <mutex>
@@ -116,8 +117,14 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     std::map<int32_t, std::string> updateReasonStrMapping_;
     std::string unkown_reason = "UNKOWN_REASON";
+    ReclaimPriorityConfig config_;
+    std::set<std::string> allKillableSystemApps_;
+
     ReclaimPriorityManager();
     bool GetEventHandler();
+    void GetAllKillableSystemApps();
+    void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
+    void HandlePreStartedProcs();
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
             AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
@@ -135,7 +142,8 @@ private:
     std::shared_ptr<AccountBundleInfo> FindOsAccountById(int accountId);
     void RemoveOsAccountById(int accountId);
     void AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account);
-    bool IsSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
+    bool IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
+    void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {

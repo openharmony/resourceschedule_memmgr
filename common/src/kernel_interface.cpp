@@ -211,12 +211,14 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     // 1 (init) S 0 0 0 0 -1 4210944 1 ...
     std::string stat, statm, statPid, vss, rss;
     if (!ReadFromFile(statPath, stat)) {
+        HILOGD("stat file error!");
         return false;
     }
     std::istringstream isStat(stat);
     isStat >> statPid >> procInfo.name >> procInfo.status;
 
     if (statPid != std::to_string(procInfo.pid)) {
+        HILOGD("pid error!");
         return false;
     }
 
@@ -224,6 +226,7 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     // format like:
     // 640 472 369 38 0 115 0
     if (!ReadFromFile(statmPath, statm)) {
+        HILOGD("statm file error!");
         return false;
     }
     std::istringstream isStatm(statm);
@@ -232,6 +235,19 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     procInfo.size = atoi(rss.c_str()) * PAGE_TO_KB;
     HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d KB",
            procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
+    return true;
+}
+
+bool KernelInterface::GetProcNameByPid(int pid, std::string &name)
+{
+    std::string statusPath = JoinPath("/proc/", std::to_string(pid), "/status");
+    std::string statusContent, nameTag;
+    if (!ReadFromFile(statusPath, statusContent)) {
+        HILOGE("status file [%{public}s] error!", statusPath.c_str());
+        return false;
+    }
+    std::istringstream statusStream(statusContent);
+    statusStream >> nameTag >> name;
     return true;
 }
 

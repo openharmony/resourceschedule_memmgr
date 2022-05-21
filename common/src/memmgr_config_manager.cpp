@@ -129,6 +129,66 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             ParseSystemMemoryLevelConfig(currNode);
             continue;
         }
+        if (name.compare("reclaimPriorityConfig") == 0) {
+            ParseReclaimPriorityConfig(currNode);
+            continue;
+        }
+        HILOGW("unknown node :<%{public}s>", name.c_str());
+        return false;
+    }
+    return true;
+}
+
+const ReclaimPriorityConfig& MemmgrConfigManager::GetReclaimPriorityConfig()
+{
+    return reclaimPriorityConfig_;
+}
+
+bool MemmgrConfigManager::ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr)
+{
+    if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
+        return true;
+    }
+    for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
+        if (!CheckNode(currNode)) {
+            return false;
+        }
+        std::string name = std::string(reinterpret_cast<const char *>(currNode->name));
+        if (name.compare("killalbeSystemApps") == 0) {
+            ParseReclaimPriorityKillableSystemAppsConfig(currNode);
+            continue;
+        }
+        HILOGW("unknown node :<%{public}s>", name.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool MemmgrConfigManager::ParseReclaimPriorityKillableSystemAppsConfig(const xmlNodePtr &rootNodePtr)
+{
+    if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
+        return true;
+    }
+    for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
+        if (!CheckNode(currNode)) {
+            return false;
+        }
+        std::string name = std::string(reinterpret_cast<const char *>(currNode->name));
+        if (name.compare("killableSysApp") == 0) {
+            auto contentPtr = xmlNodeGetContent(currNode);
+            std::string value;
+            if (contentPtr != nullptr) {
+                value = std::string(reinterpret_cast<char *>(contentPtr));
+                xmlFree(contentPtr);
+                HILOGW("read a killable app: %{public}s", value.c_str());
+                if (value.size() == 0) {
+                    HILOGE("read a empty killable app: %{public}s, ignore it!", value.c_str());
+                    continue;
+                }
+                reclaimPriorityConfig_.killalbeSystemApps_.insert(value);
+            }
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
     }

@@ -49,6 +49,18 @@ bool WriteOomScoreAdjToKernel(std::shared_ptr<BundlePriorityInfo> bundle)
     return true;
 }
 
+bool WriteOomScoreAdjToKernel(pid_t pid, int priority)
+{
+    HILOGD("called");
+    std::stringstream ss;
+    ss << "/proc/" << pid << "/oom_score_adj";
+    std::string path = ss.str();
+    std::string content = std::to_string(priority);
+    HILOGD("prepare to echo %{public}s > %{public}s", content.c_str(), path.c_str());
+    KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
+    return true;
+}
+
 ReclaimPriorityManager::ReclaimPriorityManager()
 {
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::CREATE_PROCESS)] = "CREATE_PROCESS";
@@ -86,7 +98,10 @@ std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateR
 
 bool ReclaimPriorityManager::Init()
 {
+    config_ = MemmgrConfigManager::GetInstance().GetReclaimPriorityConfig();
     initialized_ = GetEventHandler();
+    GetAllKillableSystemApps();
+    HandlePreStartedProcs();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -102,6 +117,56 @@ bool ReclaimPriorityManager::GetEventHandler()
             AppExecFwk::EventRunner::Create());
     }
     return true;
+}
+
+void ReclaimPriorityManager::GetAllKillableSystemApps()
+{
+    HILOGI("called");
+    // get killable system apps from xml
+    allKillableSystemApps_.merge(config_.killalbeSystemApps_);
+    // get killable system apps from fwk (finally from bms)
+    std::set<std::string> killableSystemAppsFromAms_;
+    GetKillableSystemAppsFromAms(killableSystemAppsFromAms_);
+    allKillableSystemApps_.merge(killableSystemAppsFromAms_);
+}
+
+void ReclaimPriorityManager::GetKillableSystemAppsFromAms(std::set<std::string> &killableApps)
+{
+    // get killable system apps from fwk (finally from bms)
+}
+
+// if user install new killable system apps, fwk should tell me by calling this interface.
+// if user uninstall some killable system apps, we can do nothing since killable info will be updated on next rebooting.
+void ReclaimPriorityManager::NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps)
+{
+    allKillableSystemApps_.merge(newKillableApps);
+}
+
+// handle process started before our service
+void ReclaimPriorityManager::HandlePreStartedProcs()
+{
+    std::vector<unsigned int> preStartedPids;
+    KernelInterface::GetInstance().GetAllProcPids(preStartedPids);
+    for (unsigned int pid : preStartedPids) {
+        unsigned int uid = 0;
+        if (!KernelInterface::GetInstance().GetUidByPid(pid, uid)) {
+            HILOGE("process[pid=%{public}d] started before me, but GetUidByPid failed.", pid);
+            continue;
+        }
+        struct ProcInfo procInfo;
+        std::string name;
+        if (!KernelInterface::GetInstance().GetProcNameByPid(pid, name)) {
+            HILOGE("process[pid=%{public}d, uid=%{public}d] started before me, but GetProcNameByPid failed.", pid, uid);
+            continue;
+        }
+        bool killable = false;;
+        if (allKillableSystemApps_.find(name) != allKillableSystemApps_.end()) {
+            killable = true;
+            WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
+        }
+        HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
+                pid, uid, name.c_str(), killable);
+    }
 }
 
 void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
@@ -272,11 +337,9 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, con
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
-bool ReclaimPriorityManager::IsSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
+bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
-    // special case: launcher and system ui bundle
-    if (bundle != nullptr && (bundle->name_.compare(LAUNCHER_BUNDLE_NAME) == 0 ||
-        bundle->name_.compare(SYSTEM_UI_BUNDLE_NAME) == 0)) {
+    if (allKillableSystemApps_.find(bundle->name_) != allKillableSystemApps_.end()) {
         return true;
     }
     return false;
@@ -293,6 +356,7 @@ void ReclaimPriorityManager::UpdateBundlePriority(std::shared_ptr<BundlePriority
 
 bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const std::string &bundleName, int accountId)
 {
+    HILOGD("called, bundleName=%{public}s, pid=%{public}d", bundleName.c_str(), pid);
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account == nullptr) {
         DECLARE_SHARED_POINTER(AccountBundleInfo, tmpAccount);
@@ -314,8 +378,9 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
     ProcessPriorityInfo proc(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
-    if (IsSystemApp(bundle)) {
-        proc.priority_ = RECLAIM_PRIORITY_SYSTEM;
+    if (IsKillableSystemApp(bundle)) {
+        HILOGI("[bundleName=%{public}s, pid=%{public}d] is a killable system app", bundleName.c_str(), pid);
+        proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
     }
     bundle->AddProc(proc);
     UpdateBundlePriority(bundle);
