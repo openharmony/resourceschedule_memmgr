@@ -30,6 +30,7 @@ public:
     MemMgrService();
     ~MemMgrService() = default;
     virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
+    virtual int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) override;
 
 protected:
     void OnStart() override;

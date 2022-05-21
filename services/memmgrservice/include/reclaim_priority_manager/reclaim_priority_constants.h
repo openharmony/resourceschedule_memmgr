@@ -33,6 +33,8 @@ constexpr int RECLAIM_PRIORITY_VISIBLE = 1;
 constexpr int RECLAIM_PRIORITY_BG_SUSPEND_DELAY = 100;
 // perceived background process priority
 constexpr int RECLAIM_PRIORITY_BG_PERCEIVED = 200;
+// background and connected by distribute device
+constexpr int RECLAIM_PRIORITY_BG_DIST_DEVICE = 260;
 // background priority
 constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
 // frozen process priority
@@ -71,6 +73,8 @@ enum class AppStateUpdateReason {
     APPLICATION_SUSPEND,
     PROCESS_TERMINATED,
     OS_ACCOUNT_CHANGED,
+    DIST_DEVICE_CONNECTED,
+    DIST_DEVICE_DISCONNECTED,
 };
 
 enum class BundleState {

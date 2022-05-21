@@ -40,6 +40,19 @@ int32_t MemMgrClient::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
     return dps->GetBundlePriorityList(bundlePrioList);
 }
 
+int32_t MemMgrClient::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
+        connected);
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->NotifyDistDevStatus(pid, uid, name, connected);
+}
+
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");

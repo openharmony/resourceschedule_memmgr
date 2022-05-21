@@ -67,5 +67,11 @@ HWTEST_F(InnerkitsTest, GetPriorityDescTest, TestSize.Level1)
     auto ptr = ReclaimPriorityMapping.find(RECLAIM_PRIORITY_SYSTEM);
     EXPECT_EQ(ptr->second, "System");
 }
+
+HWTEST_F(InnerkitsTest, NotifyDistDevStatus_Test, TestSize.Level1)
+{
+    int32_t ret = MemMgrClient::GetInstance().NotifyDistDevStatus(123, 456, "dist_dev_test", true);
+    EXPECT_EQ(ret, 0);
+}
 }
 }

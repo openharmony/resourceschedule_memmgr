@@ -35,6 +35,7 @@ public:
 
 private:
     int32_t HandleGetBunldePriorityList(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleNotifyDistDevStatus(MessageParcel &data, MessageParcel &reply);
 
     using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, MemMgrFunc> memberFuncMap_;

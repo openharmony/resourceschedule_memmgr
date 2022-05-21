@@ -96,5 +96,14 @@ int32_t MemMgrService::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
     bundlePrioList.SetCount(bundlePrioList.Size());
     return 0;
 }
+
+int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
+        connected);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, name,
+        connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED);
+    return 0;
+}
 } // namespace Memory
 } // namespace OHOS
