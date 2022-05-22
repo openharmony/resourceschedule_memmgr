@@ -33,10 +33,16 @@ constexpr int RECLAIM_PRIORITY_FOREGROUND = 0;
 constexpr int RECLAIM_PRIORITY_VISIBLE = 1;
 // perceived suspend delay case
 constexpr int RECLAIM_PRIORITY_BG_SUSPEND_DELAY = 100;
+// extension and a bg process bind to it
+constexpr int RECLAIM_PRIORITY_FG_BIND_EXTENSION = 100;
 // perceived background process priority
 constexpr int RECLAIM_PRIORITY_BG_PERCEIVED = 200;
+// extension and a bg process bind to it (reserved, now unsed)
+constexpr int RECLAIM_PRIORITY_BG_BIND_EXTENSION = 240;
 // background and connected by distribute device
 constexpr int RECLAIM_PRIORITY_BG_DIST_DEVICE = 260;
+// extension and no process bind to it
+constexpr int RECLAIM_PRIORITY_NO_BIND_EXTENSION = 300;
 // background priority
 constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
 // frozen process priority
@@ -74,6 +80,9 @@ enum class AppStateUpdateReason {
     OS_ACCOUNT_CHANGED,
     DIST_DEVICE_CONNECTED,
     DIST_DEVICE_DISCONNECTED,
+    FOREGROUND_BIND_EXTENSION,
+    BACKGROUND_BIND_EXTENSION,
+    NO_BIND_EXTENSION,
 };
 
 enum class BundleState {
