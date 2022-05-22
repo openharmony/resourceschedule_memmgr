@@ -15,6 +15,11 @@
         <refaultThreshold>50</refaultThreshold>
     </ZswapdParam>
   </reclaimConfig>
+  <reclaimPriorityConfig>
+    <killalbeSystemApps>
+      <killableSysApp></killableSysApp>
+    </killalbeSystemApps>
+  </reclaimPriorityConfig>
   <killConfig>
   </killConfig>
   <systemMemoryLevelConfig>
