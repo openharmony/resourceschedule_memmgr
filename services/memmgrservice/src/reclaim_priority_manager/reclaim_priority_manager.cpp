@@ -529,8 +529,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         if (proc.priority_ > RECLAIM_PRIORITY_NO_BIND_EXTENSION) {
             proc.SetPriority(RECLAIM_PRIORITY_NO_BIND_EXTENSION);
         }
-    }
-     else {
+    } else {
         // is a plain background process
     }
     HILOGI(": bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d, "
