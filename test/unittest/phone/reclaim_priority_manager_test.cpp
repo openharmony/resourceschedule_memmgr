@@ -113,21 +113,6 @@ HWTEST_F(ReclaimPriorityManagerTest, IsProcExist, TestSize.Level1)
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(ReclaimPriorityManagerTest, IsSystemApp, TestSize.Level1)
-{
-    std::shared_ptr<BundlePriorityInfo> bundle_1 = std::make_shared<BundlePriorityInfo>("test", 101, 100);
-    bool isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle_1);
-    EXPECT_EQ(isSystem, false);
-
-    std::shared_ptr<BundlePriorityInfo> bundle_2 = std::make_shared<BundlePriorityInfo>("com.ohos.systemui", 102, 100);
-    isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle_2);
-    EXPECT_EQ(isSystem, true);
-
-    std::shared_ptr<BundlePriorityInfo> bundle_3 = std::make_shared<BundlePriorityInfo>("com.ohos.launcher", 103, 100);
-    isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle_3);
-    EXPECT_EQ(isSystem, true);
-}
-
 HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSize.Level1)
 {
     int pid = 10002;
@@ -170,28 +155,6 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessTerminate, Test
     EXPECT_EQ(hasProc_2, false);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid_1, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
-}
-
-HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySystemProcess, TestSize.Level1)
-{
-    int pid = 10005;
-    int uid = 20010005;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.systemui", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.systemui", AppStateUpdateReason::BACKGROUND);
-
-    int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
-    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    bool isSystem = ReclaimPriorityManager::GetInstance().IsSystemApp(bundle);
-    EXPECT_EQ(isSystem, true);
-
-    int priority = bundle->priority_;
-    EXPECT_EQ(priority, RECLAIM_PRIORITY_SYSTEM);
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 

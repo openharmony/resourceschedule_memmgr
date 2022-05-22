@@ -41,7 +41,6 @@ bool ReclaimStrategyManager::Init()
         if (!GetEventHandler_()) {
             break;
         }
-        MemmgrConfigManager::GetInstance().Init();
         AvailBufferManager::GetInstance().Init();
         if (!MemcgMgr::GetInstance().SetRootMemcgPara()) {
             break;

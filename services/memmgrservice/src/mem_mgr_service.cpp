@@ -16,6 +16,7 @@
 #include "mem_mgr_service.h"
 #include "memmgr_log.h"
 #include "system_ability_definition.h"
+#include "memmgr_config_manager.h"
 #include "mem_mgr_event_center.h"
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
@@ -38,6 +39,8 @@ MemMgrService::MemMgrService() : SystemAbility(MEMORY_MANAGER_SA_ID, true)
 
 bool MemMgrService::Init()
 {
+    MemmgrConfigManager::GetInstance().Init();
+
     // init reclaim priority manager
     if (!ReclaimPriorityManager::GetInstance().Init()) {
         HILOGE("ReclaimPriorityManager init failed");

@@ -25,6 +25,8 @@ namespace OHOS {
 namespace Memory {
 // system app
 constexpr int RECLAIM_PRIORITY_SYSTEM = -1000;
+// killable system app
+constexpr int RECLAIM_PRIORITY_KILLABLE_SYSTEM = -800;
 // foreground process priority
 constexpr int RECLAIM_PRIORITY_FOREGROUND = 0;
 // visible process priority
@@ -48,9 +50,6 @@ constexpr int RECLAIM_PRIORITY_UNKNOWN = 1000;
 
 constexpr int RECLAIM_PRIORITY_MIN = -1000;
 constexpr int RECLAIM_PRIORITY_MAX = 1000;
-
-constexpr std::string_view SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
-constexpr std::string_view LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 const int USER_ID_SHIFT = 200000;
 #define GET_OS_ACCOUNT_ID_BY_UID(bundleUid) ((bundleUid) / USER_ID_SHIFT)
