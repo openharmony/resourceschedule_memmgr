@@ -15,6 +15,7 @@
 
 #include "process_priority_info.h"
 #include "memmgr_log.h"
+#include "reclaim_priority_constants.h"
 
 namespace OHOS {
 namespace Memory {
@@ -33,6 +34,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->isEventStart = false;
     this->isDataAbilityStart = false;
     this->isDistDeviceConnected = false;
+    this->extensionBindStatus = EXTENSION_STATUS_BIND_UNKOWN;
 }
 
 ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
@@ -46,11 +48,13 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isEventStart = copyProcess.isEventStart;
     this->isDataAbilityStart = copyProcess.isDataAbilityStart;
     this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
+    this->extensionBindStatus = copyProcess.extensionBindStatus;
 }
 
 void ProcessPriorityInfo::SetPriority(int targetPriority)
 {
     priority_ = targetPriority;
+    HILOGD("set process[%{public}d] priority to %{public}d", pid_, priority_);
 }
 } // namespace Memory
 } // namespace OHOS
