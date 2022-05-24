@@ -15,12 +15,12 @@
 
 #include "memmgr_log.h"
 #include "default_multi_account_strategy.h"
+#include "reclaim_priority_constants.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "DefaultMultiAccountStrategy";
-const int INVALID_BUNDLE_PRIORITY = -1;
 }
 
 bool DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPriorityInfo> accountInfo)
@@ -45,7 +45,7 @@ int DefaultMultiAccountStrategy::RecalcBundlePriority(std::shared_ptr<AccountPri
                                                       int bundlePriority)
 {
     if (accountInfo == nullptr) {
-        return INVALID_BUNDLE_PRIORITY;
+        return RECLAIM_PRIORITY_MAX;
     }
 
     return accountInfo->GetPriority() + bundlePriority;
