@@ -62,9 +62,10 @@ static void PrintReclaimPriorityList()
         printf("%3d\t%42s\t%5d\t%3d\n", bi.uid_, bi.name_.c_str(), bi.priority_, bi.accountId_);
         for (auto piPair : bi.procs_) {
             ProcessPriorityInfo &pi = piPair.second;
-            printf("\tuid_=%3d, pid_=%5d, priority_=%5d, isFg=%d, isBgTsk=%d, isSusDelay=%d, isDistDevConn=%d \n",
+            printf("\tuid_=%3d, pid_=%5d, priority_=%5d, isFg=%d, isBgTsk=%d, isSusDelay=%d, isDistDevConn=%d, "
+                "extensionBindStatus=%d\n",
                 pi.uid_, pi.pid_, pi.priority_, pi.isFreground, pi.isBackgroundRunning, pi.isSuspendDelay,
-                pi.isDistDeviceConnected);
+                pi.isDistDeviceConnected, pi.extensionBindStatus);
         }
     }
     printf("-------------------------------------------------------------------------------\n");
@@ -497,6 +498,90 @@ HWTEST_F(ReclaimPriorityManagerTest, DistDeviceCase, TestSize.Level1)
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
+    PrintReclaimPriorityList();
+
+    // clean up the mess
+    printf("clean up the mess\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid1, bundleUid, bundleName1,
+        AppStateUpdateReason::PROCESS_TERMINATED);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::PROCESS_TERMINATED);
+    PrintReclaimPriorityList();
+}
+
+HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
+{
+    // Preconditions: create one bundle with two freground processes
+    printf("Preconditions: create one bundle with two freground processes\n");
+    int pid1 = 10019;
+    int pid2 = 10020;
+    int bundleUid = 20010019;
+    const std::string bundleName1 = "com.ohos.exten_bind_test.main";
+    const std::string bundleName2 = "com.ohos.exten_bind_test.extension";
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid1, bundleUid, bundleName1,
+        AppStateUpdateReason::CREATE_PROCESS);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::CREATE_PROCESS);
+
+    int accountId = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(bundleUid);
+    bool isProc1Exist = ReclaimPriorityManager::GetInstance().IsProcExist(pid1, bundleUid, accountId);
+    ASSERT_EQ(isProc1Exist, true);
+    bool isProc2Exist = ReclaimPriorityManager::GetInstance().IsProcExist(pid2, bundleUid, accountId);
+    ASSERT_EQ(isProc2Exist, true);
+    std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+    ProcessPriorityInfo &proc1 = bundle->FindProcByPid(pid1);
+    ProcessPriorityInfo &proc2 = bundle->FindProcByPid(pid2);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    PrintReclaimPriorityList();
+
+    // process#1 keep freground, process#2 go to background
+    printf("process#1 keep freground, process#2 go to background\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::BACKGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    PrintReclaimPriorityList();
+
+    // process#2 is bind to a fg process
+    printf("process#2 is bind to a fg process\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::FOREGROUND_BIND_EXTENSION);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    PrintReclaimPriorityList();
+
+    // process#1 go to background
+    printf("process#1 go to background\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid1, bundleUid, bundleName1,
+        AppStateUpdateReason::BACKGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
+    PrintReclaimPriorityList();
+
+    // process#2 is bind to a bg process
+    printf("process#2 is bind to a bg process\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::BACKGROUND_BIND_EXTENSION);
+    sleep(5);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BG_BIND_EXTENSION);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_BIND_EXTENSION);
+    PrintReclaimPriorityList();
+
+    // process#2 is bind to a bg process
+    printf("process#2 is no bind to any process\n");
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
+        AppStateUpdateReason::NO_BIND_EXTENSION);
+    sleep(5);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
     PrintReclaimPriorityList();
 
     // clean up the mess

@@ -84,6 +84,11 @@ ReclaimPriorityManager::ReclaimPriorityManager()
         "DIST_DEVICE_CONNECTED";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DIST_DEVICE_DISCONNECTED)] =
         "DIST_DEVICE_DISCONNECTED";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::FOREGROUND_BIND_EXTENSION)] =
+        "FOREGROUND_BIND_EXTENSION";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BACKGROUND_BIND_EXTENSION)] =
+        "BACKGROUND_BIND_EXTENSION";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::NO_BIND_EXTENSION)] = "NO_BIND_EXTENSION";
 }
 
 std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateReason reason)
@@ -477,12 +482,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
                                                         ProcessPriorityInfo &proc)
 {
-    HILOGD("enter, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
-        "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
-        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, priority=%{public}d]",
-        bundle->uid_, bundle->name_.c_str(), bundle->priority_,
-        proc.pid_, proc.uid_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
-        proc.isDataAbilityStart, proc.isDistDeviceConnected, proc.priority_);
+    int priorityBefore = proc.priority_;
 
     if (bundle->priority_ < RECLAIM_PRIORITY_FOREGROUND) { // is a system process
         HILOGD("%{public}d is a system process, skiped!", proc.pid_);
@@ -494,30 +494,51 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
         }
     } else { // is a background process
-        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
         HILOGD("%{public}d is a background process, set process priority to %{public}d first", proc.pid_,
-            proc.priority_);
+            RECLAIM_PRIORITY_BACKGROUND);
+        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
     }
     if (proc.isSuspendDelay) { // is a background process with transient task
         HILOGD("%{public}d is a background process with transient task", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
-            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
+        }
+    } else if (proc.extensionBindStatus == EXTENSION_STATUS_FG_BIND) { // is a extension and bind to a fg process
+        HILOGD("%{public}d is a extension process bind to a fg process", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_FG_BIND_EXTENSION) {
+            proc.SetPriority(RECLAIM_PRIORITY_FG_BIND_EXTENSION);
         }
     } else if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
         // is a background perceived process
+        HILOGD("%{public}d is a background perceived process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
-            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
+        }
+    } else if (proc.extensionBindStatus == EXTENSION_STATUS_BG_BIND) { // is a extension and bind to a bg process
+        HILOGD("%{public}d is a extension process bind to a bg process", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_BG_BIND_EXTENSION) {
+            proc.SetPriority(RECLAIM_PRIORITY_BG_BIND_EXTENSION);
         }
     } else if (proc.isDistDeviceConnected) { // is a background process connected by distribute device
+        HILOGD("%{public}d is a process connect to a dist device", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_DIST_DEVICE) {
-            HILOGD("set process[%{public}d] priority to %{public}d", proc.pid_, proc.priority_);
             proc.SetPriority(RECLAIM_PRIORITY_BG_DIST_DEVICE);
+        }
+    } else if (proc.extensionBindStatus == EXTENSION_STATUS_NO_BIND) { // is a extension and no bind to any process
+        HILOGD("%{public}d is a extension process no bind to any process", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_NO_BIND_EXTENSION) {
+            proc.SetPriority(RECLAIM_PRIORITY_NO_BIND_EXTENSION);
         }
     } else {
         // is a plain background process
     }
+    HILOGI(": bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d, "
+        "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d, "
+        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d], "
+        "priority:%{public}d-->%{public}d",
+        bundle->uid_, bundle->name_.c_str(), bundle->priority_,
+        proc.pid_, proc.uid_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
+        proc.isDataAbilityStart, proc.isDistDeviceConnected, proc.extensionBindStatus, priorityBefore, proc.priority_);
     UpdateBundlePriority(bundle);
 }
 
@@ -526,10 +547,12 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
 {
     HILOGD("called, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
         "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
-        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, priority=%{public}d], case:%{public}s",
+        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d, "
+        "priority=%{public}d], case:%{public}s",
         bundle->uid_, bundle->name_.c_str(), bundle->priority_, proc.pid_, proc.uid_, proc.isFreground,
         proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDataAbilityStart,
-        proc.isDistDeviceConnected, proc.priority_, AppStateUpdateResonToString(reason).c_str());
+        proc.isDistDeviceConnected, proc.extensionBindStatus, proc.priority_,
+        AppStateUpdateResonToString(reason).c_str());
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
             proc.isFreground = true;
@@ -570,6 +593,15 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
             break;
         case AppStateUpdateReason::DIST_DEVICE_DISCONNECTED:
             proc.isDistDeviceConnected = false;
+            break;
+        case AppStateUpdateReason::FOREGROUND_BIND_EXTENSION:
+            proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
+            break;
+        case AppStateUpdateReason::BACKGROUND_BIND_EXTENSION:
+            proc.extensionBindStatus = EXTENSION_STATUS_BG_BIND;
+            break;
+        case AppStateUpdateReason::NO_BIND_EXTENSION:
+            proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
             break;
         default:
             break;
