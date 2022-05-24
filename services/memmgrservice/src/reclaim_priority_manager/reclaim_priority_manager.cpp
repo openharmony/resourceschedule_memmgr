@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-
-#include <sstream>
-
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "multi_account_manager.h"
 #include "kernel_interface.h"
+#include "oom_score_adj_utils.h"
 #include "reclaim_strategy_manager.h"
 #include "reclaim_priority_manager.h"
 
@@ -29,37 +27,6 @@ namespace {
 const std::string TAG = "ReclaimPriorityManager";
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
-
-bool WriteOomScoreAdjToKernel(std::shared_ptr<BundlePriorityInfo> bundle)
-{
-    HILOGD("called");
-    if (bundle == nullptr) {
-        return false;
-    }
-    for (auto i = bundle->procs_.begin(); i != bundle->procs_.end(); ++i) {
-        int priority = i->second.priority_;
-        pid_t pid = i->second.pid_;
-        std::stringstream ss;
-        ss << "/proc/" << pid << "/oom_score_adj";
-        std::string path = ss.str();
-        std::string content = std::to_string(priority);
-        HILOGD("prepare to echo %{public}s > %{public}s", content.c_str(), path.c_str());
-        KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
-    }
-    return true;
-}
-
-bool WriteOomScoreAdjToKernel(pid_t pid, int priority)
-{
-    HILOGD("called");
-    std::stringstream ss;
-    ss << "/proc/" << pid << "/oom_score_adj";
-    std::string path = ss.str();
-    std::string content = std::to_string(priority);
-    HILOGD("prepare to echo %{public}s > %{public}s", content.c_str(), path.c_str());
-    KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
-    return true;
-}
 
 ReclaimPriorityManager::ReclaimPriorityManager()
 {
@@ -162,7 +129,7 @@ void ReclaimPriorityManager::HandlePreStartedProcs()
         bool killable = false;;
         if (allKillableSystemApps_.find(name) != allKillableSystemApps_.end()) {
             killable = true;
-            WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
+            OomScoreAdjUtils::WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
         }
         HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
             pid, uid, name.c_str(), killable);
@@ -588,7 +555,7 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriority
     MAKE_POINTER(para, shared, ReclaimParam, "make ReclaimParam failed", return false,
         pid, bundle->uid_, bundle->name_, bundle->accountId_, bundle->priority_, action);
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
-    return WriteOomScoreAdjToKernel(bundle);
+    return OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundle);
 }
 
 bool ReclaimPriorityManager::OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod)

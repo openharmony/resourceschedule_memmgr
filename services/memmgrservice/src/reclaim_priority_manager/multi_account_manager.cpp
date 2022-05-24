@@ -18,6 +18,8 @@
 #include "default_multi_account_strategy.h"
 #include "reclaim_strategy_manager.h"
 #include "kernel_interface.h"
+#include "oom_score_adj_utils.h"
+#include "reclaim_priority_constants.h"
 #include "multi_account_manager.h"
 
 namespace OHOS {
@@ -26,7 +28,6 @@ namespace {
 const std::string TAG = "MultiAccountManager";
 const int MAX_RETRY_TIMES = 10;
 const int SLEEP_TIME = 3000;
-const int INVALID_BUNDLE_PRIORITY = -1;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MultiAccountManager);
@@ -118,17 +119,18 @@ int MultiAccountManager::RecalcBundlePriority(int accountId, int bundlePriority)
     std::shared_ptr<AccountPriorityInfo> accountInfo = GetAccountPriorityInfo(accountId);
     if (accountInfo == nullptr) {
         HILOGI("Repeat calculate bundle priority failed, account non-exist, accountId = %{public}d.", accountId);
-        return INVALID_BUNDLE_PRIORITY;
+        return RECLAIM_PRIORITY_MAX;
     }
 
     if (strategy_ == nullptr) {
         HILOGI("Repeat calculate bundle priority failed, strategy is null.");
-        return INVALID_BUNDLE_PRIORITY;
+        return RECLAIM_PRIORITY_MAX;
     }
 
     int recalcPriority = strategy_->RecalcBundlePriority(accountInfo, bundlePriority);
-    HILOGI("Repeat calculate bundle priority succeed, accountId = %{public}d, old = %{public}d, new = %{public}d.",
-           accountId, bundlePriority, recalcPriority);
+    if (recalcPriority > RECLAIM_PRIORITY_MAX) {
+        recalcPriority = RECLAIM_PRIORITY_MAX;
+    }
     return recalcPriority;
 }
 
@@ -261,6 +263,8 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
             bundleInfo->priority_ = RecalcBundlePriority(accountId, oldPriority);
             HILOGI("Account hot switch account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
                    accountId, iter.first, oldPriority, bundleInfo->priority_);
+            bundleInfo->IncreaseProcsPriority(bundleInfo->priority_ - oldPriority);
+            OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundleInfo);
         }
     }
     return true;
