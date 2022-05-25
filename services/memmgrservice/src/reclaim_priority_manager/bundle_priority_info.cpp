@@ -117,5 +117,16 @@ void BundlePriorityInfo::SetState(BundleState state)
 {
     state_ = state;
 }
+
+void BundlePriorityInfo::IncreaseProcsPriority(int delta)
+{
+    for (auto i = procs_.begin(); i != procs_.end(); ++i) {
+        int oldPriority = i->second.priority_;
+        i->second.SetPriority(oldPriority + delta);
+        int newPriority = i->second.priority_;
+        HILOGI("pid = %{public}d, oldPriority = %{public}d, newPriority = %{public}d",
+               i->second.pid_, oldPriority, newPriority);
+    }
+}
 } // namespace Memory
 } // namespace OHOS

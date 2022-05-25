@@ -55,6 +55,7 @@ public:
     void UpdatePriority();
     BundleState GetState();
     void SetState(BundleState state);
+    void IncreaseProcsPriority(int delta);
 };
 } // namespace Memory
 } // namespace OHOS
