@@ -34,7 +34,7 @@ bool DefaultMultiAccountStrategy::SetAccountPriority(std::shared_ptr<AccountPrio
     if (accountInfo->GetIsActived()) {
         priority = static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY);
     } else {
-        priority = static_cast<int>(DefaultMultiAccountPriority::MID_PRIORITY);
+        priority = static_cast<int>(DefaultMultiAccountPriority::LOW_PRIORITY);
     }
 
     accountInfo->SetPriority(priority);

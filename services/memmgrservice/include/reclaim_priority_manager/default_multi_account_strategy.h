@@ -21,9 +21,8 @@
 namespace OHOS {
 namespace Memory {
 enum class DefaultMultiAccountPriority {
-    LOW_PRIORITY = 100,
-    MID_PRIORITY = 50,
-    HIGH_PRIORITY = 0,
+    LOW_PRIORITY = 50,
+    HIGH_PRIORITY = -50,
 };
 
 class DefaultMultiAccountStrategy : public MultiAccountStrategy {
