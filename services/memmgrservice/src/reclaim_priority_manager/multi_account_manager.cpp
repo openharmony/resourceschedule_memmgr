@@ -131,6 +131,9 @@ int MultiAccountManager::RecalcBundlePriority(int accountId, int bundlePriority)
     if (recalcPriority > RECLAIM_PRIORITY_MAX) {
         recalcPriority = RECLAIM_PRIORITY_MAX;
     }
+    if (recalcPriority < RECLAIM_PRIORITY_FOREGROUND) {
+        recalcPriority = RECLAIM_PRIORITY_FOREGROUND;
+    }
     return recalcPriority;
 }
 
@@ -247,13 +250,18 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
     return true;
 }
 
-bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
+bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &updatedAccountIds,
     std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_)
 {
-    for (int accountId : switchedAccountIds) {
+    for (int accountId : updatedAccountIds) {
         std::shared_ptr<AccountBundleInfo> accountBundleInfo = GetAccountBundleInfo(accountId, osAccountsInfoMap_);
         if (accountBundleInfo == nullptr) {
             HILOGI("Search account bundle info failed, accountId = %{public}d.", accountId);
+            continue;
+        }
+
+        if (accountBundleInfo->bundleIdInfoMapping_.empty()) {
+            HILOGI("The bundle list of the account = %{public}d is empty.", accountId);
             continue;
         }
 
@@ -261,7 +269,7 @@ bool MultiAccountManager::HandleAccountHotSwitch(std::vector<int> &switchedAccou
             std::shared_ptr<BundlePriorityInfo> bundleInfo = iter.second;
             int oldPriority = bundleInfo->priority_;
             bundleInfo->priority_ = RecalcBundlePriority(accountId, oldPriority);
-            HILOGI("Account hot switch account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
+            HILOGI("account = %{public}d bundle = %{public}d old = %{public}d new = %{public}d.",
                    accountId, iter.first, oldPriority, bundleInfo->priority_);
             bundleInfo->IncreaseProcsPriority(bundleInfo->priority_ - oldPriority);
             OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundleInfo);
@@ -284,9 +292,9 @@ bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_A
         return false;
     }
 
-    std::vector<int> updateAccountIds = switchedAccountIds;
-    updateAccountIds.push_back(accountId);
-    if (!UpdateAccountPriorityInfo(updateAccountIds)) {
+    std::vector<int> updatedAccountIds = switchedAccountIds;
+    updatedAccountIds.push_back(accountId);
+    if (!UpdateAccountPriorityInfo(updatedAccountIds)) {
         HILOGI("Update account priority information failed.");
         return false;
     }
@@ -295,7 +303,7 @@ bool MultiAccountManager::HandleOsAccountsChanged(int accountId, AccountSA::OS_A
         case AccountSA::COLD_SWITCH:
             return HandleAccountColdSwitch(switchedAccountIds, osAccountsInfoMap_);
         case AccountSA::HOT_SWITCH:
-            return HandleAccountHotSwitch(switchedAccountIds, osAccountsInfoMap_);
+            return HandleAccountHotSwitch(updatedAccountIds, osAccountsInfoMap_);
         default:
             HILOGI("Switch mode incorrect, mode = %{public}d.", static_cast<int>(switchMod));
             return false;
