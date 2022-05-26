@@ -45,7 +45,7 @@ public:
                                  std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
     bool HandleAccountColdSwitch(std::vector<int> &switchedAccountIds,
                                  std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
-    bool HandleAccountHotSwitch(std::vector<int> &switchedAccountIds,
+    bool HandleAccountHotSwitch(std::vector<int> &updatedAccountIds,
                                 std::map<int, std::shared_ptr<AccountBundleInfo>> &osAccountsInfoMap_);
 
 private:
