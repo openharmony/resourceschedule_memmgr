@@ -187,7 +187,7 @@ bool MemmgrConfigManager::ParseReclaimPriorityKillableSystemAppsConfig(const xml
             }
             reclaimPriorityConfig_.killalbeSystemApps_.insert(value);
             xmlFree(contentPtr);
-	    continue;
+            continue;
         }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
