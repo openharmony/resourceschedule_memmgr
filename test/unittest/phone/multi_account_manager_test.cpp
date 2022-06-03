@@ -20,6 +20,7 @@
 #define private public
 #define protected public
 #include "reclaim_priority_constants.h"
+#include "default_multi_account_strategy.h"
 #include "multi_account_manager.h"
 #undef private
 #undef protected
@@ -67,7 +68,7 @@ HWTEST_F(MultiAccountManagerTest, SetAccountPrority, TestSize.Level1)
     EXPECT_STREQ(info->GetName().c_str(), accountName.c_str());
     EXPECT_EQ(info->GetType(), accountType);
     EXPECT_EQ(info->GetIsActived(), isActived);
-    EXPECT_EQ(info->GetPriority(), 0);
+    EXPECT_EQ(info->GetPriority(), static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY));
 }
 
 HWTEST_F(MultiAccountManagerTest, RecalcBundlePriortiy, TestSize.Level1)
