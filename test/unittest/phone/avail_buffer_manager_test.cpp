@@ -55,6 +55,7 @@ void AvailBufferManagerTest::TearDown()
 
 HWTEST_F(AvailBufferManagerTest, initTest, TestSize.Level1)
 {
+    MemmgrConfigManager::GetInstance().Init();
     AvailBufferManager::GetInstance().Init();
 }
 }
