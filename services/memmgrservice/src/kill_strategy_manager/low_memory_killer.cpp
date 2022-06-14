@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "low_memory_killer.h"
+#include "memmgr_config_manager.h"
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "kernel_interface.h"
@@ -103,6 +104,34 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
     return freedBuf;
 }
 
+std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsigned int currBufferKB)
+{
+    unsigned int thBufKB = 0;
+    int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
+
+    static const MemmgrConfigManager::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
+    if (levelMap.empty()) { /* xml not config, using default table */
+        for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
+            thBufKB = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
+            if (currBufferKB < thBufKB) {
+                minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
+                break;
+            }
+        }
+        return std::make_pair(thBufKB, minPrio);
+    }
+    /* query from xml */
+    for (auto it = levelMap.begin(); it != levelMap.end(); it++) {
+        if (currBufferKB < (it->first * 1024)) { /* 1024 means MB to KB */
+            thBufKB = it->first * 1024; /* 1024 means MB to KB */
+            minPrio = it->second;
+            break;
+        }
+    }
+    HILOGI("(%{public}u) return from xml memory:%{public}u prio:%{public}d", currBufferKB, thBufKB, minPrio);
+    return std::make_pair(thBufKB, minPrio);
+}
+
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandlerInner()
 {
@@ -119,13 +148,10 @@ void LowMemoryKiller::PsiHandlerInner()
         return;
     }
 
-    for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
-        thBuf = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
-        if (triBuf < thBuf) {
-            minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
-            break;
-        }
-    }
+    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf);
+    thBuf = memPrioPair.first;
+    minPrio = memPrioPair.second;
+
     HILOGE("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
