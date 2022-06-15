@@ -21,9 +21,9 @@
     </killalbeSystemApps>
   </reclaimPriorityConfig>
   <systemMemoryLevelConfig>
-      <moderate>819200</moderate>
-      <low>716800</low>
-      <critical>614400</critical>
+      <moderate>800</moderate>
+      <low>700</low>
+      <critical>600</critical>
   </systemMemoryLevelConfig>
   <killConfig>
       <killLevel id="1">
