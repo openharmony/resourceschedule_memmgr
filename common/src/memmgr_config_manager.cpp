@@ -64,7 +64,7 @@ ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, unsigned in
 {
 }
 
-SystemMemoryLevelConfig::SystemMemoryLevelConfig(int moderate, int low, int critical)
+SystemMemoryLevelConfig::SystemMemoryLevelConfig(unsigned int moderate, unsigned int low, unsigned int critical)
     : moderate(moderate), low(low), critical(critical)
 {
 }
@@ -215,18 +215,25 @@ bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNod
         return false;
     }
 
-    int moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
-    int low = MEMORY_LEVEL_LOW_DEFAULT;
-    int critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+    unsigned int moderate = 0;
+    unsigned int low = 0;
+    unsigned int critical = 0;
 
-    SetIntParam(param, "moderate", moderate);
-    SetIntParam(param, "low", low);
-    SetIntParam(param, "critical", critical);
+    SetUnsignedIntParam(param, "moderate", moderate);
+    SetUnsignedIntParam(param, "low", low);
+    SetUnsignedIntParam(param, "critical", critical);
 
-    if (!((moderate <= low) && (low <= critical))) {
-        moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
-        low = MEMORY_LEVEL_LOW_DEFAULT;
-        critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+    /* check xml input */
+    if (moderate > low && low > critical && critical > 0) {
+        /* change MB to KB */
+        moderate *= KB_PER_MB;
+        low *= KB_PER_MB;
+        critical *= KB_PER_MB;
+        HILOGI("Use xml values %{public}u %{public}u %{public}u", moderate, low, critical);
+    } else {
+        moderate = MEMORY_LEVEL_MODERATE_KB_DEFAULT;
+        low = MEMORY_LEVEL_LOW_KB_DEFAULT;
+        critical = MEMORY_LEVEL_CRITICAL_KB_DEFAULT;
         HILOGW("Use default values instead of invalid values.");
     }
 

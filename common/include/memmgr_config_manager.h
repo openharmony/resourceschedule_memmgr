@@ -43,10 +43,10 @@ public:
 
 class SystemMemoryLevelConfig {
 public:
-    int moderate;
-    int low;
-    int critical;
-    SystemMemoryLevelConfig(int moderate, int low, int critical);
+    unsigned int moderate;
+    unsigned int low;
+    unsigned int critical;
+    SystemMemoryLevelConfig(unsigned int moderate, unsigned int low, unsigned int critical);
 };
 
 class ReclaimPriorityConfig {
