@@ -22,11 +22,11 @@
 namespace OHOS {
 namespace Memory {
 // default value of the moderate memory level
-constexpr int MEMORY_LEVEL_MODERATE_DEFAULT = 819200;
+constexpr unsigned int MEMORY_LEVEL_MODERATE_KB_DEFAULT = 800 * 1024; /* 800 MB */
 // default value of the low memory level
-constexpr int MEMORY_LEVEL_LOW_DEFAULT = 716800;
+constexpr unsigned int MEMORY_LEVEL_LOW_KB_DEFAULT = 700 * 1024; /* 700 MB */
 // default value of the critical memory level
-constexpr int MEMORY_LEVEL_CRITICAL_DEFAULT = 614400;
+constexpr unsigned int MEMORY_LEVEL_CRITICAL_KB_DEFAULT = 600 * 1024; /* 600 MB */
 
 enum class SystemMemoryLevel {
     MEMORY_LEVEL_MODERATE = 0,

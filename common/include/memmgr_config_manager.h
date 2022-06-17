@@ -43,10 +43,10 @@ public:
 
 class SystemMemoryLevelConfig {
 public:
-    int moderate;
-    int low;
-    int critical;
-    SystemMemoryLevelConfig(int moderate, int low, int critical);
+    unsigned int moderate;
+    unsigned int low;
+    unsigned int critical;
+    SystemMemoryLevelConfig(unsigned int moderate, unsigned int low, unsigned int critical);
 };
 
 class ReclaimPriorityConfig {
@@ -83,16 +83,19 @@ public:
     bool ReadParamFromXml();
     bool WriteReclaimRatiosConfigToKernel();
     using ReclaimRatiosConfigSet = std::set<std::shared_ptr<ReclaimRatiosConfig>, ReclaimRatiosConfigPtrCmp>;
+    using KillLevelsMap = std::map<unsigned int, int>;
     bool GetXmlLoaded();
     std::shared_ptr<AvailBufferSize> GetAvailBufferSize();
     std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
     const ReclaimPriorityConfig& GetReclaimPriorityConfig();
+    const KillLevelsMap& GetKillLevelsMap();
 
 private:
     void InitDefaultConfig();
     bool ParseXmlRootNode(const xmlNodePtr &rootNodePtr);
     bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseKillLevelNode(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
     bool ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr);
@@ -110,6 +113,7 @@ private:
     bool xmlLoaded_ = false;
     std::shared_ptr<AvailBufferSize> availBufferSize_;
     std::shared_ptr<SystemMemoryLevelConfig> systemMemoryLevelConfig_;
+    KillLevelsMap killLevelsMap_;
     ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
     ReclaimPriorityConfig reclaimPriorityConfig_;
     void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);

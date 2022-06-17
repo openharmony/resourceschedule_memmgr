@@ -28,11 +28,13 @@ namespace {
     const std::string TAG = "MemmgrConfigManager";
     const std::string XML_PATH = "/etc/memmgr/";
     const std::string MEMCG_PATH = KernelInterface::MEMCG_BASE_PATH;
+    const unsigned int KILL_LEVEL_ITEMS__MAX_COUNT = 10;
 } // namespace
 IMPLEMENT_SINGLE_INSTANCE(MemmgrConfigManager);
 
 bool MemmgrConfigManager::Init()
 {
+    killLevelsMap_.clear();
     ReadParamFromXml();
     WriteReclaimRatiosConfigToKernel();
     return this->xmlLoaded_;
@@ -46,6 +48,7 @@ MemmgrConfigManager::MemmgrConfigManager()
 MemmgrConfigManager::~MemmgrConfigManager()
 {
     ClearReclaimRatiosConfigSet();
+    killLevelsMap_.clear();
 }
 
 AvailBufferSize::AvailBufferSize(unsigned int availBuffer, unsigned int minAvailBuffer,
@@ -61,7 +64,7 @@ ReclaimRatiosConfig::ReclaimRatiosConfig(int minScore, int maxScore, unsigned in
 {
 }
 
-SystemMemoryLevelConfig::SystemMemoryLevelConfig(int moderate, int low, int critical)
+SystemMemoryLevelConfig::SystemMemoryLevelConfig(unsigned int moderate, unsigned int low, unsigned int critical)
     : moderate(moderate), low(low), critical(critical)
 {
 }
@@ -144,6 +147,11 @@ const ReclaimPriorityConfig& MemmgrConfigManager::GetReclaimPriorityConfig()
     return reclaimPriorityConfig_;
 }
 
+const MemmgrConfigManager::KillLevelsMap& MemmgrConfigManager::GetKillLevelsMap()
+{
+    return killLevelsMap_;
+}
+
 bool MemmgrConfigManager::ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr)
 {
     if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
@@ -207,18 +215,25 @@ bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNod
         return false;
     }
 
-    int moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
-    int low = MEMORY_LEVEL_LOW_DEFAULT;
-    int critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+    unsigned int moderate = 0;
+    unsigned int low = 0;
+    unsigned int critical = 0;
 
-    SetIntParam(param, "moderate", moderate);
-    SetIntParam(param, "low", low);
-    SetIntParam(param, "critical", critical);
+    SetUnsignedIntParam(param, "moderate", moderate);
+    SetUnsignedIntParam(param, "low", low);
+    SetUnsignedIntParam(param, "critical", critical);
 
-    if (!((moderate <= low) && (low <= critical))) {
-        moderate = MEMORY_LEVEL_MODERATE_DEFAULT;
-        low = MEMORY_LEVEL_LOW_DEFAULT;
-        critical = MEMORY_LEVEL_CRITICAL_DEFAULT;
+    /* check xml input */
+    if (moderate > low && low > critical && critical > 0) {
+        /* change MB to KB */
+        moderate *= KB_PER_MB;
+        low *= KB_PER_MB;
+        critical *= KB_PER_MB;
+        HILOGI("Use xml values %{public}u %{public}u %{public}u", moderate, low, critical);
+    } else {
+        moderate = MEMORY_LEVEL_MODERATE_KB_DEFAULT;
+        low = MEMORY_LEVEL_LOW_KB_DEFAULT;
+        critical = MEMORY_LEVEL_CRITICAL_KB_DEFAULT;
         HILOGW("Use default values instead of invalid values.");
     }
 
@@ -229,6 +244,60 @@ bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNod
 
 bool MemmgrConfigManager::ParseKillConfig(const xmlNodePtr &rootNodePtr)
 {
+    if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
+        return true;
+    }
+    for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
+        std::map<std::string, std::string> param;
+        GetModuleParam(currNode, param);
+        if (!ParseKillLevelNode(currNode, param) || killLevelsMap_.size() > KILL_LEVEL_ITEMS__MAX_COUNT) {
+            /* if has error, clear set */
+            killLevelsMap_.clear();
+            break;
+        }
+    }
+    if (killLevelsMap_.empty()) {
+        return false;
+    }
+    /* check if <memoryMB, minPriority> is increasing, if not, invalid. */
+    int lastPriority = RECLAIM_PRIORITY_MIN - 1;
+    for (auto it = killLevelsMap_.begin(); it != killLevelsMap_.end(); it++) {
+        HILOGD("KillConfig: memory:%{public}u prio:%{public}d lastPrio:%{public}d",
+            it->first, it->second, lastPriority);
+        if (it->second <= lastPriority) {
+            /* Priority list must be decreasing, if not, clear set */
+            HILOGE("KillConfig: memory:%{public}u prio:%{public}d invalid", it->first, it->second);
+            killLevelsMap_.clear();
+            break;
+        }
+        lastPriority = it->second;
+    }
+    return !killLevelsMap_.empty();
+}
+
+bool MemmgrConfigManager::ParseKillLevelNode(const xmlNodePtr &currNodePtr,
+    std::map<std::string, std::string> &param)
+{
+    std::string name = std::string(reinterpret_cast<const char *>(currNodePtr->name));
+    if (name.compare("comment") == 0) {
+        HILOGD("%{public}s comment skip :<%{public}s>", __func__, name.c_str());
+        return true;
+    }
+    if (name.compare("killLevel") != 0) {
+        HILOGW("%{public}s unknown node :<%{public}s>", __func__, name.c_str());
+        return false;
+    }
+    unsigned int memoryMB = 0;
+    int minPriority = RECLAIM_PRIORITY_MAX + 1;
+    SetUnsignedIntParam(param, "memoryMB", memoryMB);
+    SetIntParam(param, "minPriority", minPriority);
+    /* if read from xml fail, error */
+    if (memoryMB == 0 || minPriority == (RECLAIM_PRIORITY_MAX + 1) ||
+        killLevelsMap_.count(memoryMB) != 0) { /* if @memoryMB has exist, error */
+        HILOGE("%{public}s node:<%{public}s> memoryMB: %{public}u invalid", __func__, name.c_str(), memoryMB);
+        return false;
+    }
+    killLevelsMap_.insert(std::make_pair(memoryMB, minPriority));
     return true;
 }
 
@@ -282,6 +351,7 @@ void MemmgrConfigManager::SetIntParam(std::map<std::string, std::string> &param,
     }
     HILOGW("find param failed key:<%{public}s>", key.c_str());
 }
+
 void MemmgrConfigManager::SetUnsignedIntParam(std::map<std::string, std::string> &param,
                                               std::string key, unsigned int &dst)
 {
@@ -303,6 +373,7 @@ void MemmgrConfigManager::SetUnsignedIntParam(std::map<std::string, std::string>
     }
     HILOGW("find param failed key:<%{public}s>", key.c_str());
 }
+
 bool MemmgrConfigManager::SetReclaimParam(const xmlNodePtr &currNodePtr,
     std::map<std::string, std::string> &param)
 {
