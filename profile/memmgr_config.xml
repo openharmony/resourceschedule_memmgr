@@ -20,11 +20,31 @@
       <killableSysApp></killableSysApp>
     </killalbeSystemApps>
   </reclaimPriorityConfig>
-  <killConfig>
-  </killConfig>
   <systemMemoryLevelConfig>
-    <moderate>819200</moderate>
-    <low>716800</low>
-    <critical>614400</critical>
+      <moderate>800</moderate>
+      <low>700</low>
+      <critical>600</critical>
   </systemMemoryLevelConfig>
+  <killConfig>
+      <killLevel id="1">
+          <memoryMB>500</memoryMB>
+          <minPriority>400</minPriority>
+      </killLevel>
+      <killLevel id="2">
+          <memoryMB>400</memoryMB>
+          <minPriority>300</minPriority>
+      </killLevel>
+      <killLevel id="3">
+          <memoryMB>300</memoryMB>
+          <minPriority>200</minPriority>
+      </killLevel>
+      <killLevel id="4">
+          <memoryMB>200</memoryMB>
+          <minPriority>100</minPriority>
+      </killLevel>
+      <killLevel id="5">
+          <memoryMB>100</memoryMB>
+          <minPriority>0</minPriority>
+      </killLevel>
+  </killConfig>
 </Memmgr>
