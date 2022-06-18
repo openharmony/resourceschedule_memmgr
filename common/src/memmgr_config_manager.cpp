@@ -224,7 +224,7 @@ bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNod
     SetUnsignedIntParam(param, "critical", critical);
 
     /* check xml input */
-    if (moderate > low && low > critical && critical > 0) {
+    if (UINT_MAX >= (moderate * KB_PER_MB) && moderate > low && low > critical && critical > 0) {
         /* change MB to KB */
         moderate *= KB_PER_MB;
         low *= KB_PER_MB;
@@ -292,12 +292,21 @@ bool MemmgrConfigManager::ParseKillLevelNode(const xmlNodePtr &currNodePtr,
     SetUnsignedIntParam(param, "memoryMB", memoryMB);
     SetIntParam(param, "minPriority", minPriority);
     /* if read from xml fail, error */
-    if (memoryMB == 0 || minPriority == (RECLAIM_PRIORITY_MAX + 1) ||
-        killLevelsMap_.count(memoryMB) != 0) { /* if @memoryMB has exist, error */
-        HILOGE("%{public}s node:<%{public}s> memoryMB: %{public}u invalid", __func__, name.c_str(), memoryMB);
+    if (memoryMB == 0 || minPriority == (RECLAIM_PRIORITY_MAX + 1)) {
+        HILOGE("node:<%{public}s> <%{public}u, %{public}d> read fail", name.c_str(), memoryMB, minPriority);
         return false;
     }
-    killLevelsMap_.insert(std::make_pair(memoryMB, minPriority));
+    if ((memoryMB * KB_PER_MB) > UINT_MAX) {
+        HILOGE("<%{public}s> %{public}u MB to KB > UINT_MAX", name.c_str(), memoryMB);
+        return false;
+    }
+    unsigned int memoryKB = memoryMB * KB_PER_MB; /* MB to KB */
+    if (killLevelsMap_.count(memoryKB) > 0) { /* if key @memoryKB has exist, error */
+        HILOGE("node:<%{public}s> <%{public}u, %{public}d> key has exist, mapSize:%{public}zu",
+            name.c_str(), memoryKB, minPriority, killLevelsMap_.size());
+        return false;
+    }
+    killLevelsMap_.insert(std::make_pair(memoryKB, minPriority));
     return true;
 }
 
