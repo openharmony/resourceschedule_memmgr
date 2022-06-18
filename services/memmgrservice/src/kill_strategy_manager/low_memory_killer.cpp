@@ -112,8 +112,13 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
     static const MemmgrConfigManager::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
     if (levelMap.empty()) { /* xml not config, using default table */
         for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
-            thBufKB = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
-            if (currBufferKB < thBufKB) {
+            int thbufInTable = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
+            if (thbufInTable < 0) {
+                HILOGE("error: negative value(%{public}d) of mem in g_minPrioTable", thbufInTable);
+                continue;
+            }
+            if (currBufferKB < (unsigned int)thbufInTable) {
+                thBufKB = (unsigned int)thbufInTable;
                 minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
                 break;
             }
@@ -122,8 +127,8 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
     }
     /* query from xml */
     for (auto it = levelMap.begin(); it != levelMap.end(); it++) {
-        if (currBufferKB < (it->first * 1024)) { /* 1024 means MB to KB */
-            thBufKB = it->first * 1024; /* 1024 means MB to KB */
+        if (currBufferKB < it->first) {
+            thBufKB = it->first;
             minPrio = it->second;
             break;
         }
@@ -136,7 +141,8 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
 void LowMemoryKiller::PsiHandlerInner()
 {
     HILOGI("[%{public}ld] called", ++calledCount);
-    int triBuf, availBuf, thBuf, freedBuf;
+    int triBuf, availBuf, freedBuf;
+    unsigned int thBuf = 0;
     int totalBuf = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
     int killCnt = 0;
@@ -179,7 +185,7 @@ void LowMemoryKiller::PsiHandlerInner()
 out:
     // resume zswapd
     if (totalBuf) {
-        HILOGI("[%{public}ld] Reclaimed %{public}dkB when current buffer %{public}dkB below %{public}dkB",
+        HILOGI("[%{public}ld] Reclaimed %{public}dkB when current buffer %{public}dkB below %{public}ukB",
             calledCount, totalBuf, triBuf, thBuf);
     }
 }
