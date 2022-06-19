@@ -25,6 +25,13 @@ namespace {
     const std::string TAG = "LowMemoryKiller";
     const int LOW_MEM_KILL_LEVELS = 5;
     const int MAX_KILL_CNT_PER_EVENT = 3;
+    /*
+     * LMKD_DBG_TRIGGER_FILE_PATH:
+     * print process meminfo when write 0/1 to the file,
+     * 0: print all info anyway. 1: print limited by interval.
+     * It is used before killing one bundle.
+     */
+    const std::string LMKD_DBG_TRIGGER_FILE_PATH = "/proc/lmkd_dbg_trigger";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(LowMemoryKiller);
@@ -167,6 +174,8 @@ void LowMemoryKiller::PsiHandlerInner()
 
     // stop zswapd
     do {
+        /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val */
+        KernelInterface::GetInstance().WriteToFile(LMKD_DBG_TRIGGER_FILE_PATH, "1");
         if ((freedBuf = KillOneBundleByPrio(minPrio)) == 0) {
             HILOGE("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
             goto out;
