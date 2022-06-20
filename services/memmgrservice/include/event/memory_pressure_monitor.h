@@ -66,7 +66,7 @@ struct MemPressLevelCfg {
 };
 
 static struct MemPressLevelCfg levelConfigArr[MEM_PRESS_LEVEL_COUNT] = {
-    { LEVEL_0, SOME, 70, -1},    /* 70ms out of 1sec for partial stall */
+    { LEVEL_0, SOME, 10, -1},    /* 10ms out of 1sec for partial stall */
 };
 
 
@@ -84,12 +84,7 @@ private:
     int epollfd_ = -1;
     // current monitor level count
     int curLevelCount_ = 0;
-    int polling_ = 0;
-
-    struct timespec lastTime_ = {0, 0};
-    struct timespec currentTime_ = {0, 0};
     struct LevelHandler *handlerInfo_ = nullptr;
-    struct LevelHandler *pollHandler_ = NULL;
 
     void Init();
 
@@ -100,7 +95,6 @@ private:
     int delLevelFileFdFromEpoll(int epollfd, int fd);
     void CloseLevelFileFd(int fd);
     void MainLoop(void);
-    void HandleTimeOut();
     void HandleEpollEvent(struct epoll_event *curEpollEvent);
 };
 } // namespace Memory
