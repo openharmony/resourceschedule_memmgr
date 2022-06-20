@@ -17,6 +17,7 @@
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "low_memory_killer.h"
+#include "memory_level_manager.h"
 
 #include <string>
 #include <sys/epoll.h>
@@ -150,44 +151,16 @@ int MemoryPressureMonitor::AddLevelFileFdToEpoll(int epollfd, int fd, void* data
     return ret;
 }
 
-static inline long TimeBetweenInMs(struct timespec &beginTime, struct timespec &endTime)
-{
-    return (endTime.tv_sec - beginTime.tv_sec) * MS_PER_SECOND +
-           (endTime.tv_nsec - beginTime.tv_nsec) / NS_PER_MS;
-}
-
-static inline void GetTimeAndSetTo(struct timespec &timeSpec)
-{
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &timeSpec);
-}
-
 void MemoryPressureMonitor::MainLoop(void)
 {
     HILOGE("enter");
     struct epoll_event *curEpollEvent;
-    long delay = -1;
 
     while (1) {
         HILOGD("waiting for epoll event ...");
         struct epoll_event events[curLevelCount_];
-        int nevents;
         int i;
-
-        if (polling_) {
-            GetTimeAndSetTo(currentTime_);
-            delay = TimeBetweenInMs(lastTime_, currentTime_);
-            delay = (delay < POLL_PERIOD_MS) ?
-                POLL_PERIOD_MS - delay : POLL_PERIOD_MS;
-            nevents = epoll_wait(epollfd_, events, curLevelCount_, delay);
-
-            GetTimeAndSetTo(currentTime_);
-            if (TimeBetweenInMs(lastTime_, currentTime_) >= POLL_PERIOD_MS) {
-                HandleTimeOut();
-            }
-        } else {
-            nevents = epoll_wait(epollfd_, events, curLevelCount_, -1);
-        }
-
+        int nevents = epoll_wait(epollfd_, events, curLevelCount_, -1);
         if (nevents == -1) {
             if (errno == EINTR)
                 continue;
@@ -212,34 +185,17 @@ void MemoryPressureMonitor::MainLoop(void)
     } // end of while
 }
 
-void MemoryPressureMonitor::HandleTimeOut()
-{
-    polling_--;
-    if (pollHandler_) {
-        HILOGD("#1 call handler");
-        pollHandler_->handler(pollHandler_->data, 0);
-        lastTime_ = currentTime_;
-    } else {
-        HILOGE("pollHandler_ is NULL!");
-    }
-}
-
 void MemoryPressureMonitor::HandleEpollEvent(struct epoll_event *curEpollEvent)
 {
     handlerInfo_ = (struct LevelHandler*)curEpollEvent->data.ptr;
     HILOGD("#2 call handler");
     handlerInfo_->handler(handlerInfo_->data, curEpollEvent->events);
-
-    if (handlerInfo_->handler == HandleLevelReport) {
-        polling_ = POLL_COUNT;
-        pollHandler_ = handlerInfo_;
-        GetTimeAndSetTo(lastTime_);
-    }
 }
 
 void HandleLevelReport(int level, uint32_t events)
 {
     HILOGI("level=%{public}d !", level);
+    MemoryLevelManager::GetInstance().PsiHandler();
     LowMemoryKiller::GetInstance().PsiHandler();
 }
 

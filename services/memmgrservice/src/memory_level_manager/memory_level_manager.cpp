@@ -51,20 +51,22 @@ bool MemoryLevelManager::CalcSystemMemoryLevel(SystemMemoryLevel &level)
     int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
     std::shared_ptr<SystemMemoryLevelConfig> config = MemmgrConfigManager::GetInstance().GetSystemMemoryLevelConfig();
     if (config == nullptr) {
-        HILOGD("The SystemMemoryLevelConfig is NULL.");
+        HILOGE("The SystemMemoryLevelConfig is NULL.");
         return false;
     }
 
-    HILOGD("critical:%{public}d low:%{public}d moderate:%{public}d.", config->critical, config->low, config->moderate);
-    HILOGD("currentBuffer:%{public}d.", currentBuffer);
     if (currentBuffer <= config->critical) {
         level = SystemMemoryLevel::MEMORY_LEVEL_CRITICAL;
     } else if (currentBuffer <= config->low) {
         level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
-    } else {
+    } else if (currentBuffer <= config->moderate) {
         level = SystemMemoryLevel::MEMORY_LEVEL_MODERATE;
+    } else {
+        return false;
     }
-    HILOGD("The system memory level is %{public}d.", static_cast<int>(level));
+
+    HILOGI("critical:%{public}d low:%{public}d moderate:%{public}d in config, curBuf:%{public}dKB, level:%{public}d.",
+           config->critical, config->low, config->moderate, currentBuffer, static_cast<int>(level));
     return true;
 }
 
@@ -72,15 +74,12 @@ bool MemoryLevelManager::CalcReclaimAppList(std::vector<std::shared_ptr<AppEntit
 {
     ReclaimPriorityManager::BunldeCopySet bundleSet;
     ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundleSet);
-    HILOGD("The reclaim app list start:");
     for (auto bundleInfo : bundleSet) {
         std::shared_ptr<AppEntity> app;
-        MAKE_POINTER(app, shared, AppEntity, "make shared failed", return false,
-            bundleInfo.uid_, bundleInfo.name_);
+        MAKE_POINTER(app, shared, AppEntity, "make shared failed", return false, bundleInfo.uid_, bundleInfo.name_);
         appList.push_back(app);
-        HILOGD("app.uid = %{public}d, app.name = %{public}s.", app->uid_, app->name_.c_str());
+        HILOGI("The app will be reclaimed, uid:%{public}d, name:%{public}s.", app->uid_, app->name_.c_str());
     }
-    HILOGD("The reclaim app list end.");
     return true;
 }
 
@@ -91,14 +90,12 @@ void MemoryLevelManager::PsiHandlerInner()
     /* Calculate the system memory level */
     SystemMemoryLevel level;
     if (!CalcSystemMemoryLevel(level)) {
-        HILOGD("Calculate the system memory level failed.");
         return;
     }
 
     /* Calculate the reclaim app list */
     std::vector<std::shared_ptr<AppEntity>> appList;
     if (!CalcReclaimAppList(appList)) {
-        HILOGD("Calculate the reclaim app list failed.");
         return;
     }
 }
