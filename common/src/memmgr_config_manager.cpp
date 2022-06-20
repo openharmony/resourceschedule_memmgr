@@ -136,8 +136,60 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             ParseReclaimPriorityConfig(currNode);
             continue;
         }
+        if (name.compare("nandlife") == 0) {
+            ParseNandLifeConfig(currNode);
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
+    }
+    return true;
+}
+
+const NandLifeConfig &MemmgrConfigManager::GetNandLifeConfig()
+{
+    return nandLifeConfig_;
+}
+
+bool ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsigned long long &value)
+{
+    try {
+        auto contentPtr = xmlNodeGetContent(rootNodePtr);
+        std::string valueStr;
+        if (contentPtr != nullptr) {
+            valueStr = std::string(reinterpret_cast<char *>(contentPtr));
+            xmlFree(contentPtr);
+            value = std::strtoull(valueStr.c_str(), NULL, 10); // 10:Decimal
+            return true;
+        }
+    } catch (...) {
+        return false;
+    }
+    return false;
+}
+
+bool MemmgrConfigManager::ParseNandLifeConfig(const xmlNodePtr &rootNodePtr)
+{
+    if (!CheckNode(rootNodePtr) || !HasChild(rootNodePtr)) {
+        return true;
+    }
+    for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
+        std::string key = std::string(reinterpret_cast<const char *>(currNode->name));
+        if (key == "dailySwapOutQuotaMB") {
+            if (!ParseUnsignedLongLongContent(currNode, nandLifeConfig_.daily_swap_out_quota_mb)) {
+                HILOGE("parse key :<%{public}s> error", key.c_str());
+                return false;
+            }
+            HILOGI("daily_swap_out_quota_mb=%{public}llu", nandLifeConfig_.daily_swap_out_quota_mb);
+        } else if (key == "totalSwapOutQuotaMB") {
+            if (!ParseUnsignedLongLongContent(currNode, nandLifeConfig_.total_swap_out_quota_mb)) {
+                HILOGE("parse key :<%{public}s> error", key.c_str());
+                return false;
+            }
+            HILOGI("total_swap_out_quota_mb=%{public}llu", nandLifeConfig_.total_swap_out_quota_mb);
+        } else {
+            HILOGW("unknown key :<%{public}s>", key.c_str());
+        }
     }
     return true;
 }
