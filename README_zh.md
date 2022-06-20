@@ -140,6 +140,10 @@ xml样例:
 	</reclaimConfig>
 	<killConfig>
 	</killConfig>
+	<nandlife>
+		<dailySwapOutQuotaMB>50</dailySwapOutQuotaMB>
+		<totalSwapOutQuotaMB>199</totalSwapOutQuotaMB>
+	</nandlife>
 </Memmgr>
 
 功能参考:
@@ -180,6 +184,10 @@ Memmgr			Memmgr相关配置
 				0<=ub_zram2ufs_ratio<=100
 				0<=refault_threshold<=100
 	killConfig:		内存查杀相关配置
+	nandlife:		寿命管控相关配置
+		dailySwapOutQuotaMB：每日换出量限制（单位MB），应为正数
+		totalSwapOutQuotaMB：总换出量限制（单位MB），应为正数
+		两者同时设为0，代表放开换出量限制。厂商可根据器件容量等规格参数，设置合适的值。
 
 ## 相关仓<a name="section_projects"></a>
 

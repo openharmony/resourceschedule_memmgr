@@ -54,6 +54,12 @@ public:
     std::set<std::string> killalbeSystemApps_;
 };
 
+class NandLifeConfig {
+public:
+    int DAILY_SWAP_OUT_QUOTA_MB;
+    int TOTAL_SWAP_OUT_QUOTA_MB;
+};
+
 class ReclaimRatiosConfig {
 public:
     int minScore;
@@ -89,7 +95,8 @@ public:
     std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
     const ReclaimPriorityConfig& GetReclaimPriorityConfig();
-    const KillLevelsMap& GetKillLevelsMap();
+	const KillLevelsMap& GetKillLevelsMap();
+    const NandLifeConfig& GetNandLifeConfig();
 
 private:
     void InitDefaultConfig();
@@ -100,6 +107,7 @@ private:
     bool ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr);
     bool ParseReclaimPriorityKillableSystemAppsConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseNandLifeConfig(const xmlNodePtr &rootNodePtr);
     bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
     void SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst);
     void SetUnsignedIntParam(std::map<std::string, std::string> &param, std::string key, unsigned int &dst);
@@ -116,6 +124,7 @@ private:
     KillLevelsMap killLevelsMap_;
     ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
     ReclaimPriorityConfig reclaimPriorityConfig_;
+    NandLifeConfig nandLifeConfig_;
     void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);
     void ClearReclaimRatiosConfigSet();
     MemmgrConfigManager();

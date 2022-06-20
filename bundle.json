@@ -29,7 +29,8 @@
           "libhisysevent",
           "libaccountkits",
           "os_account_innerkits",
-          "bgtaskmgr_innerkits"
+          "bgtaskmgr_innerkits",
+          "syspara"
         ],
         "third_party": []
       },
@@ -38,7 +39,8 @@
             "//foundation/resourceschedule/memmgr/sa_profile:memmgr_sa_profile",
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
-            "//foundation/resourceschedule/memmgr/profile:memmgr_config"
+            "//foundation/resourceschedule/memmgr/profile:memmgr_config",
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para"
         ],
         "inner_kits": [
           {

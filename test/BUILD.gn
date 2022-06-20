@@ -134,6 +134,22 @@ ohos_unittest("multi_account_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("nandlife_controller_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/nandlife_controller_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 ohos_unittest("reclaim_strategy_manager_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
@@ -208,6 +224,7 @@ group("memmgr_unittest") {
     ":memcg_test",
     ":memmgr_config_manager_test",
     ":multi_account_manager_test",
+    ":nandlife_controller_test",
     ":reclaim_priority_manager_test",
     ":reclaim_strategy_manager_test",
     ":user_memcg_test",
