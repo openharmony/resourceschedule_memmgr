@@ -236,7 +236,8 @@ void NandLifeController::CheckSwapOut()
     HILOGE("[%{public}llu] called", iter);
 
     if (IsSwapOutClosedPermently()) {
-        CloseSwapOutTemporarily("swap-out has benn closed permently, nandlife controller no need work!");
+        CloseSwapOutTemporarily("swap-out has benn closed permently!");
+        SetTimer();
         return;
     }
 
