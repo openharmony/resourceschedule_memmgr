@@ -197,11 +197,10 @@ void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bu
         }
 
         try {
-            BundlePriorityInfo *tmpBundleInfo = new BundlePriorityInfo(*bundle);
-            auto ret = bundleSet.insert(*tmpBundleInfo);
+            auto ret = bundleSet.insert(*bundle);
             if (ret.second) {
-                HILOGI("insert bundle<%{public}d, %{public}s}> to set, priority=%{public}d", tmpBundleInfo->uid_,
-                    tmpBundleInfo->name_.c_str(), tmpBundleInfo->priority_);
+                HILOGI("insert bundle<%{public}d, %{public}s}> to set, priority=%{public}d", bundle->uid_,
+                    bundle->name_.c_str(), bundle->priority_);
                 ++count;
                 break;
             }
