@@ -159,7 +159,7 @@ bool ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsigned long l
         if (contentPtr != nullptr) {
             valueStr = std::string(reinterpret_cast<char *>(contentPtr));
             xmlFree(contentPtr);
-            value = std::strtoull(valueStr.c_str(), NULL, 10); // 10:Decimal
+            value = std::strtoull(valueStr.c_str(), nullptr, 10); // 10:Decimal
             return true;
         }
     } catch (...) {

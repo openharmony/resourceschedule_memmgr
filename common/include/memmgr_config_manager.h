@@ -56,8 +56,8 @@ public:
 
 class NandLifeConfig {
 public:
-    int DAILY_SWAP_OUT_QUOTA_MB;
-    int TOTAL_SWAP_OUT_QUOTA_MB;
+    unsigned long long daily_swap_out_quota_mb;
+    unsigned long long total_swap_out_quota_mb;
 };
 
 class ReclaimRatiosConfig {
@@ -95,7 +95,7 @@ public:
     std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
     const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
     const ReclaimPriorityConfig& GetReclaimPriorityConfig();
-	const KillLevelsMap& GetKillLevelsMap();
+    const KillLevelsMap& GetKillLevelsMap();
     const NandLifeConfig& GetNandLifeConfig();
 
 private:
