@@ -266,7 +266,7 @@ void NandLifeController::CheckSwapOut()
 
     CheckDailyLimit();
 
-    if (minsToday_ >= 12 * 60) { // 24: a day has 24 hours, 60: one hour has 60 min
+    if (minsToday_ >= 24 * 60) { // 24: a day has 24 hours, 60: one hour has 60 min
         HILOGI("[%{public}llu] enter a new day", iter);
         minsToday_ = 0;
         swapOutKBToday_ = 0;
