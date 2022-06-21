@@ -23,8 +23,9 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "NandLifeController";
-const int TIMER_PEROID_MIN = 15;
-const int TIMER_PEROID_MS = TIMER_PEROID_MIN * 60 * 1000;
+
+constexpr int TIMER_PEROID_MIN = 15;
+constexpr int TIMER_PEROID_MS = TIMER_PEROID_MIN * 60 * 1000;
 
 const std::string PARAM_VALUE_ZERO = "0";
 const std::string PARAM_VALUE_ONE = "1";
@@ -50,14 +51,14 @@ const std::string params[] = {
     SWAP_OUT_KB_FROM_BIRTH_PARAM,
 };
 
-const std::string PSI_HEALTH_INFO_PATH = "/dev/memcg/memory.psi_health_info";
+const std::string PSI_HEALTH_INFO_PATH = "/dev/memcg/memory.eswap_info";
 const std::string SWAP_OUT_SIZE_TAG = "Total Swapout Size";
 
 const std::string ESWAP_ENABLE_PATH = "/proc/sys/kernel/hyperhold/enable";
 const std::string ENABLE_ESWAP = "enable";
 const std::string DISABLE_ESWAP = "disable";
 
-const int RETRY_TIMES = 3;
+constexpr int RETRY_TIMES = 3;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(NandLifeController);
@@ -94,16 +95,16 @@ bool NandLifeController::Init()
         CloseSwapOutTemporarily("get or validate nandlife config failed, controller will not work properly.");
         return false;
     }
-    HILOGI("get and validate nandlife config success. dailyQuotaMB=%{public}d, totalQuotaMB=%{public}d",
-        config_.DAILY_SWAP_OUT_QUOTA_MB, config_.TOTAL_SWAP_OUT_QUOTA_MB);
-    if (config_.DAILY_SWAP_OUT_QUOTA_MB == 0 && config_.TOTAL_SWAP_OUT_QUOTA_MB == 0) {
+    HILOGI("get and validate nandlife config success. dailyQuotaMB=%{public}llu, totalQuotaMB=%{public}llu",
+        config_.daily_swap_out_quota_mb, config_.total_swap_out_quota_mb);
+    if (config_.daily_swap_out_quota_mb == 0 && config_.total_swap_out_quota_mb == 0) {
         HILOGE("will not limit swap-out!");
         OpenSwapOutPermanently();
         OpenSwapOutTemporarily();
         return true;
     } else {
-        DAILY_SWAP_OUT_QUOTA_KB = config_.DAILY_SWAP_OUT_QUOTA_MB * 1024; // 1024: MB to KB
-        TOTAL_SWAP_OUT_QUOTA_KB = config_.TOTAL_SWAP_OUT_QUOTA_MB * 1024; // 1024: MB to KB
+        DAILY_SWAP_OUT_QUOTA_KB = config_.daily_swap_out_quota_mb * 1024; // 1024: MB to KB
+        TOTAL_SWAP_OUT_QUOTA_KB = config_.total_swap_out_quota_mb * 1024; // 1024: MB to KB
     }
 
     if (CheckTotalLimit()) {
@@ -172,7 +173,7 @@ bool NandLifeController::IsSwapOutClosedPermently()
 bool NandLifeController::GetAndValidateNandLifeConfig()
 {
     config_ = MemmgrConfigManager::GetInstance().GetNandLifeConfig();
-    return config_.DAILY_SWAP_OUT_QUOTA_MB >= 0 && config_.TOTAL_SWAP_OUT_QUOTA_MB >=0;
+    return config_.daily_swap_out_quota_mb >= 0 && config_.total_swap_out_quota_mb >=0;
 }
 
 bool NandLifeController::GetEventHandler()
@@ -265,11 +266,12 @@ void NandLifeController::CheckSwapOut()
 
     CheckDailyLimit();
 
-    if (minsToday_ >= 24 * 60) { // 24: a day has 24 hours, 60: one hour has 60 min
+    if (minsToday_ >= 12 * 60) { // 24: a day has 24 hours, 60: one hour has 60 min
         HILOGI("[%{public}llu] enter a new day", iter);
         minsToday_ = 0;
         swapOutKBToday_ = 0;
         if (swapOutKBSinceBirth_ < TOTAL_SWAP_OUT_QUOTA_KB) { // swap-out is allowed
+            HILOGI("[%{public}llu] open swap-out since a new day", iter);
             OpenSwapOutTemporarily();
         }
     }
