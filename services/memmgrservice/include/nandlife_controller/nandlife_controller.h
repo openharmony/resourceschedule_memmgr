@@ -56,12 +56,12 @@ private:
     void SetTimer();
     void CheckSwapOut();
     bool GetSwapOutKBSinceKernelBoot(unsigned long long &ret);
-    bool CheckDailyLimit();
-    bool CheckTotalLimit();
+    bool CheckReachedDailyLimit();
+    bool CheckReachedTotalLimit();
     bool SetParameterRetry(const std::string &paramName, const std::string &paramValue, int retryTimes);
     bool UpdateNandLifeParam();
 
-    void OpenSwapOutTemporarily();
+    void OpenSwapOutTemporarily(const std::string &reason);
     void CloseSwapOutTemporarily(const std::string &reason);
     void OpenSwapOutPermanently();
     void CloseSwapOutPermanently();
