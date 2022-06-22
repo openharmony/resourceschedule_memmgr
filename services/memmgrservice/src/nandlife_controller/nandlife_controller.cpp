@@ -70,13 +70,14 @@ NandLifeController::NandLifeController()
 
 bool NandLifeController::Init()
 {
-    HILOGE("called");
     if (!GetEventHandler()) {
         CloseSwapOutTemporarily("init handler failed, nandlife controller cannot set timmer");
         return false;
     }
     HILOGI("init handler successed");
 
+    // read nandlife config from xml, then check and set it.
+    // if the config does not meet the requirements, eswap will be closed temporarily.
     if (!GetAndValidateNandLifeConfig()) {
         CloseSwapOutTemporarily("get or validate nandlife config failed, controller will not work properly.");
         return false;
@@ -128,7 +129,6 @@ bool NandLifeController::Init()
         return false;
     }
 
-    HILOGI("pass all check");
     OpenSwapOutTemporarily("pass all check when init");
     SetTimer();
     return true;
