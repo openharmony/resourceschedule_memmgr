@@ -77,8 +77,6 @@ bool NandLifeController::Init()
     }
     HILOGI("init handler successed");
 
-    // read nandlife config from xml, then check and set it.
-    // if the config does not meet the requirements, eswap will be closed temporarily.
     if (!GetAndValidateNandLifeConfig()) {
         CloseSwapOutTemporarily("get or validate nandlife config failed, controller will not work properly.");
         return false;
@@ -132,7 +130,6 @@ bool NandLifeController::Init()
 
     HILOGI("pass all check");
     OpenSwapOutTemporarily("pass all check when init");
-
     SetTimer();
     return true;
 }
@@ -156,7 +153,6 @@ bool NandLifeController::LoadNandLifeParam()
     } else {
         HILOGI("[%{public}llu] minsToday_=%{public}llu", iter, minsToday_);
     }
-
 
     swapOutKBToday_ = ReadUnsignedLongLongParam(SWAP_OUT_KB_TODAY_PARAM);
     if (errno == ERANGE || swapOutKBToday_ == ULLONG_MAX) {
