@@ -255,7 +255,7 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
 {
     std::string contentStr;
     if (!ReadFromFile(ZWAPD_PRESSURE_SHOW_PATH, contentStr)) {
-        HILOGE("read %{public}s failed, content=[%{public}s]", ZWAPD_PRESSURE_SHOW_PATH.c_str(), contentStr.c_str());
+        HILOGE("read %{public}s faild, content=[%{public}s]", ZWAPD_PRESSURE_SHOW_PATH.c_str(), contentStr.c_str());
         return;
     }
     char *contentPtr = new char[contentStr.size() + 1];

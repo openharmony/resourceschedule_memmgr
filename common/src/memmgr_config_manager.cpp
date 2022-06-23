@@ -211,7 +211,7 @@ bool MemmgrConfigManager::ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNod
 
     std::map<std::string, std::string> param;
     if (!GetModuleParam(rootNodePtr, param)) {
-        HILOGW("Get module param failed.");
+        HILOGW("Get moudle param failed.");
         return false;
     }
 
