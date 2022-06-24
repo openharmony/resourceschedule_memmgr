@@ -382,5 +382,62 @@ bool KernelInterface::GetUidByPid(unsigned int pid, unsigned int& uid)
     }
     return true;
 }
+
+bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr,
+    unsigned long long &ret)
+{
+    std::string contentStr;
+    if (!ReadFromFile(path, contentStr)) {
+        return false;
+    }
+    char *contentPtr = new char[contentStr.size() + 1];
+    if (contentPtr == nullptr) {
+        HILOGE("alloc buffer fail");
+        return false;
+    }
+    if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
+        HILOGE("copy fail");
+        return false;
+    }
+    char *restPtr;
+    char *line = strtok_r(contentPtr, "\n", &restPtr);
+    do {
+        std::string lineStr(line);
+
+        size_t i = 0;
+        for (; i < strlen(line); i++) {
+            if (line[i] == ':') {
+                break;
+            }
+        }
+        if (i >= strlen(line) - 2) { // 2: no : in the line or : is at end of line
+            line = strtok_r(NULL, "\n", &restPtr);
+            continue;
+        }
+        std::string tag = lineStr.substr(0, i);
+        if (tag == tagStr) {
+            std::string value = lineStr.substr(i + 1);
+            std::istringstream iss(value);
+            std::string sizeStr, unitStr;
+            iss >> sizeStr >> unitStr;
+            try {
+                ret = std::strtoull(sizeStr.c_str(), nullptr, 10); // 10:Decimal
+                return true;
+            } catch (...) {
+                HILOGE("parse [%{public}s] to unsigned long long error!", sizeStr.c_str());
+                return false;
+            }
+        }
+
+        line = strtok_r(NULL, "\n", &restPtr);
+    } while (line);
+    if (restPtr) {
+        delete [] restPtr;
+    }
+    if (contentPtr) {
+        delete [] contentPtr;
+    }
+    return false;
+}
 } // namespace Memory
 } // namespace OHOS
