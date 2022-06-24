@@ -18,6 +18,7 @@
 #include "system_ability_definition.h"
 #include "memmgr_config_manager.h"
 #include "mem_mgr_event_center.h"
+#include "nandlife_controller.h"
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
 #include "multi_account_manager.h"
@@ -61,6 +62,9 @@ bool MemMgrService::Init()
         HILOGE("MemMgrEventCenter init failed");
         return false;
     }
+
+    // init nandlife controller
+    NandLifeController::GetInstance().Init();
     HILOGI("init successed");
     return true;
 }

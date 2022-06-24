@@ -47,4 +47,8 @@
           <minPriority>0</minPriority>
       </killLevel>
   </killConfig>
+  <nandlife>
+    <dailySwapOutQuotaMB>0</dailySwapOutQuotaMB>
+    <totalSwapOutQuotaMB>0</totalSwapOutQuotaMB>
+  </nandlife>
 </Memmgr>
