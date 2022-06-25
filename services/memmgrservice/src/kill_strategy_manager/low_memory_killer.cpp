@@ -147,7 +147,7 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandlerInner()
 {
-    HILOGI("[%{public}ld] called", ++calledCount);
+    HILOGD("[%{public}ld] called", ++calledCount);
     int triBuf, availBuf, freedBuf;
     unsigned int thBuf = 0;
     int totalBuf = 0;
@@ -157,7 +157,7 @@ void LowMemoryKiller::PsiHandlerInner()
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
     HILOGE("[%{public}ld] current buffer = %{public}d KB", calledCount, triBuf);
     if (triBuf == MAX_BUFFER_KB) {
-        HILOGE("[%{public}ld] get buffer failed, skiped!", calledCount);
+        HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount);
         return;
     }
 
@@ -168,7 +168,7 @@ void LowMemoryKiller::PsiHandlerInner()
     HILOGE("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
-        HILOGE("[%{public}ld] no minPrio, skiped!", calledCount);
+        HILOGD("[%{public}ld] no minPrio, skiped!", calledCount);
         return;
     }
 
@@ -177,7 +177,7 @@ void LowMemoryKiller::PsiHandlerInner()
         /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val */
         KernelInterface::GetInstance().WriteToFile(LMKD_DBG_TRIGGER_FILE_PATH, "1");
         if ((freedBuf = KillOneBundleByPrio(minPrio)) == 0) {
-            HILOGE("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
+            HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
             goto out;
         }
         totalBuf += freedBuf;
