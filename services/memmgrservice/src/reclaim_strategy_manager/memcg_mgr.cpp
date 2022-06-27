@@ -60,7 +60,7 @@ bool MemcgMgr::SetRootMemcgPara()
     rootMemcg_->SetReclaimRatios(ROOT_MEMCG_MEM_2_ZRAM_RATIO,
         ROOT_MEMCG_ZRAM_2_UFS_RATIO, ROOT_MEMCG_REFAULT_THRESHOLD);
     bool ret = rootMemcg_->SetScoreAndReclaimRatiosToKernel();
-    HILOGI("Init rootMemcg reclaim retios success");
+    HILOGI("Init rootMemcg reclaim ratios success");
     return ret;
 }
 
@@ -108,7 +108,7 @@ bool MemcgMgr::UpdateMemcgScoreAndReclaimRatios(unsigned int userId, int score, 
         HILOGI("account %{public}u not exist. cannot update score and ratios", userId);
         return false;
     }
-    HILOGI("update reclaim retios userId=%{public}u score=%{public}d, %{public}s",
+    HILOGI("update reclaim ratios userId=%{public}u score=%{public}d, %{public}s",
            userId, score, ratios.ToString().c_str());
     memcg->SetScore(score);
     return memcg->SetReclaimRatios(ratios) && memcg->SetScoreAndReclaimRatiosToKernel();
