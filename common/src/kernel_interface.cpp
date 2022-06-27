@@ -337,7 +337,7 @@ bool KernelInterface::GetAllProcPids(std::vector<unsigned int> &pids)
     pids.clear();
     DIR *dir = opendir(ROOT_PROC_PATH.c_str());
     if (dir == nullptr) {
-        HILOGE("dir %{public}s is not exsit", ROOT_PROC_PATH.c_str());
+        HILOGE("dir %{public}s is not exist", ROOT_PROC_PATH.c_str());
         return false;
     }
     struct dirent *ptr = nullptr;
