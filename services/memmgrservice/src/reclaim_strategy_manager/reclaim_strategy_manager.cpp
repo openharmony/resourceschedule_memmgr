@@ -52,8 +52,8 @@ bool ReclaimStrategyManager::Init()
         HILOGE("init failed");
         return false;
     }
-    InitProcessBeforeMemmgr(); // add process (which started before memmgr) to memcg
-    HILOGI("init successed");
+    InitProcessBeforeMemmgr(); // add the process (which started before memmgr) to memcg
+    HILOGI("init success");
     return initialized_;
 }
 

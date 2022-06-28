@@ -29,7 +29,7 @@ public:
 private:
     LowMemoryKiller();
     ~LowMemoryKiller() = default;
-    std::pair<unsigned int, int> QueryKillMemoryPriorityPair(unsigned int currBufferKB);
+    std::pair<unsigned int, int> QueryKillMemoryPriorityPair(unsigned int currBufferKB, unsigned int &targetBufKB);
     void PsiHandlerInner();
     int KillOneBundleByPrio(int minPrio);
     bool GetEventHandler();

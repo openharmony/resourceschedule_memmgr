@@ -111,37 +111,47 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
     return freedBuf;
 }
 
-std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsigned int currBufferKB)
+std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsigned int currBufferKB,
+    unsigned int &targetBufKB)
 {
-    unsigned int thBufKB = 0;
+    unsigned int minBufKB = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
 
+    targetBufKB = 0; /* default val */
     static const MemmgrConfigManager::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
     if (levelMap.empty()) { /* xml not config, using default table */
         for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
-            int thbufInTable = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
-            if (thbufInTable < 0) {
-                HILOGE("error: negative value(%{public}d) of mem in g_minPrioTable", thbufInTable);
+            int minBufInTable = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
+            if (minBufInTable < 0) {
+                HILOGE("error: negative value(%{public}d) of mem in g_minPrioTable", minBufInTable);
                 continue;
             }
-            if (currBufferKB < (unsigned int)thbufInTable) {
-                thBufKB = (unsigned int)thbufInTable;
+            if (currBufferKB < (unsigned int)minBufInTable) {
+                minBufKB = (unsigned int)minBufInTable;
                 minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
                 break;
             }
         }
-        return std::make_pair(thBufKB, minPrio);
+        /* set targetBufKB = max mem val in g_minPrioTable */
+        int maxMemInTable = g_minPrioTable[LOW_MEM_KILL_LEVELS - 1][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
+        targetBufKB = (maxMemInTable > 0 ? (unsigned int)maxMemInTable : 0);
+
+        return std::make_pair(minBufKB, minPrio);
     }
     /* query from xml */
     for (auto it = levelMap.begin(); it != levelMap.end(); it++) {
         if (currBufferKB < it->first) {
-            thBufKB = it->first;
+            minBufKB = it->first;
             minPrio = it->second;
             break;
         }
     }
-    HILOGI("(%{public}u) return from xml memory:%{public}u prio:%{public}d", currBufferKB, thBufKB, minPrio);
-    return std::make_pair(thBufKB, minPrio);
+    /* set targetBufKB = max mem val in levelMap */
+    targetBufKB = levelMap.rbegin()->first;
+
+    HILOGD("(%{public}u) return from xml mem:%{public}u prio:%{public}d target:%{public}u",
+        currBufferKB, minBufKB, minPrio, targetBufKB);
+    return std::make_pair(minBufKB, minPrio);
 }
 
 /* Low memory killer core function */
@@ -149,8 +159,7 @@ void LowMemoryKiller::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount);
     int triBuf, availBuf, freedBuf;
-    unsigned int thBuf = 0;
-    int totalBuf = 0;
+    unsigned int minBuf = 0, targetBuf = 0, targetKillKb = 0, currKillKb = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
     int killCnt = 0;
 
@@ -161,9 +170,12 @@ void LowMemoryKiller::PsiHandlerInner()
         return;
     }
 
-    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf);
-    thBuf = memPrioPair.first;
+    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf, targetBuf);
+    minBuf = memPrioPair.first;
     minPrio = memPrioPair.second;
+    if (triBuf > 0 && targetBuf > (unsigned int)triBuf) {
+        targetKillKb = (unsigned int)(targetBuf - triBuf);
+    }
 
     HILOGE("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
 
@@ -172,30 +184,31 @@ void LowMemoryKiller::PsiHandlerInner()
         return;
     }
 
-    // stop zswapd
     do {
-        /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val */
-        KernelInterface::GetInstance().WriteToFile(LMKD_DBG_TRIGGER_FILE_PATH, "1");
-        if ((freedBuf = KillOneBundleByPrio(minPrio)) == 0) {
+        /* print process mem info in dmesg, 0 means it is not limited by print interval. Ignore return val */
+        KernelInterface::GetInstance().WriteToFile(LMKD_DBG_TRIGGER_FILE_PATH, "0");
+        if ((freedBuf = KillOneBundleByPrio(minPrio)) <= 0) {
             HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
             goto out;
         }
-        totalBuf += freedBuf;
+        currKillKb += (unsigned int)freedBuf;
         killCnt++;
         HILOGD("[%{public}ld] killCnt = %{public}d", calledCount, killCnt);
 
         availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-        if (availBuf == MAX_BUFFER_KB) {
+        if (availBuf < 0 || availBuf >= MAX_BUFFER_KB) {
             HILOGE("[%{public}ld] get buffer failed, go out!", calledCount);
             goto out;
         }
-    } while (availBuf < MAX_BUFFER_KB && killCnt < MAX_KILL_CNT_PER_EVENT);
+        if ((unsigned int)availBuf >= targetBuf) {
+            goto out;
+        }
+    } while (currKillKb < targetKillKb && killCnt < MAX_KILL_CNT_PER_EVENT);
 
 out:
-    // resume zswapd
-    if (totalBuf) {
-        HILOGI("[%{public}ld] Reclaimed %{public}dkB when current buffer %{public}dkB below %{public}ukB",
-            calledCount, totalBuf, triBuf, thBuf);
+    if (currKillKb > 0) {
+        HILOGI("[%{public}ld] Reclaimed %{public}uK when currBuff %{public}dK below %{public}uK target %{public}uK",
+            calledCount, currKillKb, triBuf, minBuf, targetBuf);
     }
 }
 

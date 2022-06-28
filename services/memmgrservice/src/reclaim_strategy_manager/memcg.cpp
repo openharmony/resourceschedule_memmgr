@@ -277,7 +277,7 @@ bool Memcg::SwapIn()
     std::string zramPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.ub_ufs2zram_ratio");
     bool ret = WriteToFile_(zramPath, std::to_string(PERCENT_100)); // load 100% to zram
     std::string swapinPath = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.force_swapin");
-    ret = ret && WriteToFile_(swapinPath, "0"); // echo 0 to tigger force swapin
+    ret = ret && WriteToFile_(swapinPath, "0"); // echo 0 to trigger force swapin
     return ret;
 }
 
