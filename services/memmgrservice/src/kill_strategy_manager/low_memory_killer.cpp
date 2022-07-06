@@ -185,8 +185,8 @@ void LowMemoryKiller::PsiHandlerInner()
     }
 
     do {
-        /* print process mem info in dmesg, 0 means it is not limited by print interval. Ignore return val */
-        KernelInterface::GetInstance().EchoToPath(LMKD_DBG_TRIGGER_FILE_PATH.c_str(), "0");
+        /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val   */
+        KernelInterface::GetInstance().EchoToPath(LMKD_DBG_TRIGGER_FILE_PATH.c_str(), "1");
         if ((freedBuf = KillOneBundleByPrio(minPrio)) <= 0) {
             HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
             goto out;
