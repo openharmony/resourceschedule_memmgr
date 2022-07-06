@@ -22,7 +22,7 @@ namespace OHOS {
 namespace Memory {
 static constexpr OHOS::HiviewDFX::HiLogLabel DP_LOG_LABEL = {
     LOG_CORE,
-    0x7001100,
+    0xD001799,
     "MemMgr"
 };
 
