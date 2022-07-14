@@ -16,9 +16,7 @@
 #ifndef OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 #define OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 
-#include <string>
-
-#include "reclaim_priority_constants.h"
+#include <sys/types.h>
 
 namespace OHOS {
 namespace Memory {

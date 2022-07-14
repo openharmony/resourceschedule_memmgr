@@ -16,11 +16,6 @@
 #ifndef OHOS_MEMORY_MEMMGR_RECALIM_PRIORITY_CONSTANTS_H
 #define OHOS_MEMORY_MEMMGR_RECALIM_PRIORITY_CONSTANTS_H
 
-#include <map>
-#include <string>
-#include <set>
-#include <sys/types.h>
-
 namespace OHOS {
 namespace Memory {
 // system app

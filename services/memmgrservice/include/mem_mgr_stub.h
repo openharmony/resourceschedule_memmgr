@@ -20,7 +20,6 @@
 
 #include "iremote_stub.h"
 #include "nocopyable.h"
-#include "string_ex.h"
 #include "i_mem_mgr.h"
 
 namespace OHOS {

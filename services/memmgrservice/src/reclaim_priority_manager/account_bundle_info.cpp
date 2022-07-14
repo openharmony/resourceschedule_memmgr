@@ -16,7 +16,6 @@
 #include "account_bundle_info.h"
 #include "memmgr_log.h"
 
-
 namespace OHOS {
 namespace Memory {
 namespace {
