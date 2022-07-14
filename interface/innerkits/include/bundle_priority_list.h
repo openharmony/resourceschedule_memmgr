@@ -16,8 +16,6 @@
 #ifndef OHOS_MEMORY_MEMMGR_INNERKITS_BUNDLE_PRIORITY_LIST_H
 #define OHOS_MEMORY_MEMMGR_INNERKITS_BUNDLE_PRIORITY_LIST_H
 
-#include <string>
-
 #include "bundle_priority.h"
 #include "parcel.h"
 
