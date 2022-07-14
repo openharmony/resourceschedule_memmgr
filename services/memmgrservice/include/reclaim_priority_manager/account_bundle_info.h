@@ -16,8 +16,8 @@
 #ifndef OHOS_MEMORY_MEMMGR_OS_ACCOUNT_PRIORITY_INFO_H
 #define OHOS_MEMORY_MEMMGR_OS_ACCOUNT_PRIORITY_INFO_H
 
-#include "bundle_priority_info.h"
 #include <map>
+#include "bundle_priority_info.h"
 
 namespace OHOS {
 namespace Memory {

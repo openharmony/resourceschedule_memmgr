@@ -17,6 +17,8 @@
 #include "memmgr_log.h"
 #include "reclaim_priority_constants.h"
 
+#include <string>
+
 namespace OHOS {
 namespace Memory {
 namespace {
