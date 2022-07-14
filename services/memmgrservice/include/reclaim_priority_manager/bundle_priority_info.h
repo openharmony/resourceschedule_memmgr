@@ -17,7 +17,6 @@
 #define OHOS_MEMORY_MEMMGR_BUNDLE_PRIORITY_INFO_H
 
 #include <string>
-#include <list>
 #include <map>
 #include <mutex>
 
