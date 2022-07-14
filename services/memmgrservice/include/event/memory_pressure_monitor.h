@@ -16,10 +16,9 @@
 #ifndef OHOS_MEMORY_MEMMGR_MEMORY_PRESSURE_MONITOR_H
 #define OHOS_MEMORY_MEMMGR_MEMORY_PRESSURE_MONITOR_H
 
-#include <sys/epoll.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include "event_handler.h"
+
+struct epoll_event;
 
 #define MS_PER_SECOND 1000
 
