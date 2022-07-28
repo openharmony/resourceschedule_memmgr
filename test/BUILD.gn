@@ -25,10 +25,10 @@ memmgr_deps = [
   "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
   "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
   "//third_party/libxml2:xml2",
-  "//utils/native/base:utils",
 ]
 
 memmgr_external_deps = [
+  "c_utils:utils",
   "eventhandler:libeventhandler",
   "hiviewdfx_hilog_native:libhilog",
   "ipc:ipc_core",
