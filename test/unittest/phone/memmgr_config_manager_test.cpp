@@ -53,56 +53,6 @@ void MemmgrConfigManagerTest::TearDown()
 {
 }
 
-HWTEST_F(MemmgrConfigManagerTest, setIntParamTest1, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", "2147483647"));
-    std::string key = "key";
-    int dst = 0;
-    MemmgrConfigManager::GetInstance().SetIntParam(param, key, dst);
-    EXPECT_EQ(dst, 2147483647);
-}
-
-HWTEST_F(MemmgrConfigManagerTest, setIntParamTest2, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", "."));
-    std::string key = "key";
-    int dst = 0;
-    MemmgrConfigManager::GetInstance().SetIntParam(param, key, dst);
-    EXPECT_EQ(dst, 0);
-}
-
-HWTEST_F(MemmgrConfigManagerTest, setIntParamTest3, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", " "));
-    std::string key = "key";
-    int dst = 0;
-    MemmgrConfigManager::GetInstance().SetIntParam(param, key, dst);
-    EXPECT_EQ(dst, 0);
-}
-
-HWTEST_F(MemmgrConfigManagerTest, setIntParamTest4, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", "2147483648"));
-    std::string key = "key";
-    int dst = 0;
-    MemmgrConfigManager::GetInstance().SetIntParam(param, key, dst);
-    EXPECT_EQ(dst, 0);
-}
-
-HWTEST_F(MemmgrConfigManagerTest, setUnsignedIntParamTest1, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", "-1"));
-    std::string key = "key";
-    unsigned int dst = 0;
-    MemmgrConfigManager::GetInstance().SetUnsignedIntParam(param, key, dst);
-    EXPECT_EQ(dst, 0);
-}
-
 HWTEST_F(MemmgrConfigManagerTest, initTest, TestSize.Level1)
 {
     MemmgrConfigManager::GetInstance().Init();

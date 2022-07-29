@@ -95,7 +95,7 @@ void ReclaimPriorityManager::GetAllKillableSystemApps()
 {
     HILOGI("called");
     // get killable system apps from xml
-    allKillableSystemApps_.merge(config_.killalbeSystemApps_);
+    allKillableSystemApps_.merge(config_.GetkillalbeSystemApps());
     // get killable system apps from fwk (finally from bms)
     std::set<std::string> killableSystemAppsFromAms_;
     GetKillableSystemAppsFromAms(killableSystemAppsFromAms_);

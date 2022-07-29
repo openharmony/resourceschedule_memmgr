@@ -19,10 +19,10 @@
 namespace OHOS {
 namespace Memory {
 // default values of buffer param (MB)
-constexpr int AVAIL_BUFFER = 800;
-constexpr int MIN_AVAIL_BUFFER = 750;
-constexpr int HIGH_AVAIL_BUFFER = 850;
-constexpr int SWAP_RESERVE = 200;
+constexpr unsigned int AVAIL_BUFFER = 800;
+constexpr unsigned int MIN_AVAIL_BUFFER = 750;
+constexpr unsigned int HIGH_AVAIL_BUFFER = 850;
+constexpr unsigned int SWAP_RESERVE = 200;
 // default values of memcg reclaim ratios
 constexpr int MEMCG_MEM_2_ZRAM_RATIO = 60; // 60%
 constexpr int MEMCG_ZRAM_2_UFS_RATIO = 10; // 10%

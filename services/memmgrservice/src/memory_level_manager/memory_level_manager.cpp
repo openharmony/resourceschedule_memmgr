@@ -49,24 +49,25 @@ bool MemoryLevelManager::GetEventHandler()
 bool MemoryLevelManager::CalcSystemMemoryLevel(SystemMemoryLevel &level)
 {
     int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
-    std::shared_ptr<SystemMemoryLevelConfig> config = MemmgrConfigManager::GetInstance().GetSystemMemoryLevelConfig();
+    std::shared_ptr<SystemMemoryLevelConfig> config =
+        std::make_shared<SystemMemoryLevelConfig>(MemmgrConfigManager::GetInstance().GetSystemMemoryLevelConfig());
     if (config == nullptr) {
         HILOGE("The SystemMemoryLevelConfig is NULL.");
         return false;
     }
 
-    if (currentBuffer <= config->critical) {
+    if (currentBuffer <= config->GetCritical()) {
         level = SystemMemoryLevel::MEMORY_LEVEL_CRITICAL;
-    } else if (currentBuffer <= config->low) {
+    } else if (currentBuffer <= config->GetLow()) {
         level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
-    } else if (currentBuffer <= config->moderate) {
+    } else if (currentBuffer <= config->GetModerate()) {
         level = SystemMemoryLevel::MEMORY_LEVEL_MODERATE;
     } else {
         return false;
     }
 
     HILOGI("critical:%{public}d low:%{public}d moderate:%{public}d in config, curBuf:%{public}dKB, level:%{public}d.",
-           config->critical, config->low, config->moderate, currentBuffer, static_cast<int>(level));
+           config->GetCritical(), config->GetLow(), config->GetModerate(), currentBuffer, static_cast<int>(level));
     return true;
 }
 
