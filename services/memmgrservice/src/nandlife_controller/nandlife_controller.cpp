@@ -83,15 +83,15 @@ bool NandLifeController::Init()
         return false;
     }
     HILOGI("get and validate nandlife config success. dailyQuotaMB=%{public}llu, totalQuotaMB=%{public}llu",
-        config_.daily_swap_out_quota_mb, config_.total_swap_out_quota_mb);
-    if (config_.daily_swap_out_quota_mb == 0 && config_.total_swap_out_quota_mb == 0) {
+        config_.GetDailySwapOutQuotaMb(), config_.GetTotalSwapOutQuotaMb());
+    if (config_.GetDailySwapOutQuotaMb() == 0 && config_.GetTotalSwapOutQuotaMb() == 0) {
         HILOGE("will not limit swap-out!");
         OpenSwapOutPermanently();
         OpenSwapOutTemporarily("not limit swap-out in xml");
         return true;
     } else {
-        DAILY_SWAP_OUT_QUOTA_KB = config_.daily_swap_out_quota_mb * 1024; // 1024: MB to KB
-        TOTAL_SWAP_OUT_QUOTA_KB = config_.total_swap_out_quota_mb * 1024; // 1024: MB to KB
+        DAILY_SWAP_OUT_QUOTA_KB = config_.GetDailySwapOutQuotaMb() * 1024; // 1024: MB to KB
+        TOTAL_SWAP_OUT_QUOTA_KB = config_.GetTotalSwapOutQuotaMb() * 1024; // 1024: MB to KB
     }
 
     if (!LoadNandLifeParam()) {
@@ -199,7 +199,7 @@ bool NandLifeController::IsSwapOutClosedPermently()
 bool NandLifeController::GetAndValidateNandLifeConfig()
 {
     config_ = MemmgrConfigManager::GetInstance().GetNandLifeConfig();
-    return config_.daily_swap_out_quota_mb >= 0 && config_.total_swap_out_quota_mb >=0;
+    return config_.GetDailySwapOutQuotaMb() >= 0 && config_.GetTotalSwapOutQuotaMb() >=0;
 }
 
 bool NandLifeController::GetEventHandler()

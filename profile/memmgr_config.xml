@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Memmgr>
+  <availBufferConfig>
+      <availBuffer>800</availBuffer>
+      <minAvailBuffer>750</minAvailBuffer>
+      <highAvailBuffer>850</highAvailBuffer>
+      <swapReserve>200</swapReserve>
+  </availBufferConfig>
   <reclaimConfig>
-    <availbufferSize>
-        <availBuffer>800</availBuffer>
-        <minAvailBuffer>750</minAvailBuffer>
-        <highAvailBuffer>850</highAvailBuffer>
-        <swapReserve>200</swapReserve>
-    </availbufferSize>
     <ZswapdParam id="1">
         <minScore>0</minScore>
         <maxScore>1000</maxScore>
@@ -47,8 +47,8 @@
           <minPriority>0</minPriority>
       </killLevel>
   </killConfig>
-  <nandlife>
+  <nandLifeConfig>
     <dailySwapOutQuotaMB>0</dailySwapOutQuotaMB>
     <totalSwapOutQuotaMB>0</totalSwapOutQuotaMB>
-  </nandlife>
+  </nandLifeConfig>
 </Memmgr>

@@ -60,34 +60,35 @@ bool AvailBufferManager::GetEventHandler()
 
 bool AvailBufferManager::LoadAvailBufferFromConfig()
 {
-    std::shared_ptr<AvailBufferSize> availBuffer = MemmgrConfigManager::GetInstance().GetAvailBufferSize();
+    std::shared_ptr<AvailBufferConfig> availBuffer =
+        std::make_shared<AvailBufferConfig>(MemmgrConfigManager::GetInstance().GetAvailBufferConfig());
     SetAvailBuffer(availBuffer);
     return true;
 }
 
-bool AvailBufferManager::CheckAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer)
+bool AvailBufferManager::CheckAvailBuffer(std::shared_ptr<AvailBufferConfig> availBuffer)
 {
-    if (availBuffer->availBuffer > this->memTotal_ || availBuffer->minAvailBuffer > this->memTotal_ ||
-        availBuffer->highAvailBuffer > this->memTotal_ || availBuffer->swapReserve > this->memTotal_) {
+    if (availBuffer->GetAvailBuffer() > this->memTotal_ || availBuffer->GetMinAvailBuffer() > this->memTotal_ ||
+        availBuffer->GetHighAvailBuffer() > this->memTotal_ || availBuffer->GetSwapReserve() > this->memTotal_) {
         return false;
     }
-    if (availBuffer->availBuffer < availBuffer->minAvailBuffer ||
-        availBuffer->availBuffer > availBuffer->highAvailBuffer) {
+    if (availBuffer->GetAvailBuffer() < availBuffer->GetMinAvailBuffer() ||
+        availBuffer->GetAvailBuffer() > availBuffer->GetHighAvailBuffer()) {
         return false;
     }
     return true;
 }
 
-bool AvailBufferManager::SetAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer)
+bool AvailBufferManager::SetAvailBuffer(std::shared_ptr<AvailBufferConfig> availBuffer)
 {
     if (!CheckAvailBuffer(availBuffer)) {
         HILOGI("size invalid, set failed");
         return false;
     }
-    this->availBuffer_ = availBuffer->availBuffer;
-    this->minAvailBuffer_ = availBuffer->minAvailBuffer;
-    this->highAvailBuffer_ = availBuffer->highAvailBuffer;
-    this->swapReserve_ = availBuffer->swapReserve;
+    this->availBuffer_ = availBuffer->GetAvailBuffer();
+    this->minAvailBuffer_ = availBuffer->GetMinAvailBuffer();
+    this->highAvailBuffer_ = availBuffer->GetHighAvailBuffer();
+    this->swapReserve_ = availBuffer->GetSwapReserve();
     HILOGI("=%{public}d,minAvailBuffer = %{public}d,highAvailBuffer = %{public}d,swapReserve = %{public}d",
            this->availBuffer_, this->minAvailBuffer_, this->highAvailBuffer_, this->swapReserve_);
     return WriteAvailBufferToKernel();
@@ -111,8 +112,8 @@ bool AvailBufferManager::WriteAvailBufferToKernel()
 
 void AvailBufferManager::CloseZswapd()
 {
-    DECLARE_SHARED_POINTER(AvailBufferSize, availBuffer);
-    MAKE_POINTER(availBuffer, shared, AvailBufferSize, "make shared failed", return, 0, 0, 0, 0);
+    DECLARE_SHARED_POINTER(AvailBufferConfig, availBuffer);
+    MAKE_POINTER(availBuffer, shared, AvailBufferConfig, "make shared failed", return, 0, 0, 0, 0);
     HILOGI("Zswapd close now");
     SetAvailBuffer(availBuffer);
 }
