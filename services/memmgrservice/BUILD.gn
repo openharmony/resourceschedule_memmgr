@@ -98,7 +98,7 @@ ohos_shared_library("memmgrservice") {
     "os_account:libaccountkits",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   part_name = "${memmgr_part_name}"
