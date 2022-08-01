@@ -52,7 +52,6 @@ public:
     bool CreateFile(const std::string& path, const mode_t& mode);
     bool RemoveFile(const std::string& path);
     bool WriteToFile(const std::string& path, const std::string& content, bool truncated = true);
-    bool WriteLinesToFile(const std::string& path, const std::vector<std::string>& lines, bool truncated = true);
     bool ReadFromFile(const std::string& path, std::string& content);
     bool ReadLinesFromFile(const std::string& path, std::vector<std::string>& lines);
     // dir operations
