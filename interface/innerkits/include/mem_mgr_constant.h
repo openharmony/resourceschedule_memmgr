@@ -22,6 +22,8 @@ namespace OHOS {
 namespace Memory {
 // system app
 constexpr int RECLAIM_PRIORITY_SYSTEM = -1000;
+// persist(killable) system app
+constexpr int RECLAIM_PRIORITY_KILLABLE_SYSTEM = -800;
 // foreground process priority
 constexpr int RECLAIM_PRIORITY_FOREGROUND = 0;
 // perceived suspend delay case
@@ -35,6 +37,7 @@ constexpr int RECLAIM_PRIORITY_UNKNOWN = 1000;
 
 const std::map<int, std::string> ReclaimPriorityMapping = {
     { RECLAIM_PRIORITY_SYSTEM, "System" },
+    { RECLAIM_PRIORITY_KILLABLE_SYSTEM, "Persistent" },
     { RECLAIM_PRIORITY_FOREGROUND, "Foreground" },
     { RECLAIM_PRIORITY_BG_SUSPEND_DELAY, "Suspend-delay" },
     { RECLAIM_PRIORITY_BG_PERCEIVED, "Perceived" },

@@ -19,7 +19,11 @@
 #include "kernel_interface.h"
 #include "oom_score_adj_utils.h"
 #include "reclaim_strategy_manager.h"
+#include "singleton.h"
 #include "reclaim_priority_manager.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "bundle_mgr_client.h"
 
 namespace OHOS {
 namespace Memory {
@@ -135,9 +139,9 @@ void ReclaimPriorityManager::HandlePreStartedProcs()
         if (allKillableSystemApps_.find(name) != allKillableSystemApps_.end()) {
             killable = true;
             OomScoreAdjUtils::WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
+            HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
+                pid, uid, name.c_str(), killable);
         }
-        HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
-            pid, uid, name.c_str(), killable);
     }
 }
 
@@ -311,7 +315,30 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, con
 bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     if (allKillableSystemApps_.find(bundle->name_) != allKillableSystemApps_.end()) {
+        HILOGI("find bundle (%{public}s) in killable system app list", bundle->name_.c_str());
         return true;
+    }
+
+    std::shared_ptr<AppExecFwk::BundleMgrClient> bmsPtr = DelayedSingleton<AppExecFwk::BundleMgrClient>::GetInstance();
+    if (bmsPtr == nullptr) {
+        HILOGE("failed to get BundleMgrClient.");
+        return false;
+    }
+    AppExecFwk::ApplicationInfo info;
+    bool result = bmsPtr->GetApplicationInfo(bundle->name_.c_str(),
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountLocalIdFromUid(bundle->uid_), info);
+    if (result) {
+        HILOGI("appInfo<%{public}s,%{public}d><keepAlive=%{public}d, isSystemApp=%{public}d, isLauncherApp=%{public}d>",
+            bundle->name_.c_str(), bundle->uid_, info.keepAlive, info.isSystemApp, info.isLauncherApp);
+        if (info.keepAlive) {
+            auto ret = allKillableSystemApps_.insert(bundle->name_);
+            if (ret.second) {
+                HILOGI("add a new killable system app (%{public}s)", bundle->name_.c_str());
+            }
+        }
+        return info.keepAlive;
+    } else {
+        HILOGE("bundleMgr GetApplicationInfo failed!");
     }
     return false;
 }
@@ -352,6 +379,8 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
     if (IsKillableSystemApp(bundle)) {
         HILOGI("[bundleName=%{public}s, pid=%{public}d] is a killable system app", bundleName.c_str(), pid);
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
+    } else {
+        HILOGI("[bundleName=%{public}s, pid=%{public}d] is not a killable system app", bundleName.c_str(), pid);
     }
     bundle->AddProc(proc);
     UpdateBundlePriority(bundle);
