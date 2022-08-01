@@ -98,19 +98,18 @@ void MemoryLevelManager::PsiHandlerInner()
     DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
     MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", /* no return */,
         /* no param */);
-    switch (level)
-    {
-    case SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
-        appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
-        break;
-    case SystemMemoryLevel::MEMORY_LEVEL_LOW:
-        appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
-        break;
-    case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
-        appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
-        break;
-    default:
-        break;
+    switch (level) {
+        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
+            break;
+        case SystemMemoryLevel::MEMORY_LEVEL_LOW:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
+            break;
+        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
+            break;
+        default:
+            break;
     }
 }
 
