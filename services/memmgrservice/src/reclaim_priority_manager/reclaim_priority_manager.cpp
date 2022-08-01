@@ -20,10 +20,10 @@
 #include "oom_score_adj_utils.h"
 #include "reclaim_strategy_manager.h"
 #include "singleton.h"
-#include "reclaim_priority_manager.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "bundle_mgr_client.h"
+#include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
