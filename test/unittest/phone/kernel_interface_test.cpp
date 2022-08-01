@@ -163,28 +163,16 @@ HWTEST_F(KernelInterfaceTest, SingleLineFileReadWriteTest, TestSize.Level1)
     ret = ret && KernelInterface::GetInstance().ReadFromFile(path, output);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(output.compare(line1 + line1), 0);
-    KernelInterface::GetInstance().RemoveFile(path);
-}
 
-HWTEST_F(KernelInterfaceTest, SingleLineFileReadWriteLinesTest, TestSize.Level1)
-{
-    const std::string BASE_PATH = "/data/local/tmp";
-    std::string path = KernelInterface::GetInstance().JoinPath(BASE_PATH, "testFile");
-    KernelInterface::GetInstance().RemoveFile(path);
-    bool ret = KernelInterface::GetInstance().CreateFile(path);
-    ret = ret && KernelInterface::GetInstance().IsFileExists(path);
+    ret = KernelInterface::GetInstance().WriteToFile(path, "", false); // curr content: "line1line1"
+    ret = ret && KernelInterface::GetInstance().ReadFromFile(path, output);
     EXPECT_EQ(ret, true);
-    std::string line1 = "line1";
-    std::vector<std::string> inputLines = {line1};
-    std::string output;
-    std::vector<std::string> outputLines;
+    EXPECT_EQ(output.compare(line1 + line1), 0);
 
-    ret = KernelInterface::GetInstance().WriteLinesToFile(path, inputLines); // curr content: "line1\n"
-    ret = ret && KernelInterface::GetInstance().ReadLinesFromFile(path, outputLines);
+    ret = KernelInterface::GetInstance().WriteToFile(path, "", true); // curr content: ""
+    ret = ret && KernelInterface::GetInstance().ReadFromFile(path, output);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(outputLines.size(), 2u);
-    EXPECT_EQ(outputLines[0].compare(line1), 0);
-    EXPECT_EQ(outputLines[1].length(), 0u);
+    EXPECT_EQ(output.compare(""), 0);
     KernelInterface::GetInstance().RemoveFile(path);
 }
 
@@ -213,31 +201,6 @@ HWTEST_F(KernelInterfaceTest, MultLinesFileReadWriteTest, TestSize.Level1)
     ret = ret && KernelInterface::GetInstance().ReadFromFile(path, output);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(output.compare(lines), 0);
-    KernelInterface::GetInstance().RemoveFile(path);
-}
-
-HWTEST_F(KernelInterfaceTest, MultLinesFileReadWriteLinesTest, TestSize.Level1)
-{
-    const std::string BASE_PATH = "/data/local/tmp";
-    std::string path = KernelInterface::GetInstance().JoinPath(BASE_PATH, "testFile");
-    KernelInterface::GetInstance().RemoveFile(path);
-    bool ret = KernelInterface::GetInstance().CreateFile(path);
-    ret = ret && KernelInterface::GetInstance().IsFileExists(path);
-    EXPECT_EQ(ret, true);
-    std::string line1 = "line1";
-    std::string line2 = "line2";
-    std::string line3 = "line3";
-    std::vector<std::string> outputLines;
-    std::vector<std::string> inputLines = {line1, line2, line3};
-
-    ret = KernelInterface::GetInstance().WriteLinesToFile(path, inputLines); // curr content: "line1\nline2\nline3\n"
-    ret = ret && KernelInterface::GetInstance().ReadLinesFromFile(path, outputLines);
-    EXPECT_EQ(ret, true);
-    EXPECT_EQ(outputLines.size(), 4u);
-    EXPECT_EQ(outputLines[0].compare(line1), 0);
-    EXPECT_EQ(outputLines[1].compare(line2), 0);
-    EXPECT_EQ(outputLines[2].compare(line3), 0);
-    EXPECT_EQ(outputLines[3].length(), 0u);
     KernelInterface::GetInstance().RemoveFile(path);
 }
 
@@ -282,9 +245,7 @@ HWTEST_F(KernelInterfaceTest, NoSuchFileReadWriteTest, TestSize.Level1)
     ret = ret || KernelInterface::GetInstance().ReadFromFile("", output);
     EXPECT_EQ(ret, false);
 
-    ret = KernelInterface::GetInstance().WriteLinesToFile(path, inputLines);
     ret = ret || KernelInterface::GetInstance().ReadLinesFromFile(path, outputLines);
-    ret = ret || KernelInterface::GetInstance().WriteLinesToFile("", inputLines);
     ret = ret || KernelInterface::GetInstance().ReadLinesFromFile("", outputLines);
     EXPECT_EQ(ret, false);
 }
