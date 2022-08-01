@@ -22,7 +22,7 @@
 #include "singleton.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-#include "bundle_mgr_client.h"
+#include "bundle_mgr_proxy.h"
 #include "reclaim_priority_manager.h"
 
 namespace OHOS {
@@ -77,7 +77,6 @@ bool ReclaimPriorityManager::Init()
     config_ = MemmgrConfigManager::GetInstance().GetReclaimPriorityConfig();
     initialized_ = GetEventHandler();
     GetAllKillableSystemApps();
-    HandlePreStartedProcs();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -312,6 +311,25 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, con
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
+sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
+{
+    sptr<ISystemAbilityManager> saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        HILOGE("failed to get system ability manager!");
+        return nullptr;
+    }
+    sptr<IRemoteObject> remoteObject_ = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject_ == nullptr) {
+        HILOGE("bms not found!");
+        return nullptr;
+    }
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = iface_cast<AppExecFwk::IBundleMgr>(remoteObject_);
+    if (bundleMgr == nullptr) {
+        HILOGE("bms interface cast failed!");
+    }
+    return bundleMgr;
+}
+
 bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     if (allKillableSystemApps_.find(bundle->name_) != allKillableSystemApps_.end()) {
@@ -319,11 +337,12 @@ bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityI
         return true;
     }
 
-    std::shared_ptr<AppExecFwk::BundleMgrClient> bmsPtr = DelayedSingleton<AppExecFwk::BundleMgrClient>::GetInstance();
+    sptr<AppExecFwk::IBundleMgr> bmsPtr = GetBundleMgr();
     if (bmsPtr == nullptr) {
-        HILOGE("failed to get BundleMgrClient.");
+        HILOGE("failed to get BundleMgr!");
         return false;
     }
+
     AppExecFwk::ApplicationInfo info;
     bool result = bmsPtr->GetApplicationInfo(bundle->name_.c_str(),
         AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountLocalIdFromUid(bundle->uid_), info);
