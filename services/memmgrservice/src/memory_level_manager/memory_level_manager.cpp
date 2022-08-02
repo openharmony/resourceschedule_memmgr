@@ -15,6 +15,8 @@
 #include "memory_level_manager.h"
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
+#include "app_mem_info.h"
+#include "app_mgr_client.h"
 #include "kernel_interface.h"
 #include "reclaim_priority_manager.h"
 #include "memmgr_config_manager.h"
@@ -93,10 +95,21 @@ void MemoryLevelManager::PsiHandlerInner()
         return;
     }
 
-    /* Calculate the reclaim app list */
-    std::vector<std::shared_ptr<AppEntity>> appList;
-    if (!CalcReclaimAppList(appList)) {
-        return;
+    DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
+        /* no param */);
+    switch (level) {
+        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
+            break;
+        case SystemMemoryLevel::MEMORY_LEVEL_LOW:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
+            break;
+        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
+            break;
+        default:
+            break;
     }
 }
 
