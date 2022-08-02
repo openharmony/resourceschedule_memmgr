@@ -19,6 +19,10 @@
 #include "kernel_interface.h"
 #include "oom_score_adj_utils.h"
 #include "reclaim_strategy_manager.h"
+#include "singleton.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "bundle_mgr_proxy.h"
 #include "reclaim_priority_manager.h"
 
 namespace OHOS {
@@ -73,7 +77,6 @@ bool ReclaimPriorityManager::Init()
     config_ = MemmgrConfigManager::GetInstance().GetReclaimPriorityConfig();
     initialized_ = GetEventHandler();
     GetAllKillableSystemApps();
-    HandlePreStartedProcs();
     if (initialized_) {
         HILOGI("init successed");
     } else {
@@ -135,9 +138,9 @@ void ReclaimPriorityManager::HandlePreStartedProcs()
         if (allKillableSystemApps_.find(name) != allKillableSystemApps_.end()) {
             killable = true;
             OomScoreAdjUtils::WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_KILLABLE_SYSTEM);
+            HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
+                pid, uid, name.c_str(), killable);
         }
-        HILOGI("process[pid=%{public}d, uid=%{public}d, name=%{public}s] started before me, killable = %{public}d",
-            pid, uid, name.c_str(), killable);
     }
 }
 
@@ -308,10 +311,53 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, con
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
+sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
+{
+    sptr<ISystemAbilityManager> saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        HILOGE("failed to get system ability manager!");
+        return nullptr;
+    }
+    sptr<IRemoteObject> remoteObject_ = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject_ == nullptr) {
+        HILOGE("bms not found!");
+        return nullptr;
+    }
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = iface_cast<AppExecFwk::IBundleMgr>(remoteObject_);
+    if (bundleMgr == nullptr) {
+        HILOGE("bms interface cast failed!");
+    }
+    return bundleMgr;
+}
+
 bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     if (allKillableSystemApps_.find(bundle->name_) != allKillableSystemApps_.end()) {
+        HILOGI("find bundle (%{public}s) in killable system app list", bundle->name_.c_str());
         return true;
+    }
+
+    sptr<AppExecFwk::IBundleMgr> bmsPtr = GetBundleMgr();
+    if (bmsPtr == nullptr) {
+        HILOGE("failed to get BundleMgr!");
+        return false;
+    }
+
+    AppExecFwk::ApplicationInfo info;
+    bool result = bmsPtr->GetApplicationInfo(bundle->name_.c_str(),
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountLocalIdFromUid(bundle->uid_), info);
+    if (result) {
+        HILOGI("appInfo<%{public}s,%{public}d><keepAlive=%{public}d, isSystemApp=%{public}d, isLauncherApp=%{public}d>",
+            bundle->name_.c_str(), bundle->uid_, info.keepAlive, info.isSystemApp, info.isLauncherApp);
+        if (info.keepAlive) {
+            auto ret = allKillableSystemApps_.insert(bundle->name_);
+            if (ret.second) {
+                HILOGI("add a new killable system app (%{public}s)", bundle->name_.c_str());
+            }
+        }
+        return info.keepAlive;
+    } else {
+        HILOGE("bundleMgr GetApplicationInfo failed!");
     }
     return false;
 }
@@ -352,6 +398,8 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
     if (IsKillableSystemApp(bundle)) {
         HILOGI("[bundleName=%{public}s, pid=%{public}d] is a killable system app", bundleName.c_str(), pid);
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
+    } else {
+        HILOGI("[bundleName=%{public}s, pid=%{public}d] is not a killable system app", bundleName.c_str(), pid);
     }
     bundle->AddProc(proc);
     UpdateBundlePriority(bundle);
