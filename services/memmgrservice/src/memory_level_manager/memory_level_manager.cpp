@@ -96,7 +96,7 @@ void MemoryLevelManager::PsiHandlerInner()
     }
 
     DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
-    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", /* no return */,
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
         /* no param */);
     switch (level) {
         case SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
