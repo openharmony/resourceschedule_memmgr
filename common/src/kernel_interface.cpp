@@ -106,21 +106,28 @@ bool KernelInterface::RemoveFile(const std::string& path)
 
 bool KernelInterface::WriteToFile(const std::string& path, const std::string& content, bool truncated)
 {
-    return OHOS::SaveStringToFile(path, content, truncated);
-}
-
-bool KernelInterface::WriteLinesToFile(const std::string& path, const std::vector<std::string>& lines, bool truncated)
-{
+    int fd;
     if (truncated) {
-        RemoveFile(path); // clear file content
+        fd = open(path.c_str(), O_RDWR | O_TRUNC);
+    } else {
+        fd = open(path.c_str(), O_RDWR | O_APPEND);
     }
-    for (std::string line : lines) {
-        if (!SaveStringToFile(path, line + "\n", false)) {
-            return false;
-        }
+    if (fd == -1) {
+        HILOGE("echo %{public}s %{public}s %{public}s failed: file is not open",
+            content.c_str(), truncated ? ">" : ">>", path.c_str());
+        return false;
     }
+    if (write(fd, content.c_str(), strlen(content.c_str())) < 0) {
+        HILOGE("echo %{public}s %{public}s %{public}s failed: write failed",
+            content.c_str(), truncated ? ">" : ">>", path.c_str());
+        close(fd);
+        return false;
+    }
+    close(fd);
+    HILOGD("echo %{public}s %{public}s %{public}s", content.c_str(), truncated ? ">" : ">>", path.c_str());
     return true;
 }
+
 
 bool KernelInterface::ReadFromFile(const std::string& path, std::string& content)
 {
