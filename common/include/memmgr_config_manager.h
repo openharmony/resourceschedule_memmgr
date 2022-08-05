@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
-#define OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H
 
-#include <stdexcept>
 #include <map>
 #include <string>
 #include <set>
@@ -71,4 +70,4 @@ private:
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_RECLAIM_CONFIG_MANAGER_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H

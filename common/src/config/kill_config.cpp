@@ -52,7 +52,7 @@ void KillConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
     int lastPriority = RECLAIM_PRIORITY_MIN - 1;
     for (auto it = killLevelsMap_.begin(); it != killLevelsMap_.end(); it++) {
         HILOGD("KillConfig: memory:%{public}u prio:%{public}d lastPrio:%{public}d",
-            it->first, it->second, lastPriority);
+               it->first, it->second, lastPriority);
         if (it->second <= lastPriority) {
             /* Priority list must be decreasing, if not, clear set */
             HILOGE("KillConfig: memory:%{public}u prio:%{public}d invalid", it->first, it->second);
@@ -96,7 +96,7 @@ bool KillConfig::ParseKillLevelNode(const xmlNodePtr &currNodePtr,
     unsigned int memoryKB = memoryMB * KB_PER_MB; /* MB to KB */
     if (killLevelsMap_.count(memoryKB) > 0) { /* if key @memoryKB has exist, error */
         HILOGE("node:<%{public}s> <%{public}u, %{public}d> key has exist, mapSize:%{public}zu",
-            name.c_str(), memoryKB, minPriority, killLevelsMap_.size());
+               name.c_str(), memoryKB, minPriority, killLevelsMap_.size());
         return false;
     }
     killLevelsMap_.insert(std::make_pair(memoryKB, minPriority));
