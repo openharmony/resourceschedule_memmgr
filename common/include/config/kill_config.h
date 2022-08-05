@@ -13,26 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_MEMORY_LEVEL_CONSTANTS_H
-#define OHOS_MEMORY_MEMMGR_MEMORY_LEVEL_CONSTANTS_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H
 
-#include <string>
-#include <sys/types.h>
+#include <map>
+#include "libxml/parser.h"
 
 namespace OHOS {
 namespace Memory {
-// default value of the moderate memory level
-constexpr unsigned int MEMORY_LEVEL_MODERATE_DEFAULT = 800; /* 800 */
-// default value of the low memory level
-constexpr unsigned int MEMORY_LEVEL_LOW_DEFAULT = 700; /* 700 */
-// default value of the critical memory level
-constexpr unsigned int MEMORY_LEVEL_CRITICAL_DEFAULT = 600; /* 600 */
+class KillConfig {
+public:
+    using KillLevelsMap = std::map<unsigned int, int>;
+    void ClearKillLevelsMap();
+    const KillLevelsMap& GetKillLevelsMap();
+    void ParseConfig(const xmlNodePtr &rootNodePtr);
+    bool ParseKillLevelNode(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
 
-enum class SystemMemoryLevel {
-    MEMORY_LEVEL_MODERATE = 0,
-    MEMORY_LEVEL_LOW = 1,
-    MEMORY_LEVEL_CRITICAL = 2,
+private:
+    KillLevelsMap killLevelsMap_;
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_MEMORY_LEVEL_CONSTANTS_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H

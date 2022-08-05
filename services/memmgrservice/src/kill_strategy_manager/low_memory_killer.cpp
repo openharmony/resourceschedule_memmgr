@@ -118,7 +118,7 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
 
     targetBufKB = 0; /* default val */
-    static const MemmgrConfigManager::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
+    static const KillConfig::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
     if (levelMap.empty()) { /* xml not config, using default table */
         for (int i = 0; i < LOW_MEM_KILL_LEVELS; i++) {
             int minBufInTable = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
