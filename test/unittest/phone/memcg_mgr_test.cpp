@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "utils.h"
+#include "kernel_interface.h"
 
 #define private public
 #define protected public
@@ -101,8 +102,10 @@ HWTEST_F(MemcgMgrTest, UpdateMemcgScoreAndReclaimRatiosTest, TestSize.Level1)
 HWTEST_F(MemcgMgrTest, AddProcToMemcgTest, TestSize.Level1)
 {
     unsigned int memcgId = 123456u; // ensure it is a new ID
-    EXPECT_EQ(MemcgMgr::GetInstance().AddProcToMemcg(1234567, memcgId), true);
+    EXPECT_EQ(MemcgMgr::GetInstance().AddProcToMemcg(1234567, memcgId), false);
+    EXPECT_EQ(MemcgMgr::GetInstance().AddProcToMemcg(1, memcgId), true);
     EXPECT_EQ(MemcgMgr::GetInstance().GetUserMemcg(memcgId) != nullptr, true);
+    KernelInterface::GetInstance().WriteToFile("/dev/memcg/cgroup.procs", "1", false);
     EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(memcgId), true);
 }
 
