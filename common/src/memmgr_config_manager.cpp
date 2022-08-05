@@ -14,7 +14,6 @@
  */
 
 #include <fstream>
-#include <stdexcept>
 #include <string>
 
 #include "xml_helper.h"

@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_KILL_H
-#define OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_KILL_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H
 
-#include <stdexcept>
 #include <map>
 #include "libxml/parser.h"
 
@@ -35,4 +34,4 @@ private:
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_KILL_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_KILL_CONFIG_H

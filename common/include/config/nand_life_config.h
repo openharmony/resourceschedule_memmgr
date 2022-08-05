@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_NAND_LIFE_H
-#define OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_NAND_LIFE_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_NAND_LIFE_CONFIG_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_NAND_LIFE_CONFIG_H
 
-#include <stdexcept>
 #include <map>
 #include <string>
 #include <set>
@@ -40,4 +39,4 @@ private:
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_NAND_LIFE_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_NAND_LIFE_CONFIG_H

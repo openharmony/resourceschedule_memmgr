@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_ML_HELPER_H
-#define OHOS_MEMORY_ML_HELPER_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_XML_HELPER_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_XML_HELPER_H
 
-#include <stdexcept>
 #include <map>
 #include <string>
 #include <set>
@@ -43,4 +42,4 @@ static bool ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsigned
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_ABSTRACT_CONFIG_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_XML_HELPER_H
