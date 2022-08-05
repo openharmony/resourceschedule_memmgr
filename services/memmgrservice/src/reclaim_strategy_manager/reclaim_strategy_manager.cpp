@@ -210,11 +210,11 @@ bool ReclaimStrategyManager::HandleAccountPriorityChanged_(int accountId, int pr
 bool ReclaimStrategyManager::GetReclaimRatiosByScore_(int score, ReclaimRatios& ratios)
 {
     HILOGD("before get ratios from MemmgrConfigManager %{public}s", ratios.NumsToString().c_str());
-    MemmgrConfigManager::ReclaimRatiosConfigSet reclaimRatiosConfigSet =
-        MemmgrConfigManager::GetInstance().GetReclaimRatiosConfigSet();
-    for (auto i = reclaimRatiosConfigSet.begin(); i != reclaimRatiosConfigSet.end(); ++i) {
-        if ((*i)->minScore <= score && (*i)->maxScore >= score) {
-            ratios.SetRatiosByValue((*i)->mem2zramRatio, (*i)->zram2ufsRatio, (*i)->refaultThreshold);
+    ReclaimConfig::ReclaimConfigSet reclaimConfigSet =
+        MemmgrConfigManager::GetInstance().GetReclaimConfigSet();
+    for (auto i = reclaimConfigSet.begin(); i != reclaimConfigSet.end(); ++i) {
+        if ((*i)->GetMinScore() <= score && (*i)->GetMaxScore() >= score) {
+            ratios.SetRatiosByValue((*i)->GetMem2zramRatio(), (*i)->GetZram2ufsRatio(), (*i)->GetRefaultThreshold());
             HILOGI("get ratios from MemmgrConfigManager %{public}s", ratios.NumsToString().c_str());
             return true;
         }

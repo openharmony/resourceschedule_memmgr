@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
-#define OHOS_MEMORY_MEMMGR_MEMMGR_CONFIG_MANAGER_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H
 
-#include <stdexcept>
 #include <map>
 #include <string>
 #include <set>
+#include <memory>
 #include "event_handler.h"
 #include "libxml/parser.h"
 #include "libxml/xpath.h"
@@ -28,108 +28,46 @@
 #include "reclaim_strategy_constants.h"
 #include "reclaim_priority_constants.h"
 #include "memory_level_constants.h"
+#include "avail_buffer_config.h"
+#include "kill_config.h"
+#include "nand_life_config.h"
+#include "reclaim_config.h"
+#include "reclaim_priority_config.h"
+#include "system_memory_level_config.h"
 
 namespace OHOS {
 namespace Memory {
-class AvailBufferSize {
-public:
-    unsigned int availBuffer;
-    unsigned int minAvailBuffer;
-    unsigned int highAvailBuffer;
-    unsigned int swapReserve;
-    AvailBufferSize(unsigned int availBuffer, unsigned int minAvailBuffer,
-                    unsigned int highAvailBuffer, unsigned int swapReserve);
-};
-
-class SystemMemoryLevelConfig {
-public:
-    unsigned int moderate;
-    unsigned int low;
-    unsigned int critical;
-    SystemMemoryLevelConfig(unsigned int moderate, unsigned int low, unsigned int critical);
-};
-
-class ReclaimPriorityConfig {
-public:
-    std::set<std::string> killalbeSystemApps_;
-};
-
-class NandLifeConfig {
-public:
-    unsigned long long daily_swap_out_quota_mb;
-    unsigned long long total_swap_out_quota_mb;
-};
-
-class ReclaimRatiosConfig {
-public:
-    int minScore;
-    int maxScore;
-    unsigned int mem2zramRatio;
-    unsigned int zram2ufsRatio;
-    unsigned int refaultThreshold;
-    ReclaimRatiosConfig(int minScore, int maxScore, unsigned int mem2zramRatio,
-                        unsigned int zram2ufsRatio, unsigned int refaultThreshold);
-};
-
-struct ReclaimRatiosConfigPtrCmp {
-    bool operator()(const std::shared_ptr<ReclaimRatiosConfig> p1, const std::shared_ptr<ReclaimRatiosConfig> p2)
-    {
-        if (p1->minScore <= p2->minScore) {
-            return true;
-        } else {
-            return false;
-        }
-    };
-};
-
 class MemmgrConfigManager {
     DECLARE_SINGLE_INSTANCE_BASE(MemmgrConfigManager);
 public:
     bool Init();
     bool ReadParamFromXml();
     bool WriteReclaimRatiosConfigToKernel();
-    using ReclaimRatiosConfigSet = std::set<std::shared_ptr<ReclaimRatiosConfig>, ReclaimRatiosConfigPtrCmp>;
-    using KillLevelsMap = std::map<unsigned int, int>;
     bool GetXmlLoaded();
-    std::shared_ptr<AvailBufferSize> GetAvailBufferSize();
-    std::shared_ptr<SystemMemoryLevelConfig> GetSystemMemoryLevelConfig();
-    const ReclaimRatiosConfigSet GetReclaimRatiosConfigSet();
+    AvailBufferConfig GetAvailBufferConfig();
+    SystemMemoryLevelConfig GetSystemMemoryLevelConfig();
+    const ReclaimConfig::ReclaimConfigSet& GetReclaimConfigSet();
     const ReclaimPriorityConfig& GetReclaimPriorityConfig();
-    const KillLevelsMap& GetKillLevelsMap();
+    const KillConfig::KillLevelsMap& GetKillLevelsMap();
+    const KillConfig& GetKillConfig();
     const NandLifeConfig& GetNandLifeConfig();
 
 private:
     void InitDefaultConfig();
     bool ParseXmlRootNode(const xmlNodePtr &rootNodePtr);
-    bool ParseKillConfig(const xmlNodePtr &rootNodePtr);
-    bool ParseKillLevelNode(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
-    bool ParseReclaimConfig(const xmlNodePtr &rootNodePtr);
-    bool ParseSystemMemoryLevelConfig(const xmlNodePtr &rootNodePtr);
-    bool ParseReclaimPriorityConfig(const xmlNodePtr &rootNodePtr);
-    bool ParseReclaimPriorityKillableSystemAppsConfig(const xmlNodePtr &rootNodePtr);
-    bool ParseNandLifeConfig(const xmlNodePtr &rootNodePtr);
-    bool GetModuleParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
-    void SetIntParam(std::map<std::string, std::string> &param, std::string key, int &dst);
-    void SetUnsignedIntParam(std::map<std::string, std::string> &param, std::string key, unsigned int &dst);
-    bool SetReclaimParam(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
-    bool SetAvailBufferConfig(std::map<std::string, std::string> &param);
-    bool SetZswapdParamConfig (std::map<std::string, std::string> &param);
-    bool CheckNode(const xmlNodePtr &nodePtr);
-    bool HasChild(const xmlNodePtr &rootNodePtr);
-    bool CheckPathExist(const char *path);
     void ClearExistConfig();
+    void ParseReclaimNode(const xmlNodePtr &rootNodePtr);
     bool xmlLoaded_ = false;
-    std::shared_ptr<AvailBufferSize> availBufferSize_;
-    std::shared_ptr<SystemMemoryLevelConfig> systemMemoryLevelConfig_;
-    KillLevelsMap killLevelsMap_;
-    ReclaimRatiosConfigSet reclaimRatiosConfigSet_;
-    ReclaimPriorityConfig reclaimPriorityConfig_;
+    AvailBufferConfig availBufferConfig_;
+    KillConfig killConfig_;
+    SystemMemoryLevelConfig systemMemoryLevelConfig_;
     NandLifeConfig nandLifeConfig_;
-    void AddReclaimRatiosConfigToSet(std::shared_ptr<ReclaimRatiosConfig> reclaimRatiosConfig);
-    void ClearReclaimRatiosConfigSet();
+    ReclaimPriorityConfig reclaimPriorityConfig_;
+    ReclaimConfig reclaimConfig_;
+    void ClearReclaimConfigSet();
     MemmgrConfigManager();
     ~MemmgrConfigManager();
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_RECLAIM_CONFIG_MANAGER_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEMMGR_CONFIG_MANAGER_H

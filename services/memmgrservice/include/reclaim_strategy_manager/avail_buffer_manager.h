@@ -28,7 +28,7 @@ DECLARE_SINGLE_INSTANCE_BASE(AvailBufferManager)
 public:
     bool LoadAvailBufferConfig();
     bool WriteAvailBufferToKernel();
-    bool SetAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer);
+    bool SetAvailBuffer(std::shared_ptr<AvailBufferConfig> availBuffer);
     bool LoadAvailBufferFromConfig();
     void CloseZswapd();
     void InitAvailBuffer();
@@ -53,7 +53,7 @@ private:
     ~AvailBufferManager();
     bool GetEventHandler();
     void UpdateZramEnableFromKernel();
-    bool CheckAvailBuffer(std::shared_ptr<AvailBufferSize> availBuffer);
+    bool CheckAvailBuffer(std::shared_ptr<AvailBufferConfig> availBuffer);
     void UpdateMemTotalFromKernel();
 };
 } // namespace Memory

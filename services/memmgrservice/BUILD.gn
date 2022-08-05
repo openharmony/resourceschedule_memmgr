@@ -33,6 +33,9 @@ config("memory_memmgr_config") {
   include_dirs = [
     "include",
     "${memmgr_root_path}/common/include",
+    "${memmgr_root_path}/common/include/config",
+    "${memmgr_root_path}/common/src/",
+    "${memmgr_root_path}/common/src/config",
     "${memgr_innerkits_path}/include",
     "include/event/",
     "include/memory_level_manager/",
@@ -48,8 +51,15 @@ config("memory_memmgr_config") {
 ohos_shared_library("memmgrservice") {
   install_enable = true
   sources = [
+    "${memmgr_common_path}/src/config/avail_buffer_config.cpp",
+    "${memmgr_common_path}/src/config/kill_config.cpp",
+    "${memmgr_common_path}/src/config/nand_life_config.cpp",
+    "${memmgr_common_path}/src/config/reclaim_config.cpp",
+    "${memmgr_common_path}/src/config/reclaim_priority_config.cpp",
+    "${memmgr_common_path}/src/config/system_memory_level_config.cpp",
     "${memmgr_common_path}/src/kernel_interface.cpp",
     "${memmgr_common_path}/src/memmgr_config_manager.cpp",
+    "${memmgr_common_path}/src/xml_helper.cpp",
     "src/event/account_observer.cpp",
     "src/event/account_subscriber.cpp",
     "src/event/app_state_callback_mem_host.cpp",
