@@ -20,6 +20,7 @@
 #include "mem_mgr_event_observer.h"
 #include "reclaim_priority_manager.h"
 #include "background_task_mgr_helper.h"
+#include "connection_observer_client.h"
 
 namespace OHOS {
 namespace Memory {
@@ -35,6 +36,8 @@ MemMgrEventCenter::MemMgrEventCenter()
         /* no return */, /* no param */);
     MAKE_POINTER(subscriber_, shared, MemMgrBgTaskSubscriber, "make MemMgrBgTaskSubscriber failed", /* no return */,
         /* no param */);
+    MAKE_POINTER(extConnObserver_, shared, ExtensionConnectionObserver, "make ExtensionConnectionObserver failed",
+        /* no return */, /* no param */);
     registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
 }
 
@@ -67,6 +70,8 @@ bool MemMgrEventCenter::RegisterEventListener()
 
     RegisterAppStateCallback();
 
+    RegisterExtConnObserver();
+
     RegisterBgTaskObserver();
 
     RegisterAccountObserver();
@@ -88,6 +93,15 @@ void MemMgrEventCenter::RegisterAppStateCallback()
             return;
         }
         HILOGI("success to RegisterAppStateCallback");
+    }
+}
+
+void MemMgrEventCenter::RegisterExtConnObserver()
+{
+    HILOGI("called");
+    if (extConnObserver_ != nullptr) {
+        int32_t ret = AbilityRuntime::ConnectionObserverClient::GetInstance().RegisterObserver(extConnObserver_);
+        HILOGI("ret = %{public}d", ret);
     }
 }
 

@@ -64,6 +64,7 @@ ohos_shared_library("memmgrservice") {
     "src/event/account_subscriber.cpp",
     "src/event/app_state_callback_mem_host.cpp",
     "src/event/app_state_observer.cpp",
+    "src/event/extension_connection_observer.cpp",
     "src/event/mem_mgr_bg_task_subscriber.cpp",
     "src/event/mem_mgr_event_center.cpp",
     "src/event/mem_mgr_event_observer.cpp",
@@ -93,6 +94,7 @@ ohos_shared_library("memmgrservice") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_manager",
+    "ability_runtime:connection_obs_manager",
     "ability_runtime:wantagent_innerkits",
     "background_task_mgr:bgtaskmgr_innerkits",
     "bundle_framework:appexecfwk_base",
