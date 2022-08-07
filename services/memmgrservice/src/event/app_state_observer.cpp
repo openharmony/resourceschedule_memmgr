@@ -35,25 +35,6 @@ const std::map<int, std::string> stateReasonStrMap_ = {
     { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_BACKGROUND), "BACKGROUND" },
 };
 
-const std::map<int, AppStateUpdateReason> extensionStateReasonMap_ = {
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_CREATE), AppStateUpdateReason::CREATE_PROCESS },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_READY), AppStateUpdateReason::CREATE_PROCESS },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_CONNECTED),
-      AppStateUpdateReason::FOREGROUND_BIND_EXTENSION },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_DISCONNECTED),
-      AppStateUpdateReason::NO_BIND_EXTENSION },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_TERMINATED),
-      AppStateUpdateReason::PROCESS_TERMINATED },
-};
-
-const std::map<int, std::string> extensionStateReasonStrMap_ = {
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_CREATE), "EXTENSION_STATE_CREATE" },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_READY), "EXTENSION_STATE_READY" },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_CONNECTED), "EXTENSION_STATE_CONNECTED" },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_DISCONNECTED), "EXTENSION_STATE_DISCONNECTED" },
-    { static_cast<int32_t>(AppExecFwk::ExtensionState::EXTENSION_STATE_TERMINATED), "EXTENSION_STATE_TERMINATED" },
-};
-
 void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData)
 {
     // no pid here !
@@ -81,9 +62,6 @@ void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData 
 
 void AppStateObserver::OnExtensionStateChanged(const AppExecFwk::AbilityStateData &extensionStateData)
 {
-    HILOGI("uid=%{public}d, pid=%{public}d, bundleName=%{public}s, abilityName=%{public}s, abilityState=%{public}d",
-        extensionStateData.uid, extensionStateData.pid, extensionStateData.bundleName.c_str(),
-        extensionStateData.abilityName.c_str(), extensionStateData.abilityState);
 }
 
 void AppStateObserver::OnProcessCreated(const AppExecFwk::ProcessData &processData)

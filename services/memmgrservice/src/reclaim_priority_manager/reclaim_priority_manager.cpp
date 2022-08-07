@@ -55,11 +55,8 @@ ReclaimPriorityManager::ReclaimPriorityManager()
         "DIST_DEVICE_CONNECTED";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DIST_DEVICE_DISCONNECTED)] =
         "DIST_DEVICE_DISCONNECTED";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::FOREGROUND_BIND_EXTENSION)] =
-        "FOREGROUND_BIND_EXTENSION";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BACKGROUND_BIND_EXTENSION)] =
-        "BACKGROUND_BIND_EXTENSION";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::NO_BIND_EXTENSION)] = "NO_BIND_EXTENSION";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BIND_EXTENSION)] = "BIND_EXTENSION";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::UNBIND_EXTENSION)] = "UNBIND_EXTENSION";
 }
 
 std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateReason reason)
@@ -311,6 +308,20 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, con
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
+bool ReclaimPriorityManager::UpdateReclaimPriorityWithCaller(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason)
+{
+    if (!initialized_) {
+        HILOGE("has not been initialized_, skiped!");
+        return false;
+    }
+    std::function<bool()> updateReclaimPriorityCallerInnerFunc =
+        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner, this, callerPid, callerUid,
+        callerBundleName, pid, bundleUid, bundleName, priorityReason);
+    return handler_->PostImmediateTask(updateReclaimPriorityCallerInnerFunc);
+}
+
 sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
 {
     sptr<ISystemAbilityManager> saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -445,6 +456,35 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePrio
     UpdateBundlePriority(bundle);
     bool ret = ApplyReclaimPriority(bundle, IGNORE_PID, AppAction::OTHERS);
     return ret;
+}
+
+bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason)
+{
+    int accountId = GetOsAccountLocalIdFromUid(bundleUid);
+
+    if (!IsProcExist(pid, bundleUid, accountId)) {
+        HILOGE("process not exist and not to create it!!");
+        return false;
+    }
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
+
+    if (priorityReason == AppStateUpdateReason::BIND_EXTENSION) {
+        proc.AddExtensionConnector(callerUid);
+        // delay 1 min to remove caller
+        std::function<bool()> updateReclaimPriorityCallerInnerFunc =
+            std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner, this, callerPid, callerUid,
+                      callerBundleName, pid, bundleUid, bundleName, AppStateUpdateReason::UNBIND_EXTENSION);
+        handler_->PostTask(updateReclaimPriorityCallerInnerFunc, 1 * 60 * 1000, AppExecFwk::EventQueue::Priority::HIGH);
+    } else if (priorityReason == AppStateUpdateReason::UNBIND_EXTENSION) {
+        proc.RemoveExtensionConnector(callerUid);
+    }
+    AppAction action = AppAction::OTHERS;
+    HandleUpdateProcess(priorityReason, bundle, proc, action);
+    return ApplyReclaimPriority(bundle, pid, action);
 }
 
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
@@ -608,14 +648,15 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
         case AppStateUpdateReason::DIST_DEVICE_DISCONNECTED:
             proc.isDistDeviceConnected = false;
             break;
-        case AppStateUpdateReason::FOREGROUND_BIND_EXTENSION:
-            proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
+        case AppStateUpdateReason::BIND_EXTENSION:
+            if (proc.ExtensionConnectorsCount() > 0) {
+                proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
+            }
             break;
-        case AppStateUpdateReason::BACKGROUND_BIND_EXTENSION:
-            proc.extensionBindStatus = EXTENSION_STATUS_BG_BIND;
-            break;
-        case AppStateUpdateReason::NO_BIND_EXTENSION:
-            proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
+        case AppStateUpdateReason::UNBIND_EXTENSION:
+            if (proc.ExtensionConnectorsCount() == 0) {
+                proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
+            }
             break;
         default:
             break;

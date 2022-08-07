@@ -82,6 +82,8 @@ public:
     bool Init();
     bool UpdateReclaimPriority(pid_t pid, int bundleUid, const std::string &bundleName,
         AppStateUpdateReason priorityReason);
+    bool UpdateReclaimPriorityWithCaller(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
+        pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
@@ -127,6 +129,8 @@ private:
     void HandlePreStartedProcs();
     bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
             AppStateUpdateReason priorityReason);
+    bool UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
+        pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
