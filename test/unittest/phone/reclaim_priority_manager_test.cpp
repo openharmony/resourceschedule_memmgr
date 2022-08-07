@@ -546,10 +546,10 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
     PrintReclaimPriorityList();
 
-    // process#2 is bind to a fg process
-    printf("process#2 is bind to a fg process\n");
+    // process#2 is bind to a process
+    printf("process#2 is bind to a process\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
-        AppStateUpdateReason::FOREGROUND_BIND_EXTENSION);
+        AppStateUpdateReason::BIND_EXTENSION);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
@@ -564,20 +564,10 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     PrintReclaimPriorityList();
 
-    // process#2 is bind to a bg process
-    printf("process#2 is bind to a bg process\n");
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
-        AppStateUpdateReason::BACKGROUND_BIND_EXTENSION);
-    sleep(5);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
-    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BG_BIND_EXTENSION);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_BIND_EXTENSION);
-    PrintReclaimPriorityList();
-
-    // process#2 is bind to a bg process
+    // process#2 is unbind to a process
     printf("process#2 is no bind to any process\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
-        AppStateUpdateReason::NO_BIND_EXTENSION);
+        AppStateUpdateReason::UNBIND_EXTENSION);
     sleep(5);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);

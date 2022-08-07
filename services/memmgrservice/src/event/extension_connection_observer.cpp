@@ -31,7 +31,7 @@ void ExtensionConnectionObserver::OnExtensionConnected(const AbilityRuntime::Con
         data.extensionPid, data.extensionUid, static_cast<int32_t>(data.extensionType));
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.extensionPid, data.extensionUid,
-        data.extensionBundleName, AppStateUpdateReason::FOREGROUND_BIND_EXTENSION);
+        data.extensionBundleName, AppStateUpdateReason::BIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnExtensionDisconnected(const AbilityRuntime::ConnectionData& data)
@@ -49,7 +49,7 @@ void ExtensionConnectionObserver::OnDlpAbilityOpened(const AbilityRuntime::DlpSt
         data.targetModuleName.c_str(), data.targetAbilityName.c_str(), data.targetPid, data.targetUid);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.targetPid, data.targetUid,
-        data.targetBundleName, AppStateUpdateReason::FOREGROUND_BIND_EXTENSION);
+        data.targetBundleName, AppStateUpdateReason::BIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnDlpAbilityClosed(const AbilityRuntime::DlpStateData& data)

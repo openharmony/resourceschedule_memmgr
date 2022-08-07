@@ -53,10 +53,30 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->extensionBindStatus = copyProcess.extensionBindStatus;
 }
 
+ProcessPriorityInfo::~ProcessPriorityInfo()
+{
+    extensionConnectors.clear();
+}
+
 void ProcessPriorityInfo::SetPriority(int targetPriority)
 {
     priority_ = targetPriority;
     HILOGD("set process[%{public}d] priority to %{public}d", pid_, priority_);
+}
+
+int32_t ProcessPriorityInfo::ExtensionConnectorsCount()
+{
+    return extensionConnectors.size();
+}
+
+void ProcessPriorityInfo::AddExtensionConnector(int32_t uid)
+{
+    extensionConnectors.insert(uid);
+}
+
+void ProcessPriorityInfo::RemoveExtensionConnector(int32_t uid)
+{
+    extensionConnectors.erase(uid);
 }
 } // namespace Memory
 } // namespace OHOS
