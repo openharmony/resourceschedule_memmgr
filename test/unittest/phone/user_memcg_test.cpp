@@ -161,7 +161,7 @@ HWTEST_F(UserMemcgTest, AddProcTest, TestSize.Level1)
 {
     UserMemcg* memcg = new UserMemcg(userId_);
     memcg->CreateMemcgDir();
-    EXPECT_EQ(memcg->AddProc(12345678u), true);
+    EXPECT_EQ(memcg->AddProc(12345678u), false);
     memcg->RemoveMemcgDir();
     delete memcg;
     memcg = nullptr;
