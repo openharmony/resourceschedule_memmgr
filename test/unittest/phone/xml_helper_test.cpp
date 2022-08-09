@@ -91,15 +91,5 @@ HWTEST_F(XmlHelperTest, setIntParamTest4, TestSize.Level1)
     XmlHelper::SetIntParam(param, key, dst, 0);
     EXPECT_EQ(dst, 0);
 }
-
-HWTEST_F(XmlHelperTest, setUnsignedIntParamTest1, TestSize.Level1)
-{
-    std::map<std::string, std::string> param;
-    param.insert(std::make_pair("key", "-1"));
-    std::string key = "key";
-    unsigned int dst;
-    XmlHelper::SetUnsignedIntParam(param, key, dst, 0);
-    EXPECT_EQ(dst, 0);
-}
 }
 }
