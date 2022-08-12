@@ -107,27 +107,38 @@ bool KernelInterface::RemoveFile(const std::string& path)
 bool KernelInterface::WriteToFile(const std::string& path, const std::string& content, bool truncated)
 {
     int fd;
-    if (truncated) {
-        fd = open(path.c_str(), O_RDWR | O_TRUNC);
-    } else {
-        fd = open(path.c_str(), O_RDWR | O_APPEND);
+    char actualPath[PATH_MAX + 1] = {0};
+    char* ptrRet = NULL;
+
+    if (strlen(path.c_str()) == 0 || strlen(path.c_str()) > PATH_MAX) {
+        HILOGE("file path is invalid");
+        return false;
     }
+    ptrRet = realpath(path.c_str(), actualPath);
+    if (!ptrRet) {
+        HILOGE("file path cannot be canonicalized");
+        return false;
+    }
+    HILOGD("path:%{public}s, actualPath:%{public}s", path.c_str(), actualPath);
+    fd = open(actualPath, O_RDWR | (truncated ? O_TRUNC : O_APPEND));
     if (fd == -1) {
         HILOGE("echo %{public}s %{public}s %{public}s failed: file is not open",
             content.c_str(), truncated ? ">" : ">>", path.c_str());
+        ptrRet = NULL;
         return false;
     }
     if (write(fd, content.c_str(), strlen(content.c_str())) < 0) {
         HILOGE("echo %{public}s %{public}s %{public}s failed: write failed",
             content.c_str(), truncated ? ">" : ">>", path.c_str());
+        ptrRet = NULL;
         close(fd);
         return false;
     }
+    ptrRet = NULL;
     close(fd);
     HILOGD("echo %{public}s %{public}s %{public}s", content.c_str(), truncated ? ">" : ">>", path.c_str());
     return true;
 }
-
 
 bool KernelInterface::ReadFromFile(const std::string& path, std::string& content)
 {
