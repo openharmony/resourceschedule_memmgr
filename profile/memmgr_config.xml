@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Memmgr>
   <availBufferConfig>
-      <availBuffer>800</availBuffer>
-      <minAvailBuffer>750</minAvailBuffer>
-      <highAvailBuffer>850</highAvailBuffer>
+      <availBuffer>300</availBuffer>
+      <minAvailBuffer>250</minAvailBuffer>
+      <highAvailBuffer>350</highAvailBuffer>
       <swapReserve>200</swapReserve>
   </availBufferConfig>
   <reclaimConfig>
