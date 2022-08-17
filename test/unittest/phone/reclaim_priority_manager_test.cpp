@@ -492,10 +492,14 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
     PrintReclaimPriorityList();
 
+    int callerPid = 99999;
+    int callerUid = 20099999;
+    std::string caller = "com.ohos.caller";
+
     // process#2 is bind to a process
     printf("process#2 is bind to a process\n");
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
-        AppStateUpdateReason::BIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCallerInner(callerPid, callerUid, caller, pid2,
+        bundleUid, bundleName2, AppStateUpdateReason::BIND_EXTENSION);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
@@ -512,8 +516,8 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
 
     // process#2 is unbind to a process
     printf("process#2 is no bind to any process\n");
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
-        AppStateUpdateReason::UNBIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCallerInner(callerPid, callerUid, caller, pid2,
+        bundleUid, bundleName2, AppStateUpdateReason::UNBIND_EXTENSION);
     sleep(5);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
