@@ -30,8 +30,9 @@ void ExtensionConnectionObserver::OnExtensionConnected(const AbilityRuntime::Con
         data.extensionBundleName.c_str(), data.extensionModuleName.c_str(), data.extensionName.c_str(),
         data.extensionPid, data.extensionUid, static_cast<int32_t>(data.extensionType));
 
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.extensionPid, data.extensionUid,
-        data.extensionBundleName, AppStateUpdateReason::BIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCaller(data.callerPid,  data.callerUid,
+        data.callerName, data.extensionPid, data.extensionUid, data.extensionBundleName,
+        AppStateUpdateReason::BIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnExtensionDisconnected(const AbilityRuntime::ConnectionData& data)
@@ -40,8 +41,9 @@ void ExtensionConnectionObserver::OnExtensionDisconnected(const AbilityRuntime::
         "with type %{public}d", data.callerName.c_str(), data.callerPid, data.callerUid,
         data.extensionBundleName.c_str(), data.extensionModuleName.c_str(), data.extensionName.c_str(),
         data.extensionPid, data.extensionUid, static_cast<int32_t>(data.extensionType));
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.extensionPid, data.extensionUid,
-        data.extensionBundleName, AppStateUpdateReason::UNBIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCaller(data.callerPid,  data.callerUid,
+        data.callerName, data.extensionPid, data.extensionUid, data.extensionBundleName,
+        AppStateUpdateReason::UNBIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnDlpAbilityOpened(const AbilityRuntime::DlpStateData& data)
@@ -50,8 +52,9 @@ void ExtensionConnectionObserver::OnDlpAbilityOpened(const AbilityRuntime::DlpSt
         data.callerName.c_str(), data.callerPid, data.callerUid, data.targetBundleName.c_str(),
         data.targetModuleName.c_str(), data.targetAbilityName.c_str(), data.targetPid, data.targetUid);
 
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.targetPid, data.targetUid,
-        data.targetBundleName, AppStateUpdateReason::BIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCaller(data.callerPid, data.callerUid,
+        data.callerName, data.targetPid, data.targetUid, data.targetBundleName,
+        AppStateUpdateReason::BIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnDlpAbilityClosed(const AbilityRuntime::DlpStateData& data)
@@ -59,8 +62,9 @@ void ExtensionConnectionObserver::OnDlpAbilityClosed(const AbilityRuntime::DlpSt
     HILOGI("%{public}s(%{public}d,%{public}d) -/-> [%{public}s|%{public}s|%{public}s](%{public}d,%{public}d)",
         data.callerName.c_str(), data.callerPid, data.callerUid, data.targetBundleName.c_str(),
         data.targetModuleName.c_str(), data.targetAbilityName.c_str(), data.targetPid, data.targetUid);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(data.extensionPid, data.extensionUid,
-        data.extensionBundleName, AppStateUpdateReason::UNBIND_EXTENSION);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCaller(data.callerPid, data.callerUid,
+        data.callerName, data.targetPid, data.targetUid, data.targetBundleName,
+        AppStateUpdateReason::UNBIND_EXTENSION);
 }
 
 void ExtensionConnectionObserver::OnServiceDied()
