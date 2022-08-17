@@ -18,6 +18,7 @@
 #include "reclaim_priority_constants.h"
 
 #include <string>
+#include <sstream>
 
 namespace OHOS {
 namespace Memory {
@@ -34,7 +35,6 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->isBackgroundRunning = false;
     this->isSuspendDelay = false;
     this->isEventStart = false;
-    this->isDataAbilityStart = false;
     this->isDistDeviceConnected = false;
     this->extensionBindStatus = EXTENSION_STATUS_BIND_UNKOWN;
 }
@@ -48,7 +48,6 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isBackgroundRunning = copyProcess.isBackgroundRunning;
     this->isSuspendDelay = copyProcess.isSuspendDelay;
     this->isEventStart = copyProcess.isEventStart;
-    this->isDataAbilityStart = copyProcess.isDataAbilityStart;
     this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
     this->extensionBindStatus = copyProcess.extensionBindStatus;
 }
@@ -69,14 +68,30 @@ int32_t ProcessPriorityInfo::ExtensionConnectorsCount()
     return extensionConnectors.size();
 }
 
-void ProcessPriorityInfo::AddExtensionConnector(int32_t uid)
+void ProcessPriorityInfo::AddExtensionConnector(int32_t pid)
 {
-    extensionConnectors.insert(uid);
+    extensionConnectors.insert(pid);
 }
 
-void ProcessPriorityInfo::RemoveExtensionConnector(int32_t uid)
+void ProcessPriorityInfo::RemoveExtensionConnector(int32_t pid)
 {
-    extensionConnectors.erase(uid);
+    extensionConnectors.erase(pid);
+}
+
+bool ProcessPriorityInfo::ContainsConnector(int32_t pid)
+{
+    return extensionConnectors.count(pid) != 0;
+}
+
+std::string ProcessPriorityInfo::ConnectorsToString()
+{
+    std::stringstream ss;
+    ss << "[";
+    for (auto connector : extensionConnectors) {
+        ss << connector << " ";
+    }
+    ss << "]";
+    return ss.str();
 }
 } // namespace Memory
 } // namespace OHOS

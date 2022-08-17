@@ -350,60 +350,6 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventEnd, TestSize.Lev
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
 }
 
-HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityStart, TestSize.Level1)
-{
-    int pid = 10013;
-    int uid = 20010013;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::DATA_ABILITY_START);
-
-    int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
-    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    int priority = bundle->priority_;
-    EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::DATA_ABILITY_START);
-    priority = bundle->priority_;
-    EXPECT_EQ(priority, RECLAIM_PRIORITY_BG_PERCEIVED);
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
-}
-
-HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityDataAbilityEnd, TestSize.Level1)
-{
-    int pid = 10014;
-    int uid = 20010014;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-
-    int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
-    std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
-    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::DATA_ABILITY_START);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_PERCEIVED);
-
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::DATA_ABILITY_END);
-    sleep(5);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
-
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
-                "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
-}
-
 HWTEST_F(ReclaimPriorityManagerTest, GetBundlePrioSet, TestSize.Level1)
 {
     int pid = 10015;

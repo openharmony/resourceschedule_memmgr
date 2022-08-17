@@ -46,8 +46,6 @@ ReclaimPriorityManager::ReclaimPriorityManager()
         "BACKGROUND_RUNNING_END";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::EVENT_START)] = "EVENT_START";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::EVENT_END)] = "EVENT_END";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DATA_ABILITY_START)] = "DATA_ABILITY_START";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::DATA_ABILITY_END)] = "DATA_ABILITY_END";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::APPLICATION_SUSPEND)] = "APPLICATION_SUSPEND";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::PROCESS_TERMINATED)] = "PROCESS_TERMINATED";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::OS_ACCOUNT_CHANGED)] = "OS_ACCOUNT_CHANGED";
@@ -423,8 +421,28 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
 bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
     std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo> account)
 {
-    // clear proc and bundle if needed, delete the object
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
+    // find extension bind with this proc, and update extension status if needed
+    // add lock
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    for (auto currBundle : totalBundlePrioSet_) {
+        if (currBundle == nullptr || currBundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
+            continue;
+        }
+        for (auto procEntry : currBundle->procs_) {
+            ProcessPriorityInfo &currProc = procEntry.second;
+            if (currProc.ContainsConnector(proc.pid_)) {
+                HILOGI("[%{public}s(%{public}d,%{public}d)] is a caller of extension[%{public}s(%{public}d,%{public}d)]"
+                    ", unbind first", bundle->name_.c_str(), proc.pid_, proc.uid_, currBundle->name_.c_str(),
+                    currProc.pid_, currProc.uid_);
+                UpdateReclaimPriorityWithCallerInner(proc.pid_, proc.uid_, bundle->name_, currProc.pid_, currProc.uid_,
+                    currBundle->name_, AppStateUpdateReason::UNBIND_EXTENSION);
+            }
+        }
+    }
+
+    // clear proc and bundle if needed, delete the object
     int removedProcessPrio = proc.priority_;
     bundle->RemoveProcByPid(proc.pid_);
     bool ret = true;
@@ -472,15 +490,21 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
 
+    if (proc.priority_ == RECLAIM_PRIORITY_SYSTEM || IsKillableSystemApp(bundle)) {
+        HILOGI("%{public}s is system app, skip!", bundleName.c_str());
+        return true;
+    }
+
     if (priorityReason == AppStateUpdateReason::BIND_EXTENSION) {
-        proc.AddExtensionConnector(callerUid);
-        // delay 1 min to remove caller
-        std::function<bool()> updateReclaimPriorityCallerInnerFunc =
-            std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner, this, callerPid, callerUid,
-                      callerBundleName, pid, bundleUid, bundleName, AppStateUpdateReason::UNBIND_EXTENSION);
-        handler_->PostTask(updateReclaimPriorityCallerInnerFunc, 1 * 60 * 1000, AppExecFwk::EventQueue::Priority::HIGH);
+        proc.isFreground = false; // current process is a extension, it never be a fg app.
+        proc.AddExtensionConnector(callerPid);
+        HILOGI("add connector %{public}d to %{public}s(%{public}d,%{public}d), now connectors:%{public}s", pid,
+            bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     } else if (priorityReason == AppStateUpdateReason::UNBIND_EXTENSION) {
-        proc.RemoveExtensionConnector(callerUid);
+        proc.isFreground = false; // current process is a extension, it never be a fg app.
+        proc.RemoveExtensionConnector(callerPid);
+        HILOGI("remove connector %{public}d from %{public}s(%{public}d,%{public}d), now connectors:%{public}s", pid,
+            bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     }
     AppAction action = AppAction::OTHERS;
     HandleUpdateProcess(priorityReason, bundle, proc, action);
@@ -562,7 +586,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         if (proc.priority_ > RECLAIM_PRIORITY_FG_BIND_EXTENSION) {
             proc.SetPriority(RECLAIM_PRIORITY_FG_BIND_EXTENSION);
         }
-    } else if (proc.isBackgroundRunning || proc.isEventStart || proc.isDataAbilityStart) {
+    } else if (proc.isBackgroundRunning || proc.isEventStart) {
         // is a background perceived process
         HILOGD("%{public}d is a background perceived process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
@@ -588,11 +612,10 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
     }
     HILOGI(": bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d, "
         "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d, "
-        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d], "
-        "priority:%{public}d-->%{public}d",
+        "isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d], priority:%{public}d-->%{public}d",
         bundle->uid_, bundle->name_.c_str(), bundle->priority_,
         proc.pid_, proc.uid_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
-        proc.isDataAbilityStart, proc.isDistDeviceConnected, proc.extensionBindStatus, priorityBefore, proc.priority_);
+        proc.isDistDeviceConnected, proc.extensionBindStatus, priorityBefore, proc.priority_);
     UpdateBundlePriority(bundle);
 }
 
@@ -601,12 +624,10 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
 {
     HILOGD("called, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
         "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
-        "isDataAbilityStart=%{public}d, isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d, "
-        "priority=%{public}d], case:%{public}s",
+        "isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d, priority=%{public}d], case:%{public}s",
         bundle->uid_, bundle->name_.c_str(), bundle->priority_, proc.pid_, proc.uid_, proc.isFreground,
-        proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDataAbilityStart,
-        proc.isDistDeviceConnected, proc.extensionBindStatus, proc.priority_,
-        AppStateUpdateResonToString(reason).c_str());
+        proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
+        proc.extensionBindStatus, proc.priority_, AppStateUpdateResonToString(reason).c_str());
     switch (reason) {
         case AppStateUpdateReason::FOREGROUND: {
             proc.isFreground = true;
@@ -635,12 +656,6 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
             break;
         case AppStateUpdateReason::EVENT_END:
             proc.isEventStart = false;
-            break;
-        case AppStateUpdateReason::DATA_ABILITY_START:
-            proc.isDataAbilityStart = true;
-            break;
-        case AppStateUpdateReason::DATA_ABILITY_END:
-            proc.isDataAbilityStart = false;
             break;
         case AppStateUpdateReason::DIST_DEVICE_CONNECTED:
             proc.isDistDeviceConnected = true;
