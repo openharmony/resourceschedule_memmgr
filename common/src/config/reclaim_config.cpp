@@ -46,7 +46,7 @@ void ReclaimConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
 
     std::map<std::string, std::string> param;
     for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
-        if (!XmlHelper::GetModuleParam(rootNodePtr, param)) {
+        if (!XmlHelper::GetModuleParam(currNode, param)) {
             HILOGW("Get moudle param failed.");
             return;
         }
