@@ -342,7 +342,7 @@ sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
 bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle)
 {
     if (allKillableSystemApps_.find(bundle->name_) != allKillableSystemApps_.end()) {
-        HILOGI("find bundle (%{public}s) in killable system app list", bundle->name_.c_str());
+        HILOGD("find bundle (%{public}s) in killable system app list", bundle->name_.c_str());
         return true;
     }
 
@@ -356,12 +356,12 @@ bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityI
     bool result = bmsPtr->GetApplicationInfo(bundle->name_.c_str(),
         AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountLocalIdFromUid(bundle->uid_), info);
     if (result) {
-        HILOGI("appInfo<%{public}s,%{public}d><keepAlive=%{public}d, isSystemApp=%{public}d, isLauncherApp=%{public}d>",
+        HILOGD("appInfo<%{public}s,%{public}d><keepAlive=%{public}d, isSystemApp=%{public}d, isLauncherApp=%{public}d>",
             bundle->name_.c_str(), bundle->uid_, info.keepAlive, info.isSystemApp, info.isLauncherApp);
         if (info.keepAlive) {
             auto ret = allKillableSystemApps_.insert(bundle->name_);
             if (ret.second) {
-                HILOGI("add a new killable system app (%{public}s)", bundle->name_.c_str());
+                HILOGD("add a new killable system app (%{public}s)", bundle->name_.c_str());
             }
         }
         return info.keepAlive;
@@ -423,24 +423,6 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
 {
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
     // find extension bind with this proc, and update extension status if needed
-    // add lock
-    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
-
-    for (auto currBundle : totalBundlePrioSet_) {
-        if (currBundle == nullptr || currBundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
-            continue;
-        }
-        for (auto procEntry : currBundle->procs_) {
-            ProcessPriorityInfo &currProc = procEntry.second;
-            if (currProc.ContainsConnector(proc.pid_)) {
-                HILOGI("[%{public}s(%{public}d,%{public}d)] is a caller of extension[%{public}s(%{public}d,%{public}d)]"
-                    ", unbind first", bundle->name_.c_str(), proc.pid_, proc.uid_, currBundle->name_.c_str(),
-                    currProc.pid_, currProc.uid_);
-                UpdateReclaimPriorityWithCallerInner(proc.pid_, proc.uid_, bundle->name_, currProc.pid_, currProc.uid_,
-                    currBundle->name_, AppStateUpdateReason::UNBIND_EXTENSION);
-            }
-        }
-    }
 
     // clear proc and bundle if needed, delete the object
     int removedProcessPrio = proc.priority_;
@@ -498,12 +480,12 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
     if (priorityReason == AppStateUpdateReason::BIND_EXTENSION) {
         proc.isFreground = false; // current process is a extension, it never be a fg app.
         proc.AddExtensionConnector(callerPid);
-        HILOGI("add connector %{public}d to %{public}s(%{public}d,%{public}d), now connectors:%{public}s", pid,
+        HILOGI("add connector %{public}d to %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
             bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     } else if (priorityReason == AppStateUpdateReason::UNBIND_EXTENSION) {
         proc.isFreground = false; // current process is a extension, it never be a fg app.
         proc.RemoveExtensionConnector(callerPid);
-        HILOGI("remove connector %{public}d from %{public}s(%{public}d,%{public}d), now connectors:%{public}s", pid,
+        HILOGI("del connector %{public}d from %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
             bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     }
     AppAction action = AppAction::OTHERS;
