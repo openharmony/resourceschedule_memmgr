@@ -16,7 +16,6 @@
 #ifndef OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 #define OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 
-#include <sys/types.h>
 #include <set>
 
 namespace OHOS {

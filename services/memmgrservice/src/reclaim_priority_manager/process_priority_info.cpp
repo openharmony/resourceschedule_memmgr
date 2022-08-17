@@ -17,7 +17,6 @@
 #include "memmgr_log.h"
 #include "reclaim_priority_constants.h"
 
-#include <string>
 #include <sstream>
 
 namespace OHOS {

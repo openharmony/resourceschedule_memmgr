@@ -463,7 +463,6 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
     AppStateUpdateReason priorityReason)
 {
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
-
     if (!IsProcExist(pid, bundleUid, accountId)) {
         HILOGE("process not exist and not to create it!!");
         return false;
