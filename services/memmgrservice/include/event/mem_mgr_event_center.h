@@ -19,6 +19,7 @@
 #include "single_instance.h"
 #include "event_handler.h"
 #include "app_state_callback_mem_host.h"
+#include "extension_connection_observer.h"
 #include "mem_mgr_event_observer.h"
 #include "account_observer.h"
 #include "memory_pressure_monitor.h"
@@ -52,10 +53,12 @@ private:
     void RegisterSystemEventObserver();
     void RegisterAccountObserver();
     void RegisterMemPressMonitor();
+    void RegisterExtConnObserver();
 
     std::function<void()> registerEventListenerFunc_;
     int retryTimes_ = 0;
     std::shared_ptr<AppStateCallbackMemHost> appStateCallback_;
+    std::shared_ptr<ExtensionConnectionObserver> extConnObserver_;
     std::shared_ptr<MemMgrBgTaskSubscriber> subscriber_;
     std::unique_ptr<MemMgrEventObserver> sysEvtOberserver_;
     std::unique_ptr<AccountObserver> accountOberserver_;
