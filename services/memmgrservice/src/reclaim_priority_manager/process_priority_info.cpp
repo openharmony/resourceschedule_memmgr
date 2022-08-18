@@ -49,6 +49,9 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isEventStart = copyProcess.isEventStart;
     this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
     this->extensionBindStatus = copyProcess.extensionBindStatus;
+    for (auto connectors : copyProcess.extensionConnectors) {
+        this->AddExtensionConnector(connectors);
+    }
 }
 
 ProcessPriorityInfo::~ProcessPriorityInfo()
