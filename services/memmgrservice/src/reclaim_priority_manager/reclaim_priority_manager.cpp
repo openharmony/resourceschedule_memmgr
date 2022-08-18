@@ -471,7 +471,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
 
-    if (proc.priority_ == RECLAIM_PRIORITY_SYSTEM || IsKillableSystemApp(bundle)) {
+    if (proc.priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM || bundle->priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM ||
+        IsKillableSystemApp(bundle)) {
         HILOGI("%{public}s is system app, skip!", bundleName.c_str());
         return true;
     }
@@ -512,7 +513,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     }
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
-    if (bundle->priority_ == RECLAIM_PRIORITY_SYSTEM) {
+    if (bundle->priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM) {
         HILOGI("%{public}s is system app, skip!", bundleName.c_str());
         return true;
     }
