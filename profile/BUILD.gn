@@ -27,3 +27,10 @@ ohos_prebuilt_etc("memmgr.para") {
   part_name = "${memmgr_part_name}"
   module_install_dir = "etc/param"
 }
+
+ohos_prebuilt_etc("memmgr.para.dac") {
+  source = "memmgr.para.dac"
+  subsystem_name = "${memmgr_subsystem_name}"
+  part_name = "${memmgr_part_name}"
+  module_install_dir = "etc/param"
+}
