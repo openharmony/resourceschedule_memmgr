@@ -32,7 +32,7 @@ ohos_shared_library("memmgrclient") {
     "src/mem_mgr_proxy.cpp",
   ]
 
-  configs = [ ":memmgr_client_config" ]
+  public_configs = [ ":memmgr_client_config" ]
 
   deps = [
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
