@@ -26,6 +26,7 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemMgrEventCenter";
+const int EXTCONN_RETRY_TIME = 1000;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
@@ -102,7 +103,14 @@ void MemMgrEventCenter::RegisterExtConnObserver()
     if (extConnObserver_ != nullptr) {
         int32_t ret = AbilityRuntime::ConnectionObserverClient::GetInstance().RegisterObserver(extConnObserver_);
         HILOGI("ret = %{public}d", ret);
+        if (ret == 0) {
+            HILOGI("success to RegisterExtConnObserver");
+            return;
+        }
     }
+    HILOGE("failed to RegisterExtConnObserver, try again!");
+    std::function<void()> RegisterExtConnObserverFunc = std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
+    handler_->PostTask(RegisterExtConnObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void MemMgrEventCenter::RegisterBgTaskObserver()
