@@ -23,12 +23,15 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "bundle_mgr_proxy.h"
+#include "app_mgr_interface.h"
 #include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "ReclaimPriorityManager";
+constexpr int TIMER_PEROID_MIN = 3;
+constexpr int TIMER_PEROID_MS = TIMER_PEROID_MIN * 60 * 1000;
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
@@ -74,6 +77,7 @@ bool ReclaimPriorityManager::Init()
     GetAllKillableSystemApps();
     if (initialized_) {
         HILOGI("init successed");
+        SetTimer();
     } else {
         HILOGE("init failed");
     }
@@ -87,6 +91,108 @@ bool ReclaimPriorityManager::GetEventHandler()
             AppExecFwk::EventRunner::Create());
     }
     return true;
+}
+
+void ReclaimPriorityManager::Dump(int fd)
+{
+    // add lock
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    dprintf(fd, "priority list of all managed apps\n");
+    dprintf(fd, "     uid                                            name   priority\n");
+    for (auto bundlePtr : totalBundlePrioSet_) {
+        dprintf(fd, "%8d %42s %5d %3d\n", bundlePtr->uid_, bundlePtr->name_.c_str(), bundlePtr->priority_,
+            bundlePtr->GetProcsCount());
+    }
+    dprintf(fd, "-----------------------------------------------------------------\n\n");
+
+    dprintf(fd, "priority list of all managed processes, status:(fg,bgtask,trantask,evt,dist,ext)\n");
+    dprintf(fd, "    pid       uid                                   bundle priority status\
+                      connnectors\n");
+    for (auto bundlePtr : totalBundlePrioSet_) {
+        dprintf(fd, "|-----------------------------------------\n");
+        for (auto procEntry : bundlePtr->procs_) {
+            ProcessPriorityInfo &proc = procEntry.second;
+            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d %30s\n", proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
+                proc.priority_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
+                proc.isDistDeviceConnected, proc.extensionBindStatus, proc.ConnectorsToString().c_str());
+        }
+    }
+    dprintf(fd, "-----------------------------------------------------------------\n");
+}
+
+void ReclaimPriorityManager::SetTimer()
+{
+    std::function<void()> timerFunc_ = std::bind(&ReclaimPriorityManager::UpdateByPeroid, this);
+    // set timer and call CheckSwapOut each TIMER_PEROID_MIN min.
+    handler_->PostTask(timerFunc_, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
+    HILOGI("set timer after %{public}d mins", TIMER_PEROID_MIN);
+}
+
+void ReclaimPriorityManager::UpdateByPeroid()
+{
+    HILOGI("called");
+    UpdateForegroundApps();
+    // set next timer
+    SetTimer();
+}
+
+void ReclaimPriorityManager::UpdateForegroundApps()
+{
+    // add lock
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    for (auto bundle : totalBundlePrioSet_) {
+        if (bundle == nullptr) {
+            continue;
+        }
+        if (bundle->priority_ > 0) {
+            HILOGD("finish to iter all fg apps, break!");
+            break;
+        }
+        if (bundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
+            HILOGD("bundle<%{public}d, %{public}s}> is waiting to kill, skiped!", bundle->uid_, bundle->name_.c_str());
+            continue;
+        }
+        if (bundle->priority_ < 0) {
+            continue;
+        }
+        for (auto procEntry : bundle->procs_) {
+            int32_t pid = procEntry.first;
+            if (!IsFrontApp(bundle->name_, bundle->uid_, pid)) {
+                HILOGE("%{public}s(uid=%{public}d,pid=%{public}d) is not a fg app but with priority %{public}d, "
+                    "adjust it!", bundle->name_.c_str(), bundle->uid_, pid, bundle->priority_);
+                UpdateReclaimPriority(pid, bundle->uid_, bundle->name_, AppStateUpdateReason::BACKGROUND);
+            } else {
+                HILOGI("%{public}s(uid=%{public}d,pid=%{public}d) is a real fg app.", bundle->name_.c_str(),
+                    bundle->uid_, pid);
+            }
+        }
+    }
+}
+
+sptr<AppExecFwk::IAppMgr> GetAppMgrProxy()
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto appObject = systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID);
+    return iface_cast<AppExecFwk::IAppMgr>(appObject);
+}
+
+bool ReclaimPriorityManager::IsFrontApp(const std::string& pkgName, int32_t uid, int32_t pid)
+{
+    sptr<AppExecFwk::IAppMgr> appMgrProxy_ = GetAppMgrProxy();
+    if (!appMgrProxy_) {
+        HILOGE("GetAppMgrProxy failed");
+        return false;
+    }
+    std::vector<AppExecFwk::AppStateData> fgAppList;
+    appMgrProxy_->GetForegroundApplications(fgAppList);
+    for (auto fgApp : fgAppList) {
+        if (fgApp.bundleName == pkgName && fgApp.uid == uid) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ReclaimPriorityManager::GetAllKillableSystemApps()
