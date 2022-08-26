@@ -18,27 +18,18 @@
 
 #include "common_event_subscriber.h"
 #include "common_event_subscribe_info.h"
-#include "mem_mgr_event_subscriber.h"
 
 namespace OHOS {
 namespace Memory {
-struct MemMgrCaredEventCallback {
-    std::function<void(const EventFwk::CommonEventData &data)> OnReceiveCaredEvent;
-};
-
-class MemMgrEventObserver {
+class CommonEventObserver : public EventFwk::CommonEventSubscriber  {
 public:
-    MemMgrEventObserver(const MemMgrCaredEventCallback &callback);
-    ~MemMgrEventObserver();
+    CommonEventObserver(const EventFwk::CommonEventSubscribeInfo &subscriberInfo);
+    ~CommonEventObserver();
     /**
      * @brief System common event recei ver.
      * @param eventData Common event data.
      */
-    void OnReceiveEvent(const EventFwk::CommonEventData &eventData);
-protected:
-private:
-    std::shared_ptr<MemMgrEventSubscriber> subscriber_;
-    MemMgrCaredEventCallback callback_;
+    virtual void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
 };
 } // namespace Memory
 } // namespace OHOS

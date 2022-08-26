@@ -17,6 +17,7 @@
 #define OHOS_MEMORY_MEMMGR_APP_STATE_OBSERVER_H
 
 #include "application_state_observer_stub.h"
+#include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -56,6 +57,19 @@ public:
      * @param processData Process data.
      */
     virtual void OnProcessDied(const AppExecFwk::ProcessData &processData) override;
+
+private:
+    const std::map<int, AppStateUpdateReason> stateReasonMap_ = {
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_READY), AppStateUpdateReason::PROCESS_READY },
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_FOREGROUND), AppStateUpdateReason::FOREGROUND },
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_BACKGROUND), AppStateUpdateReason::BACKGROUND },
+    };
+
+    const std::map<int, std::string> stateReasonStrMap_ = {
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_READY), "PROCESS_READY" },
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_FOREGROUND), "FOREGROUND" },
+        { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_BACKGROUND), "BACKGROUND" },
+    };
 };
 } // namespace Memory
 } // namespace OHOS
