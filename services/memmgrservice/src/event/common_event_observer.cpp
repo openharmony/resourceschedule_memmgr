@@ -13,31 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_EVENT_MEM_HOST_H
-#define OHOS_MEMORY_MEMMGR_EVENT_MEM_HOST_H
-
-#include "app_process_data.h"
-#include "app_mgr_client.h"
-#include "app_state_observer.h"
-
-#include <string>
-#include "single_instance.h"
+#include "common_event_observer.h"
 #include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
+
+#include "common_event.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
 
 namespace OHOS {
 namespace Memory {
-class AppStateCallbackMemHost {
-public:
-    AppStateCallbackMemHost();
-    ~AppStateCallbackMemHost();
-    bool ConnectAppMgrService();
-    bool Connected();
-    bool Register();
-private:
-    bool connected_ = false;
-    std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
-    sptr<AppStateObserver> appStateObserver_;
-};
+namespace {
+const std::string TAG = "CommonEventObserver";
+}
+
+CommonEventObserver::CommonEventObserver(const EventFwk::CommonEventSubscribeInfo &subscriberInfo)
+    : EventFwk::CommonEventSubscriber(subscriberInfo)
+{
+}
+
+CommonEventObserver::~CommonEventObserver()
+{
+}
+
+void CommonEventObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
+{
+    auto want = eventData.GetWant();
+    std::string action = want.GetAction();
+    HILOGI("action=<%{public}s>", action.c_str());
+}
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_EVENT_MEM_HOST_H

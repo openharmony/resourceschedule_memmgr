@@ -18,12 +18,17 @@
 
 #include "single_instance.h"
 #include "event_handler.h"
-#include "app_state_callback_mem_host.h"
 #include "extension_connection_observer.h"
-#include "mem_mgr_event_observer.h"
+#include "common_event_observer.h"
 #include "account_observer.h"
-#include "memory_pressure_monitor.h"
-#include "mem_mgr_bg_task_subscriber.h"
+#include "memory_pressure_observer.h"
+#include "bg_task_observer.h"
+#include "system_ability_definition.h"
+#include "app_mgr_interface.h"
+#include "iservice_registry.h"
+#include "app_process_data.h"
+#include "app_mgr_client.h"
+#include "app_state_observer.h"
 
 namespace OHOS {
 namespace Memory {
@@ -31,39 +36,30 @@ class MemMgrEventCenter {
     DECLARE_SINGLE_INSTANCE_BASE(MemMgrEventCenter);
 
 public:
-    bool Init();
     ~MemMgrEventCenter();
+    bool Init();
 
-protected:
-    /**
-     * @brief System common event receiver.
-     * @param eventData Common event data.
-     */
-    void OnReceiveCaredEvent(const EventFwk::CommonEventData &eventData);
-
-    void OnOsAccountsChanged(const int &id);
-
-    void OnMemPressLevelUploaded(const int &level);
 private:
     MemMgrEventCenter();
-    bool GetEventHandler();
-    bool RegisterEventListener();
-    void RegisterAppStateCallback();
+    bool CreateRegisterHandler();
+    void UnregisterEventObserver();
+    bool RegisterEventObserver();
     void RegisterBgTaskObserver();
-    void RegisterSystemEventObserver();
     void RegisterAccountObserver();
-    void RegisterMemPressMonitor();
     void RegisterExtConnObserver();
-
-    std::function<void()> registerEventListenerFunc_;
-    int retryTimes_ = 0;
-    std::shared_ptr<AppStateCallbackMemHost> appStateCallback_;
+    void RegisterAppStateObserver();
+    void RegisterCommonEventObserver();
+    void RegisterMemoryPressureObserver();
+    int regAccountObsRetry_ = 0;
+    int regAppStatusObsRetry_ = 0;
+    std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
+    std::shared_ptr<AppExecFwk::EventHandler> regObsHandler_;
     std::shared_ptr<ExtensionConnectionObserver> extConnObserver_;
-    std::shared_ptr<MemMgrBgTaskSubscriber> subscriber_;
-    std::unique_ptr<MemMgrEventObserver> sysEvtOberserver_;
-    std::unique_ptr<AccountObserver> accountOberserver_;
-    std::unique_ptr<MemoryPressureMonitor> psiMonitor_;
-    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<AccountObserver> accountObserver_;
+    std::shared_ptr<CommonEventObserver> commonEventObserver_;
+    BgTaskObserver bgTaskObserver_;
+    MemoryPressureObserver memoryPressureObserver_;
+    sptr<AppStateObserver> appStateObserver_;
 };
 } // namespace Memory
 } // namespace OHOS

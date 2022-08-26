@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 
-#include "mem_mgr_bg_task_subscriber.h"
+#include "bg_task_observer.h"
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
-const std::string TAG = "MemMgrBgTaskSubscriber";
+const std::string TAG = "BgTaskObserver";
 }
 
-void MemMgrBgTaskSubscriber::OnConnected()
+void BgTaskObserver::OnConnected()
 {
     HILOGI("called");
 }
 
-void MemMgrBgTaskSubscriber::OnDisconnected()
+void BgTaskObserver::OnDisconnected()
 {
     HILOGE("called");
 }
 
-void MemMgrBgTaskSubscriber::OnTransientTaskStart(
+void BgTaskObserver::OnTransientTaskStart(
     const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
 {
     if (ttInfo == nullptr) {
@@ -48,7 +48,7 @@ void MemMgrBgTaskSubscriber::OnTransientTaskStart(
         AppStateUpdateReason::SUSPEND_DELAY_START);
 }
 
-void MemMgrBgTaskSubscriber::OnTransientTaskEnd(
+void BgTaskObserver::OnTransientTaskEnd(
     const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
 {
     if (ttInfo == nullptr) {
@@ -63,7 +63,7 @@ void MemMgrBgTaskSubscriber::OnTransientTaskEnd(
         AppStateUpdateReason::SUSPEND_DELAY_END);
 }
 
-void MemMgrBgTaskSubscriber::OnContinuousTaskStart(
+void BgTaskObserver::OnContinuousTaskStart(
     const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
 {
     if (ctInfo == nullptr) {
@@ -80,7 +80,7 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStart(
         AppStateUpdateReason::BACKGROUND_RUNNING_START);
 }
 
-void MemMgrBgTaskSubscriber::OnContinuousTaskStop(
+void BgTaskObserver::OnContinuousTaskStop(
     const std::shared_ptr<BackgroundTaskMgr::ContinuousTaskCallbackInfo>& ctInfo)
 {
     if (ctInfo == nullptr) {
@@ -97,7 +97,7 @@ void MemMgrBgTaskSubscriber::OnContinuousTaskStop(
         AppStateUpdateReason::BACKGROUND_RUNNING_END);
 }
 
-void MemMgrBgTaskSubscriber::OnRemoteDied(const wptr<IRemoteObject> &object)
+void BgTaskObserver::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     HILOGE("called");
 }

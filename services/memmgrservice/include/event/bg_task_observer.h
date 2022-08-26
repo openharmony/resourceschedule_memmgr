@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Memory {
-class MemMgrBgTaskSubscriber : public BackgroundTaskMgr::BackgroundTaskSubscriber {
+class BgTaskObserver : public BackgroundTaskMgr::BackgroundTaskSubscriber {
 public:
     virtual void OnConnected() override;
     virtual void OnDisconnected() override;
