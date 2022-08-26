@@ -112,5 +112,12 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
         connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED);
     return 0;
 }
+
+int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
+{
+    HILOGI("called");
+    ReclaimPriorityManager::GetInstance().Dump(fd);
+    return 0;
+}
 } // namespace Memory
 } // namespace OHOS

@@ -37,7 +37,7 @@ constexpr int RECLAIM_PRIORITY_BG_BIND_EXTENSION = 240;
 // background and connected by distribute device
 constexpr int RECLAIM_PRIORITY_BG_DIST_DEVICE = 260;
 // extension and no process bind to it
-constexpr int RECLAIM_PRIORITY_NO_BIND_EXTENSION = 300;
+constexpr int RECLAIM_PRIORITY_NO_BIND_EXTENSION = 400;
 // background priority
 constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
 // frozen process priority
