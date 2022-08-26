@@ -103,6 +103,9 @@ public:
 
     void SetBundleState(int accountId, int uid, BundleState state);
 
+    // for hidumper, usage: hdc shell hidumper -s 1909
+    void Dump(int fd);
+
     std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
 private:
     bool initialized_ = false;
@@ -124,6 +127,10 @@ private:
 
     ReclaimPriorityManager();
     bool GetEventHandler();
+    void SetTimer();
+    void UpdateByPeroid();
+    void UpdateForegroundApps();
+    bool IsFrontApp(const std::string& pkgName, int32_t uid, int32_t pid);
     void GetAllKillableSystemApps();
     void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
     void HandlePreStartedProcs();
