@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "memory_pressure_monitor.h"
+#include "memory_pressure_observer.h"
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "low_memory_killer.h"
@@ -28,21 +28,19 @@
 namespace OHOS {
 namespace Memory {
 namespace {
-const std::string TAG = "MemoryPressureMonitor";
+const std::string TAG = "MemoryPressureObserver";
 const int MAX_CMD_LINE_LENGTH = 256;
 }
 
-MemoryPressureMonitor::MemoryPressureMonitor(const MemPressCallback &callback) : callback_(callback)
+MemoryPressureObserver::MemoryPressureObserver()
 {
     HILOGI("called");
     MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return,
         AppExecFwk::EventRunner::Create());
     HILOGE("handler init success!");
-    std::function<void()> initFunc = std::bind(&MemoryPressureMonitor::Init, this);
-    handler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
-void MemoryPressureMonitor::Init()
+void MemoryPressureObserver::Init()
 {
     HILOGI("called");
     epollfd_ = epoll_create(6); // 6 : max epoll events
@@ -56,14 +54,13 @@ void MemoryPressureMonitor::Init()
         HILOGE("register memory pressure low level failed!");
         return;
     }
-
     // call MainLoop at handler thread
-    std::function<void()> mainLoopFun = std::bind(&MemoryPressureMonitor::MainLoop, this);
+    std::function<void()> mainLoopFun = std::bind(&MemoryPressureObserver::MainLoop, this);
     handler_->PostImmediateTask(mainLoopFun);
     HILOGI("call MainLoop at handler thread");
 }
 
-bool MemoryPressureMonitor::MonitorLevel(MemPressureLevel level)
+bool MemoryPressureObserver::MonitorLevel(MemPressureLevel level)
 {
     int fd = CreateLevelFileFd(levelConfigArr[level].stallType,
                                levelConfigArr[level].thresholdInMs * US_PER_MS,
@@ -86,7 +83,7 @@ bool MemoryPressureMonitor::MonitorLevel(MemPressureLevel level)
     return true;
 }
 
-int MemoryPressureMonitor::CreateLevelFileFd(StallType stallType, int thresholdInUs, int windowInUs)
+int MemoryPressureObserver::CreateLevelFileFd(StallType stallType, int thresholdInUs, int windowInUs)
 {
     int fd = -1;
     int res = -1;
@@ -137,7 +134,7 @@ err:
     return -1;
 }
 
-int MemoryPressureMonitor::AddLevelFileFdToEpoll(int epollfd, int fd, void* data)
+int MemoryPressureObserver::AddLevelFileFdToEpoll(int epollfd, int fd, void* data)
 {
     int ret;
     struct epoll_event epollEvent;
@@ -151,7 +148,7 @@ int MemoryPressureMonitor::AddLevelFileFdToEpoll(int epollfd, int fd, void* data
     return ret;
 }
 
-void MemoryPressureMonitor::MainLoop(void)
+void MemoryPressureObserver::MainLoop(void)
 {
     HILOGE("enter");
     struct epoll_event *curEpollEvent;
@@ -185,7 +182,7 @@ void MemoryPressureMonitor::MainLoop(void)
     } // end of while
 }
 
-void MemoryPressureMonitor::HandleEpollEvent(struct epoll_event *curEpollEvent)
+void MemoryPressureObserver::HandleEpollEvent(struct epoll_event *curEpollEvent)
 {
     handlerInfo_ = (struct LevelHandler*)curEpollEvent->data.ptr;
     HILOGD("#2 call handler");
@@ -199,13 +196,13 @@ void HandleLevelReport(int level, uint32_t events)
     LowMemoryKiller::GetInstance().PsiHandler();
 }
 
-MemoryPressureMonitor::~MemoryPressureMonitor()
+MemoryPressureObserver::~MemoryPressureObserver()
 {
     HILOGI("called");
     UnMonitorLevel(MemPressureLevel::LEVEL_0);
 }
 
-void MemoryPressureMonitor::UnMonitorLevel(MemPressureLevel level)
+void MemoryPressureObserver::UnMonitorLevel(MemPressureLevel level)
 {
     int fd = levelConfigArr[level].levelFileFd;
 
@@ -218,12 +215,12 @@ void MemoryPressureMonitor::UnMonitorLevel(MemPressureLevel level)
     curLevelCount_--;
 }
 
-int MemoryPressureMonitor::delLevelFileFdFromEpoll(int epollfd, int fd)
+int MemoryPressureObserver::delLevelFileFdFromEpoll(int epollfd, int fd)
 {
     return epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
 }
 
-void MemoryPressureMonitor::CloseLevelFileFd(int fd)
+void MemoryPressureObserver::CloseLevelFileFd(int fd)
 {
     if (fd >= 0) {
         close(fd);
