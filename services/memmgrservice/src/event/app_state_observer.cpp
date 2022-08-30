@@ -17,23 +17,12 @@
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
 
+
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "AppStateObserver";
 }
-
-const std::map<int, AppStateUpdateReason> stateReasonMap_ = {
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_READY), AppStateUpdateReason::PROCESS_READY },
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_FOREGROUND), AppStateUpdateReason::FOREGROUND },
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_BACKGROUND), AppStateUpdateReason::BACKGROUND },
-};
-
-const std::map<int, std::string> stateReasonStrMap_ = {
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_READY), "PROCESS_READY" },
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_FOREGROUND), "FOREGROUND" },
-    { static_cast<int32_t>(AppExecFwk::AbilityState::ABILITY_STATE_BACKGROUND), "BACKGROUND" },
-};
 
 void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData)
 {

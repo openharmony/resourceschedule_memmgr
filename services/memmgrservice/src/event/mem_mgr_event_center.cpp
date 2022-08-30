@@ -17,59 +17,52 @@
 #include <string>
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
-#include "mem_mgr_event_observer.h"
+#include "common_event_observer.h"
 #include "reclaim_priority_manager.h"
 #include "background_task_mgr_helper.h"
 #include "connection_observer_client.h"
+#include "common_event_support.h"
+#include "common_event_manager.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemMgrEventCenter";
+const int ACCOUNT_MAX_RETRY_TIMES = 10;
+const int ACCOUNT_RETRY_DELAY = 3000;
 const int EXTCONN_RETRY_TIME = 1000;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrEventCenter);
 
 MemMgrEventCenter::MemMgrEventCenter()
-{
-    MAKE_POINTER(appStateCallback_, shared, AppStateCallbackMemHost, "make AppStateCallbackMemHost failed",
-        /* no return */, /* no param */);
-    MAKE_POINTER(subscriber_, shared, MemMgrBgTaskSubscriber, "make MemMgrBgTaskSubscriber failed", /* no return */,
-        /* no param */);
-    MAKE_POINTER(extConnObserver_, shared, ExtensionConnectionObserver, "make ExtensionConnectionObserver failed",
-        /* no return */, /* no param */);
-    registerEventListenerFunc_ = std::bind(&MemMgrEventCenter::RegisterAppStateCallback, this);
-}
-
-MemMgrEventCenter::~MemMgrEventCenter()
-{
-}
+{}
 
 bool MemMgrEventCenter::Init()
 {
     HILOGI("called");
-    if (GetEventHandler()) {
-        return RegisterEventListener();
+    if (CreateRegisterHandler()) {
+        return RegisterEventObserver();
     }
     return false;
 }
 
-bool MemMgrEventCenter::GetEventHandler()
+bool MemMgrEventCenter::CreateRegisterHandler()
 {
-    if (!handler_) {
-        MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
-            AppExecFwk::EventRunner::Create());
+    if (!regObsHandler_) {
+        MAKE_POINTER(regObsHandler_, shared, AppExecFwk::EventHandler, "failed to create register handler",
+        return false, AppExecFwk::EventRunner::Create());
     }
     return true;
 }
 
-bool MemMgrEventCenter::RegisterEventListener()
+bool MemMgrEventCenter::RegisterEventObserver()
 {
     HILOGI("called");
-    RegisterMemPressMonitor();
 
-    RegisterAppStateCallback();
+    RegisterMemoryPressureObserver();
+
+    RegisterAppStateObserver();
 
     RegisterExtConnObserver();
 
@@ -77,98 +70,135 @@ bool MemMgrEventCenter::RegisterEventListener()
 
     RegisterAccountObserver();
 
-    RegisterSystemEventObserver();
+    RegisterCommonEventObserver();
+
     return true;
 }
 
-void MemMgrEventCenter::RegisterAppStateCallback()
+void MemMgrEventCenter::RegisterAppStateObserver()
 {
     HILOGI("called");
-    while (!appStateCallback_->ConnectAppMgrService()) {
-        HILOGE("failed to ConnectAppMgrService, try again! retryTimes=%{public}d", ++retryTimes_);
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make appMgrClient failed",
+         return, /* no param */);
+    appStateObserver_ = new (std::nothrow) AppStateObserver();
+    while (appMgrClient_->ConnectAppMgrService() != AppExecFwk::AppMgrResultCode::RESULT_OK) {
+        HILOGE("ConnectAppMgrService fail, try again! retryTimes=%{public}d", ++regAppStatusObsRetry_);
     }
-    if (appStateCallback_->Connected()) {
-        HILOGE("success to ConnectAppMgrService, retryTimes=%{public}d", retryTimes_);
-        if (!appStateCallback_->Register()) {
-            HILOGE("failed to RegisterAppStateCallback");
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<AppExecFwk::IAppMgr> appObject =
+        iface_cast<AppExecFwk::IAppMgr>(systemAbilityManager->GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appObject) {
+        int ret = appObject->RegisterApplicationStateObserver(appStateObserver_);
+        if (ret == ERR_OK) {
+            HILOGI("register success");
             return;
         }
-        HILOGI("success to RegisterAppStateCallback");
+        HILOGE("register fail, ret = %{public}d", ret);
+        return;
     }
+    HILOGE("get SystemAbilityManager fail");
 }
 
 void MemMgrEventCenter::RegisterExtConnObserver()
 {
     HILOGI("called");
+    MAKE_POINTER(extConnObserver_, shared, ExtensionConnectionObserver, "make ExtensionConnectionObserver failed",
+        /* no return */, /* no param */);
     if (extConnObserver_ != nullptr) {
         int32_t ret = AbilityRuntime::ConnectionObserverClient::GetInstance().RegisterObserver(extConnObserver_);
-        HILOGI("ret = %{public}d", ret);
-        if (ret == 0) {
-            HILOGI("success to RegisterExtConnObserver");
+        if (ret == ERR_OK) {
+            HILOGI("register success");
             return;
         }
+        HILOGE("register fail, ret = %{public}d", ret);
     }
-    HILOGE("failed to RegisterExtConnObserver, try again!");
     std::function<void()> RegisterExtConnObserverFunc = std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
-    handler_->PostTask(RegisterExtConnObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    regObsHandler_->PostTask(RegisterExtConnObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void MemMgrEventCenter::RegisterBgTaskObserver()
 {
     HILOGI("called");
-    ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*subscriber_);
-    HILOGI("ret = %{public}d", ret);
+    ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(bgTaskObserver_);
+    if (ret == ERR_OK) {
+        HILOGI("register success");
+        return;
+    }
+    HILOGE("register fail, ret = %{public}d", ret);
 }
 
-void MemMgrEventCenter::RegisterSystemEventObserver()
+void MemMgrEventCenter::RegisterCommonEventObserver()
 {
-    MemMgrCaredEventCallback callback = {
-        std::bind(&MemMgrEventCenter::OnReceiveCaredEvent, this, std::placeholders::_1),
-    };
-    MAKE_POINTER(sysEvtOberserver_, unique, MemMgrEventObserver, "make unique failed", return, callback);
-    HILOGI("success to register cared event callback");
+    HILOGI("called");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
+    EventFwk::CommonEventSubscribeInfo commonEventSubscribeInfo(matchingSkills);
+    MAKE_POINTER(commonEventObserver_, shared, CommonEventObserver, "make unique failed",
+        return, commonEventSubscribeInfo);
+    if (EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventObserver_)) {
+        HILOGI("register success");
+        return;
+    }
+    HILOGI("register fail");
 }
 
 void MemMgrEventCenter::RegisterAccountObserver()
 {
-    AccountCallback callback = {
-        std::bind(&MemMgrEventCenter::OnOsAccountsChanged, this, std::placeholders::_1),
-    };
-    MAKE_POINTER(accountOberserver_, unique, AccountObserver, "make unique failed", return, callback);
-    HILOGI("success to register account callback");
+    HILOGI("called");
+    regAccountObsRetry_++;
+    AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
+    osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
+    osAccountSubscribeInfo.SetName("MemMgrAccountActivedSubscriber");
+    MAKE_POINTER(accountObserver_, shared, AccountObserver, "make unique failed", return, osAccountSubscribeInfo);
+    ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(accountObserver_);
+    if (errCode == ERR_OK) {
+        HILOGI("register success");
+        return;
+    }
+
+    if (regAccountObsRetry_ < ACCOUNT_MAX_RETRY_TIMES) {
+        std::function<void()> RegisterAccountObserverFunc =
+            std::bind(&MemMgrEventCenter::RegisterAccountObserver, this);
+        HILOGE("register fail, retCode = %{public}d, try again after 3s!, retryTimes=%{public}d/10",
+            errCode, regAccountObsRetry_);
+        regObsHandler_->PostTask(RegisterAccountObserverFunc, ACCOUNT_RETRY_DELAY,
+            AppExecFwk::EventQueue::Priority::LOW); // 3000 means 3s
+    }
 }
 
-void MemMgrEventCenter::RegisterMemPressMonitor()
+void MemMgrEventCenter::RegisterMemoryPressureObserver()
 {
     HILOGI("called");
-    MemPressCallback callback = {
-        std::bind(&MemMgrEventCenter::OnMemPressLevelUploaded, this, std::placeholders::_1),
-    };
-    MAKE_POINTER(psiMonitor_, unique, MemoryPressureMonitor, "make unique failed", return, callback);
-    HILOGI("success to register memory pressure callback");
+    std::function<void()> initFunc = std::bind(&MemoryPressureObserver::Init, &memoryPressureObserver_);
+    regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
-// callback list below
-
-void MemMgrEventCenter::OnReceiveCaredEvent(const EventFwk::CommonEventData &eventData)
+MemMgrEventCenter::~MemMgrEventCenter()
 {
-    auto want = eventData.GetWant();
-    std::string action = want.GetAction();
-    HILOGI("action=<%{public}s>", action.c_str());
+    UnregisterEventObserver();
 }
 
-void MemMgrEventCenter::OnOsAccountsChanged(const int &id)
+void MemMgrEventCenter::UnregisterEventObserver()
 {
-    HILOGI("account changed=<%{public}d>", id);
-    // notify reclaim priority manager
-    AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod = AccountSA::OsAccountManager::GetOsAccountSwitchMod();
-    ReclaimPriorityManager::GetInstance().OsAccountChanged(id, switchMod);
-}
-
-void MemMgrEventCenter::OnMemPressLevelUploaded(const int &level)
-{
-    HILOGI("memory pressure level=<%{public}d>", level);
-    // notify kill strategy manager
+    BackgroundTaskMgr::BackgroundTaskMgrHelper::UnsubscribeBackgroundTask(bgTaskObserver_);
+    if (accountObserver_) {
+        AccountSA::OsAccountManager::UnsubscribeOsAccount(accountObserver_);
+    }
+    if (commonEventObserver_) {
+        EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventObserver_);
+    }
+    if (appStateObserver_) {
+        delete appStateObserver_;
+        appStateObserver_ = nullptr;
+    }
+    appMgrClient_ = nullptr;
+    regObsHandler_ = nullptr;
+    extConnObserver_ = nullptr;
+    accountObserver_ = nullptr;
 }
 } // namespace Memory
 } // namespace OHOS

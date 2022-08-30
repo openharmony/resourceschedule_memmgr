@@ -36,10 +36,6 @@ struct epoll_event;
 
 namespace OHOS {
 namespace Memory {
-struct MemPressCallback {
-    std::function<void(const int &level)> OnMemPressLevelUploaded;
-};
-
 enum MemPressureLevel {
     LEVEL_0 = 0,
     MEM_PRESS_LEVEL_COUNT
@@ -71,21 +67,18 @@ static struct MemPressLevelCfg levelConfigArr[MEM_PRESS_LEVEL_COUNT] = {
 
 void HandleLevelReport(int level, uint32_t events);
 
-class MemoryPressureMonitor {
+class MemoryPressureObserver {
 public:
-    MemoryPressureMonitor(const MemPressCallback &callback);
-    ~MemoryPressureMonitor();
+    MemoryPressureObserver();
+    ~MemoryPressureObserver();
+    void Init();
 private:
-    // callback is used to call event center (and is unused now)
-    MemPressCallback callback_;
     // run MainLoop on handler thread
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     int epollfd_ = -1;
     // current monitor level count
     int curLevelCount_ = 0;
     struct LevelHandler *handlerInfo_ = nullptr;
-
-    void Init();
 
     bool MonitorLevel(MemPressureLevel level);
     int CreateLevelFileFd(StallType stallType, int thresholdInUs, int windowInUs);

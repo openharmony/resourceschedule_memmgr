@@ -16,29 +16,17 @@
 #ifndef OHOS_MEMORY_MEMMGR_ACCOUNT_OBSERVER_H
 #define OHOS_MEMORY_MEMMGR_ACCOUNT_OBSERVER_H
 
-#include "account_subscriber.h"
 #include "event_handler.h"
+#include "os_account_subscriber.h"
+#include "os_account_subscribe_info.h"
 
 namespace OHOS {
 namespace Memory {
-struct AccountCallback {
-    std::function<void(const int &data)> OnOsAccountsChanged;
-};
-
-class AccountObserver {
+class AccountObserver : public AccountSA::OsAccountSubscriber  {
 public:
-    AccountObserver(const AccountCallback &callback);
+    AccountObserver(const AccountSA::OsAccountSubscribeInfo &subscriberInfo);
     ~AccountObserver();
-    void OnAccountsChanged(const int &id);
-protected:
-private:
-    bool GetEventHandler();
-    void Register();
-
-    int retryTimes_ = 0;
-    std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<AccountSubscriber> subscriber_;
-    AccountCallback callback_;
+    virtual void OnAccountsChanged(const int &id) override;
 };
 } // namespace Memory
 } // namespace OHOS
