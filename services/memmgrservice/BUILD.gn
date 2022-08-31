@@ -88,6 +88,8 @@ ohos_shared_library("memmgrservice") {
 
   configs = [ ":memory_memmgr_config" ]
 
+  deps = [ "//third_party/libxml2:libxml2" ]
+
   include_dirs = [
     "//foundation/ability/ability_runtime/interfaces/inner_api/wantagent/include",
     "//foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime",
