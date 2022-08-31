@@ -88,11 +88,17 @@ ohos_shared_library("memmgrservice") {
 
   configs = [ ":memory_memmgr_config" ]
 
+  include_dirs = [
+    "//foundation/ability/ability_runtime/interfaces/inner_api/wantagent/include",
+    "//foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime",
+    "//base/global/resource_management/interfaces/inner_api/include",
+    "//foundation/ability/ability_runtime/services/abilitymgr/include",
+  ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_manager",
     "ability_runtime:connection_obs_manager",
-    "ability_runtime:wantagent_innerkits",
     "background_task_mgr:bgtaskmgr_innerkits",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
@@ -100,12 +106,10 @@ ohos_shared_library("memmgrservice") {
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hisysevent_native:libhisysevent",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "memmgr:memmgrclient",
-    "os_account:libaccountkits",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
