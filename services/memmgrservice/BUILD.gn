@@ -50,6 +50,7 @@ config("memory_memmgr_config") {
 
 ohos_shared_library("memmgrservice") {
   install_enable = true
+  use_exceptions = true
   sources = [
     "${memmgr_common_path}/src/config/avail_buffer_config.cpp",
     "${memmgr_common_path}/src/config/kill_config.cpp",
