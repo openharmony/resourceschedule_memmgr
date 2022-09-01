@@ -36,7 +36,8 @@
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
             "//foundation/resourceschedule/memmgr/profile:memmgr_config",
-            "//foundation/resourceschedule/memmgr/profile:memmgr.para"
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para",
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para.dac"
         ],
         "inner_kits": [
           {
