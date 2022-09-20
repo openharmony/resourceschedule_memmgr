@@ -107,6 +107,7 @@ public:
     void Dump(int fd);
 
     std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
+    void Reset();
 private:
     bool initialized_ = false;
 
