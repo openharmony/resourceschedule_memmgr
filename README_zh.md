@@ -1,12 +1,18 @@
 # 内存管理部件
 
--   [简介](#section_introduction)
--   [目录](#section_catalogue)
--   [框架](#section_framework)
-    -   [进程回收优先级列表](#section_prio)
-    -   [回收策略/查杀策略](#section_reclaim)
--   [使用说明](#section_usage)
--   [相关仓](#section_projects)
+- [内存管理部件](#内存管理部件)
+	- [简介<a name="section_introduction"></a>](#简介)
+	- [目录<a name="section_catalogue"></a>](#目录)
+	- [框架<a name="section_framework"></a>](#框架)
+		- [进程回收优先级列表<a name="section_prio"></a>](#进程回收优先级列表)
+		- [回收策略/查杀策略<a name="section_reclaim"></a>](#回收策略查杀策略)
+	- [使用说明<a name="section_usage"></a>](#使用说明)
+	- [参数配置说明<a name="section_usage"></a>](#参数配置说明)
+		- [availbufferSize](#availbuffersize)
+		- [ZswapdParam](#zswapdparam)
+		- [killConfig](#killconfig)
+		- [nandlife](#nandlife)
+	- [相关仓<a name="section_projects"></a>](#相关仓)
 
 ## 简介<a name="section_introduction"></a>
 
@@ -112,7 +118,10 @@
 ## 参数配置说明<a name="section_usage"></a>
 
 产品可通过memmgr_config.xml来配置本模块相关参数，路径为/etc/memmgr/memmgr_config.xml
+
 xml样例:
+
+```
 <?xml version="1.0" encoding="UTF-8"?>
 <Memmgr>
 	<reclaimConfig>
@@ -128,7 +137,7 @@ xml样例:
 			<mem2zramRatio>60</mem2zramRatio>
 			<zran2ufsRation>10</zran2ufsRation>
 			<refaultThreshold>50</refaultThreshold>
-	</ZswapdParam>
+		</ZswapdParam>
 		<ZswapdParam id="2">
 			<minScore>501</minScore>
 			<maxScore>1000</maxScore>
@@ -138,55 +147,70 @@ xml样例:
 		</ZswapdParam>
 	</reclaimConfig>
 	<killConfig>
+		<killLevel id="1">
+			<memoryMB>500</memoryMB>
+			<minPriority>400</minPriority>
+		</killLevel>
+		<killLevel id="2">
+			<memoryMB>400</memoryMB>
+			<minPriority>300</minPriority>
+		</killLevel>
 	</killConfig>
 	<nandlife>
 		<dailySwapOutQuotaMB>50</dailySwapOutQuotaMB>
 		<totalSwapOutQuotaMB>199</totalSwapOutQuotaMB>
 	</nandlife>
 </Memmgr>
+```
 
-功能参考:
-	详见Enhanced SWAP特性介绍
-	https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/kernel/kernel-standard-mm-eswap.md
+功能参考: [详见Enhanced SWAP特性介绍](https://gitee.com/openharmony/docs/blob/master/zh-cn/device-dev/kernel/kernel-standard-mm-eswap.md)
 
-节点介绍:
-Memmgr			Memmgr相关配置
-	reclaimConfig		内存回收相关配置
-		availbufferSize 	系统水线相关配置
-			节点功能:avail_buffers接口用于设置buffer区间[min_avail_buffers, high_avail_buffers]，当检测到当前的buffer低于min_avail_buffers时则会唤醒zswapd进行匿名页回收，期望的回收量为high_avail_buffers与当前系统buffer值的差值，实际可能会因为无法回收等原因而未回收那么多内存。avail_buffers为期望的内存正常状态buffer值，free_swap_threshold则是设置交换分区空闲容量的阈值
-			默认值(未开启zram时):
-				avail_buffers: 0
-				min_avail_buffers: 0
-				high_avail_buffers: 0
-				free_swap_threshold: 0
-			默认值:
-				avail_buffers: 800
-				min_avail_buffers: 750
-				high_avail_buffers: 850
-				free_swap_threshold: 200
+### availbufferSize
 
-			限制:
-				0<=min_avail_buffers<=avail_buffers<=high_avail_buffers<=memTotal
-				0<=free_swap_threashold<=memTotal
-		ZswapdParam:		memcg相关配置
-			节点功能:设置memcg的相关配置。memcg的appScore发生变化时，根据新的appScore找到minScore和maxScore对应区间的ratio值，ub_mem2zram_ratio为内存压缩到ZRAM的比率，ub_zram2ufs_ratio为ZRAM换出到ESwap的比率，refault_threshold为refault的阈值，可通过调整比率来控制ZRAM压缩以及ESwap换出情况。
-			默认值:
-				minScore: 0
-				maxScore: 1000
-				mem2zramRatio: 60
-				zran2ufsRation: 10
-				refaultThreshold: 50
-			限制:
-				0<=minScore<=1000
-				0<=maxScore<=1000
-				0<=ub_mem2zram_ratio<=100
-				0<=ub_zram2ufs_ratio<=100
-				0<=refault_threshold<=100
-	killConfig:		内存查杀相关配置
-	nandlife:		寿命管控相关配置
-		dailySwapOutQuotaMB：每日换出量限制（单位MB），应为正数
-		totalSwapOutQuotaMB：总换出量限制（单位MB），应为正数
-		两者同时设为0，代表放开换出量限制。厂商可根据器件容量等规格参数，设置合适的值。
+| 节点名                                                                                   | 功能说明     | 默认值 |
+|------------------------------------------------------------------------------------------|-------------|-------------|
+| availBuffer | 期望的内存正常状态buffer值 |800|
+| minAvailBuffer | 检测到当前的buffer低于min_avail_buffers时则会唤醒zswapd进行匿名页回收 |750|
+| highAvailBuffer | 期望的回收量为high_avail_buffers与当前系统buffer值的差值 |850|
+| swapReserve | 交换分区空闲容量的阈值 |200|
+
+
+限制:
+* 0 <= minAvailBuffer <= availBuffer <= highAvailBuffer <= memTotal
+* 0 <=swapReserve <=memTotal
+
+### ZswapdParam
+
+| 节点名                                                                                   | 功能说明     | 默认值 |
+|------------------------------------------------------------------------------------------|-------------|-------------|
+| minScore | 期望的内存正常状态buffer值 |0|
+| maxScore | 检测到当前的buffer低于min_avail_buffers时则会唤醒zswapd进行匿名页回收 |1000|
+| mem2zramRatio | 内存压缩到ZRAM的比率 |60|
+| zran2ufsRation | ZRAM换出到ESwap的比率 |10|
+| refaultThreshold | refault的阈值 |50|
+
+限制:
+* 0<=minScore<=1000
+* 0<=maxScore<=1000
+* 0<=ub_mem2zram_ratio<=100
+* 0<=ub_zram2ufs_ratio<=100
+* 0<=refault_threshold<=100
+
+### killConfig
+内存查杀相关配置
+
+| 节点名                                                                                   | 功能说明     | 默认值 |
+|------------------------------------------------------------------------------------------|-------------|-------------|
+| killLevel | 查杀级别 |无|
+| memoryMB | 查杀目标内存阈值 |无|
+| minPriority | 可被查杀的adj最小值 |无|
+
+### nandlife
+寿命管控相关配置
+| 节点名                                                                                   | 功能说明     | 默认值 |
+|------------------------------------------------------------------------------------------|-------------|-------------|
+| dailySwapOutQuotaMB | 每日换出量限制（单位MB），应为正数 |0|
+| totalSwapOutQuotaMB | 总换出量限制（单位MB），应为正数 |0|
 
 ## 相关仓<a name="section_projects"></a>
 
