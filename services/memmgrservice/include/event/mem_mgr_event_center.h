@@ -62,7 +62,6 @@ private:
     std::shared_ptr<BgTaskObserver> bgTaskObserver_;
     std::shared_ptr<MemoryPressureObserver> memoryPressureObserver_;
     sptr<AppStateObserver> appStateObserver_;
-    std::mutex totalEventCenterLock_;
 };
 } // namespace Memory
 } // namespace OHOS

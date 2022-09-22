@@ -244,7 +244,6 @@ void MemMgrEventCenter::UnregisterEventObserver()
 
 void MemMgrEventCenter::Dump(int fd)
 {
-    std::lock_guard<std::mutex> setLock(totalEventCenterLock_);
     dprintf(fd, "state list of all observer\n");
     dprintf(fd, "                 name               state \n");
     dprintf(fd, "%30s %8s\n", "MemoryPressureObserver", memoryPressureObserver_ == nullptr ? "N" : "Y");
