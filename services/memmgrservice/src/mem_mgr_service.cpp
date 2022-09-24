@@ -81,6 +81,14 @@ void MemMgrService::OnStart()
         return;
     }
     HILOGI("publish SA successed");
+
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ABILITY_ID);
+    AddSystemAbilityListener(BACKGROUND_TASK_MANAGER_SERVICE_ID);
+    AddSystemAbilityListener(SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN);
+    AddSystemAbilityListener(SUBSYS_APPLICATIONS_SYS_ABILITY_ID_BEGIN);
+    AddSystemAbilityListener(APP_MGR_SERVICE_ID);
+    AddSystemAbilityListener(ABILITY_MGR_SERVICE_ID);
 }
 
 void MemMgrService::OnStop()
@@ -113,9 +121,22 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
     return 0;
 }
 
+void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
+    MemMgrEventCenter::GetInstance().RetryRegisterEventObserver();
+}
+
+void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    HILOGI("systemAbilityId: %{public}d remove", systemAbilityId);
+    MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
+}
+
 int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
 {
     HILOGI("called");
+    MemMgrEventCenter::GetInstance().Dump(fd);
     ReclaimPriorityManager::GetInstance().Dump(fd);
     return 0;
 }

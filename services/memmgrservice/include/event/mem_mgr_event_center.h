@@ -38,7 +38,9 @@ class MemMgrEventCenter {
 public:
     ~MemMgrEventCenter();
     bool Init();
-
+    void RetryRegisterEventObserver();
+    void Dump(int fd);
+    void RemoveEventObserver(int32_t systemAbilityId);
 private:
     MemMgrEventCenter();
     bool CreateRegisterHandler();
@@ -57,8 +59,8 @@ private:
     std::shared_ptr<ExtensionConnectionObserver> extConnObserver_;
     std::shared_ptr<AccountObserver> accountObserver_;
     std::shared_ptr<CommonEventObserver> commonEventObserver_;
-    BgTaskObserver bgTaskObserver_;
-    MemoryPressureObserver memoryPressureObserver_;
+    std::shared_ptr<BgTaskObserver> bgTaskObserver_;
+    std::shared_ptr<MemoryPressureObserver> memoryPressureObserver_;
     sptr<AppStateObserver> appStateObserver_;
 };
 } // namespace Memory

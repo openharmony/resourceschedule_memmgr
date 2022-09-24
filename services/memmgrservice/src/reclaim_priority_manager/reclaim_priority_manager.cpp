@@ -812,5 +812,12 @@ bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId,
     bool ret = MultiAccountManager::GetInstance().HandleOsAccountsChanged(accountId, switchMod, osAccountsInfoMap_);
     return ret;
 }
+
+void ReclaimPriorityManager::Reset()
+{
+    totalBundlePrioSet_.clear();
+    osAccountsInfoMap_.clear();
+}
+
 } // namespace Memory
 } // namespace OHOS
