@@ -56,21 +56,55 @@ bool MemMgrEventCenter::CreateRegisterHandler()
     return true;
 }
 
-bool MemMgrEventCenter::RegisterEventObserver()
+void MemMgrEventCenter::RemoveEventObserver(int32_t systemAbilityId)
 {
     HILOGI("called");
 
-    RegisterMemoryPressureObserver();
+    if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == APP_MGR_SERVICE_ID) {
+        appStateObserver_ = nullptr;
+        extConnObserver_ = nullptr;
+        ReclaimPriorityManager::GetInstance().Reset();
+    }
 
-    RegisterAppStateObserver();
+    if (systemAbilityId == BACKGROUND_TASK_MANAGER_SERVICE_ID) {
+        bgTaskObserver_ = nullptr;
+    }
 
-    RegisterExtConnObserver();
+    if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
+        accountObserver_ = nullptr;
+    }
 
-    RegisterBgTaskObserver();
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID || systemAbilityId == COMMON_EVENT_SERVICE_ABILITY_ID) {
+        commonEventObserver_ = nullptr;
+    }    
+}
 
-    RegisterAccountObserver();
+bool MemMgrEventCenter::RegisterEventObserver()
+{
+    HILOGI("called");
+    if (!memoryPressureObserver_) {
+        RegisterMemoryPressureObserver();
+    }
 
-    RegisterCommonEventObserver();
+    if (!appStateObserver_) {
+        RegisterAppStateObserver();
+    }
+
+    if (!extConnObserver_) {
+        RegisterExtConnObserver();
+    }
+
+    if (!bgTaskObserver_) {
+        RegisterBgTaskObserver();
+    }
+
+    if (!accountObserver_) {
+        RegisterAccountObserver();
+    }
+
+    if (!commonEventObserver_) {
+        RegisterCommonEventObserver();
+    }
 
     return true;
 }
@@ -119,7 +153,9 @@ void MemMgrEventCenter::RegisterExtConnObserver()
 void MemMgrEventCenter::RegisterBgTaskObserver()
 {
     HILOGI("called");
-    ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(bgTaskObserver_);
+    MAKE_POINTER(bgTaskObserver_, shared, BgTaskObserver, "make BgTaskObserver failed",
+        /* no return */, /* no param */);
+    ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*bgTaskObserver_);
     if (ret == ERR_OK) {
         HILOGI("register success");
         return;
@@ -173,7 +209,9 @@ void MemMgrEventCenter::RegisterAccountObserver()
 void MemMgrEventCenter::RegisterMemoryPressureObserver()
 {
     HILOGI("called");
-    std::function<void()> initFunc = std::bind(&MemoryPressureObserver::Init, &memoryPressureObserver_);
+    MAKE_POINTER(memoryPressureObserver_, shared, MemoryPressureObserver, "make MemoryPressureObserver failed",
+        /* no return */, /* no param */);
+    std::function<void()> initFunc = std::bind(&MemoryPressureObserver::Init, memoryPressureObserver_);
     regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
@@ -184,7 +222,9 @@ MemMgrEventCenter::~MemMgrEventCenter()
 
 void MemMgrEventCenter::UnregisterEventObserver()
 {
-    BackgroundTaskMgr::BackgroundTaskMgrHelper::UnsubscribeBackgroundTask(bgTaskObserver_);
+    if (bgTaskObserver_) {
+        BackgroundTaskMgr::BackgroundTaskMgrHelper::UnsubscribeBackgroundTask(*bgTaskObserver_);
+    }
     if (accountObserver_) {
         AccountSA::OsAccountManager::UnsubscribeOsAccount(accountObserver_);
     }
@@ -197,8 +237,33 @@ void MemMgrEventCenter::UnregisterEventObserver()
     }
     appMgrClient_ = nullptr;
     regObsHandler_ = nullptr;
+    bgTaskObserver_ = nullptr;
     extConnObserver_ = nullptr;
     accountObserver_ = nullptr;
 }
+
+void MemMgrEventCenter::Dump(int fd)
+{
+    dprintf(fd, "state list of all observer\n");
+    dprintf(fd, "                 name               state \n");
+    dprintf(fd, "%30s %8s\n", "MemoryPressureObserver", memoryPressureObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "AppStateObserver", appStateObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "ExtConnObserver", extConnObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "BgTaskObserver", bgTaskObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "AccountObserver", accountObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "CommonEventObserver", commonEventObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+}
+
+void MemMgrEventCenter::RetryRegisterEventObserver()
+{
+    RegisterEventObserver();
+}
+
 } // namespace Memory
 } // namespace OHOS
