@@ -160,7 +160,7 @@ void LowMemoryKiller::PsiHandlerInner()
     HILOGD("[%{public}ld] called", ++calledCount);
     int triBuf, availBuf, freedBuf;
     unsigned int minBuf = 0, targetBuf = 0, targetKillKb = 0, currKillKb = 0;
-    int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
+    int minPrio;
     int killCnt = 0;
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
