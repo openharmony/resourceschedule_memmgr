@@ -19,7 +19,9 @@
 #include "memmgr_ptr_util.h"
 #include "common_event_observer.h"
 #include "reclaim_priority_manager.h"
+#ifdef CONFIG_BGTASK_MGR
 #include "background_task_mgr_helper.h"
+#endif
 #include "connection_observer_client.h"
 #include "common_event_support.h"
 #include "common_event_manager.h"
@@ -65,11 +67,11 @@ void MemMgrEventCenter::RemoveEventObserver(int32_t systemAbilityId)
         extConnObserver_ = nullptr;
         ReclaimPriorityManager::GetInstance().Reset();
     }
-
+#ifdef CONFIG_BGTASK_MGR
     if (systemAbilityId == BACKGROUND_TASK_MANAGER_SERVICE_ID) {
         bgTaskObserver_ = nullptr;
     }
-
+#endif
     if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
         accountObserver_ = nullptr;
     }
@@ -93,11 +95,11 @@ bool MemMgrEventCenter::RegisterEventObserver()
     if (!extConnObserver_) {
         RegisterExtConnObserver();
     }
-
+#ifdef CONFIG_BGTASK_MGR
     if (!bgTaskObserver_) {
         RegisterBgTaskObserver();
     }
-
+#endif
     if (!accountObserver_) {
         RegisterAccountObserver();
     }
@@ -153,6 +155,7 @@ void MemMgrEventCenter::RegisterExtConnObserver()
 void MemMgrEventCenter::RegisterBgTaskObserver()
 {
     HILOGI("called");
+#ifdef CONFIG_BGTASK_MGR
     MAKE_POINTER(bgTaskObserver_, shared, BgTaskObserver, "make BgTaskObserver failed",
         /* no return */, /* no param */);
     ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*bgTaskObserver_);
@@ -161,6 +164,9 @@ void MemMgrEventCenter::RegisterBgTaskObserver()
         return;
     }
     HILOGE("register fail, ret = %{public}d", ret);
+#else
+    HILOGI("BackgroundTaskMgr is not enable.");
+#endif
 }
 
 void MemMgrEventCenter::RegisterCommonEventObserver()
@@ -222,9 +228,12 @@ MemMgrEventCenter::~MemMgrEventCenter()
 
 void MemMgrEventCenter::UnregisterEventObserver()
 {
+#ifdef CONFIG_BGTASK_MGR
     if (bgTaskObserver_) {
         BackgroundTaskMgr::BackgroundTaskMgrHelper::UnsubscribeBackgroundTask(*bgTaskObserver_);
     }
+    bgTaskObserver_ = nullptr;
+#endif
     if (accountObserver_) {
         AccountSA::OsAccountManager::UnsubscribeOsAccount(accountObserver_);
     }
@@ -237,7 +246,6 @@ void MemMgrEventCenter::UnregisterEventObserver()
     }
     appMgrClient_ = nullptr;
     regObsHandler_ = nullptr;
-    bgTaskObserver_ = nullptr;
     extConnObserver_ = nullptr;
     accountObserver_ = nullptr;
 }
@@ -252,8 +260,10 @@ void MemMgrEventCenter::Dump(int fd)
     dprintf(fd, "-----------------------------------------------------------------\n");
     dprintf(fd, "%30s %8s\n", "ExtConnObserver", extConnObserver_ == nullptr ? "N" : "Y");
     dprintf(fd, "-----------------------------------------------------------------\n");
+#ifdef CONFIG_BGTASK_MGR
     dprintf(fd, "%30s %8s\n", "BgTaskObserver", bgTaskObserver_ == nullptr ? "N" : "Y");
     dprintf(fd, "-----------------------------------------------------------------\n");
+#endif
     dprintf(fd, "%30s %8s\n", "AccountObserver", accountObserver_ == nullptr ? "N" : "Y");
     dprintf(fd, "-----------------------------------------------------------------\n");
     dprintf(fd, "%30s %8s\n", "CommonEventObserver", commonEventObserver_ == nullptr ? "N" : "Y");
