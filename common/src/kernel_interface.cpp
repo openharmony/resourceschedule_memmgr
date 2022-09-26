@@ -283,6 +283,7 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
     }
     if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
         HILOGE("copy fail");
+        delete [] contentPtr;
         return;
     }
     char *restPtr;
