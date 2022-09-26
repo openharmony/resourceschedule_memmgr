@@ -33,7 +33,6 @@ void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppState
 
 void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData)
 {
-    std::string appName = abilityStateData.bundleName;
     auto stateReasonPair = stateReasonMap_.find(abilityStateData.abilityState);
     auto stateReasonStrPair = stateReasonStrMap_.find(abilityStateData.abilityState);
     if (stateReasonPair != stateReasonMap_.end() && stateReasonStrPair != stateReasonStrMap_.end()) {
