@@ -46,6 +46,9 @@ config("memory_memmgr_config") {
   ]
 
   defines = []
+  if (memmgr_report_has_bg_task_mgr) {
+    defines += [ "CONFIG_BGTASK_MGR" ]
+  }
 }
 
 ohos_shared_library("memmgrservice") {
@@ -63,7 +66,6 @@ ohos_shared_library("memmgrservice") {
     "${memmgr_common_path}/src/xml_helper.cpp",
     "src/event/account_observer.cpp",
     "src/event/app_state_observer.cpp",
-    "src/event/bg_task_observer.cpp",
     "src/event/common_event_observer.cpp",
     "src/event/extension_connection_observer.cpp",
     "src/event/mem_mgr_event_center.cpp",
@@ -102,7 +104,6 @@ ohos_shared_library("memmgrservice") {
     "ability_base:want",
     "ability_runtime:app_manager",
     "ability_runtime:connection_obs_manager",
-    "background_task_mgr:bgtaskmgr_innerkits",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
@@ -117,6 +118,11 @@ ohos_shared_library("memmgrservice") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (memmgr_report_has_bg_task_mgr) {
+    sources += [ "src/event/bg_task_observer.cpp" ]
+    external_deps += [ "background_task_mgr:bgtaskmgr_innerkits" ]
+  }
 
   part_name = "${memmgr_part_name}"
   subsystem_name = "${memmgr_subsystem_name}"

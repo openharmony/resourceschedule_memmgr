@@ -22,7 +22,9 @@
 #include "common_event_observer.h"
 #include "account_observer.h"
 #include "memory_pressure_observer.h"
+#ifdef CONFIG_BGTASK_MGR
 #include "bg_task_observer.h"
+#endif
 #include "system_ability_definition.h"
 #include "app_mgr_interface.h"
 #include "iservice_registry.h"
@@ -59,7 +61,9 @@ private:
     std::shared_ptr<ExtensionConnectionObserver> extConnObserver_;
     std::shared_ptr<AccountObserver> accountObserver_;
     std::shared_ptr<CommonEventObserver> commonEventObserver_;
+#ifdef CONFIG_BGTASK_MGR
     std::shared_ptr<BgTaskObserver> bgTaskObserver_;
+#endif
     std::shared_ptr<MemoryPressureObserver> memoryPressureObserver_;
     sptr<AppStateObserver> appStateObserver_;
 };
