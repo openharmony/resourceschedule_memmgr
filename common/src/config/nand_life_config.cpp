@@ -69,5 +69,12 @@ void NandLifeConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
         }
     }
 }
+
+void NandLifeConfig::Dump(int fd)
+{
+    dprintf(fd, "NandLifeConfig:   \n");
+    dprintf(fd, "                   dailySwapOutQuotaMb: %llu\n", dailySwapOutQuotaMb_);
+    dprintf(fd, "                   totalSwapOutQuotaMb: %llu\n", totalSwapOutQuotaMb_);
+}
 } // namespace Memory
 } // namespace OHOS

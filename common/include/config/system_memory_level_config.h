@@ -34,6 +34,7 @@ public:
     unsigned int GetLow(void);
     void SetCritical(unsigned int critical);
     unsigned int GetCritical(void);
+    void Dump(int fd);
 
 private:
     unsigned int moderate_;

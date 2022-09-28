@@ -108,5 +108,14 @@ void AvailBufferConfig::SetSwapReserve(unsigned int swapReserve)
 {
     swapReserve_ = swapReserve;
 }
+
+void AvailBufferConfig::Dump(int fd)
+{
+    dprintf(fd, "AvailBufferConfig:   \n");
+    dprintf(fd, "                      availBuffer: %u\n", availBuffer_);
+    dprintf(fd, "                   minAvailBuffer: %u\n", minAvailBuffer_);
+    dprintf(fd, "                  highAvailBuffer: %u\n", highAvailBuffer_);
+    dprintf(fd, "                      swapReserve: %u\n", swapReserve_);
+}
 } // namespace Memory
 } // namespace OHOS

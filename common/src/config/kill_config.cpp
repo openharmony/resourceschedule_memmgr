@@ -102,5 +102,13 @@ bool KillConfig::ParseKillLevelNode(const xmlNodePtr &currNodePtr,
     killLevelsMap_.insert(std::make_pair(memoryKB, minPriority));
     return true;
 }
+
+void KillConfig::Dump(int fd)
+{
+    dprintf(fd, "KillConfig:   \n");
+    for (auto it = killLevelsMap_.begin(); it != killLevelsMap_.end(); it++) {
+        dprintf(fd, "                   memory:%u  ---->  prio:%d \n", it->first, it->second);
+    }
+}
 } // namespace Memory
 } // namespace OHOS
