@@ -83,5 +83,13 @@ void SystemMemoryLevelConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
 
     HILOGI("moderate=%{public}u, low=%{public}u, critical=%{public}u.", moderate, low, critical);
 }
+
+void SystemMemoryLevelConfig::Dump(int fd)
+{
+    dprintf(fd, "SystemMemoryLevelConfig:   \n");
+    dprintf(fd, "                      moderate: %u\n", moderate_);
+    dprintf(fd, "                           low: %u\n", low_);
+    dprintf(fd, "                      critical: %u\n", critical_);
+}
 } // namespace Memory
 } // namespace OHOS

@@ -28,6 +28,7 @@ public:
     const KillLevelsMap& GetKillLevelsMap();
     void ParseConfig(const xmlNodePtr &rootNodePtr);
     bool ParseKillLevelNode(const xmlNodePtr &currNodePtr, std::map<std::string, std::string> &param);
+    void Dump(int fd);
 
 private:
     KillLevelsMap killLevelsMap_;

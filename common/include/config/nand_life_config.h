@@ -32,6 +32,7 @@ public:
     unsigned long long GetDailySwapOutQuotaMb(void);
     void SetTotalSwapOutQuotaMb(unsigned long long totalSwapOutQuotaMb);
     unsigned long long GetTotalSwapOutQuotaMb(void);
+    void Dump(int fd);
 
 private:
     unsigned long long dailySwapOutQuotaMb_;

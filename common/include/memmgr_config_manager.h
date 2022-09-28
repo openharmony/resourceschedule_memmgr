@@ -41,6 +41,7 @@ class MemmgrConfigManager {
     DECLARE_SINGLE_INSTANCE_BASE(MemmgrConfigManager);
 public:
     bool Init();
+    void Dump(int fd);
     bool ReadParamFromXml();
     bool WriteReclaimRatiosConfigToKernel();
     bool GetXmlLoaded();
