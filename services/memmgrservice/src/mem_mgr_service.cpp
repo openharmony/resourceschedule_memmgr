@@ -133,11 +133,35 @@ void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::st
     MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
 }
 
+void ShowHelpInfo(int fd) {
+    dprintf(fd, "Usage:\n");
+    dprintf(fd, "-h                          |help for memmgrservice dumper\n");
+    dprintf(fd, "-a                          |dump all info\n");
+    dprintf(fd, "-e                          |dump event observer\n");
+    dprintf(fd, "-r                          |dump reclaim info and adj\n");
+    dprintf(fd, "-c                          |dump config\n");
+}
+
 int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
 {
     HILOGI("called");
-    MemMgrEventCenter::GetInstance().Dump(fd);
-    ReclaimPriorityManager::GetInstance().Dump(fd);
+    std::vector<std::string> params;
+    for (auto& arg : args) {
+        params.emplace_back(Str16ToStr8(arg));
+    }
+
+    if (params.empty() || (params.size() == 1 && params[0] == "-h")) {
+        ShowHelpInfo(fd);
+    } else if (params.size() == 1 && params[0] == "-a") {
+        MemMgrEventCenter::GetInstance().Dump(fd);
+        ReclaimPriorityManager::GetInstance().Dump(fd);
+    } else if (params.size() == 1 && params[0] == "-e") {
+        MemMgrEventCenter::GetInstance().Dump(fd);
+    } else if (params.size() == 1 && params[0] == "-r") {
+        ReclaimPriorityManager::GetInstance().Dump(fd);
+    } else if (params.size() == 1 && params[0] == "-c") {
+        MemmgrConfigManager::GetInstance().Dump(fd);
+    } 
     return 0;
 }
 } // namespace Memory

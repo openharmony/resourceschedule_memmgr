@@ -150,5 +150,19 @@ void ZswapdParam::SetRefaultThreshold(unsigned int refaultThreshold)
 {
     refaultThreshold_ = refaultThreshold;
 }
+
+void ReclaimConfig::Dump(int fd)
+{
+    int index = 0;
+    for (auto it = reclaimConfigSet_.begin(); it != reclaimConfigSet_.end(); it++) {
+        index++;
+        dprintf(fd, "ReclaimConfig %d:   \n", index);
+        dprintf(fd, "                      minScore: %d\n", (*it)->GetMinScore());
+        dprintf(fd, "                      maxScore: %d\n", (*it)->GetMaxScore());
+        dprintf(fd, "                 mem2zramRatio: %u\n", (*it)->GetMem2zramRatio());
+        dprintf(fd, "                 zram2ufsRatio: %u\n", (*it)->GetZram2ufsRatio());
+        dprintf(fd, "              refaultThreshold: %u\n", (*it)->GetRefaultThreshold());
+    }
+}
 } // namespace Memory
 } // namespace OHOS
