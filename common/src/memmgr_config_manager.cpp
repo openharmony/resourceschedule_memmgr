@@ -182,5 +182,14 @@ SystemMemoryLevelConfig MemmgrConfigManager::GetSystemMemoryLevelConfig()
 {
     return systemMemoryLevelConfig_;
 }
+
+void MemmgrConfigManager::Dump(int fd)
+{
+    availBufferConfig_.Dump(fd);
+    killConfig_.Dump(fd);
+    reclaimConfig_.Dump(fd);
+    nandLifeConfig_.Dump(fd);
+    systemMemoryLevelConfig_.Dump(fd);
+}
 } // namespace Memory
 } // namespace OHOS

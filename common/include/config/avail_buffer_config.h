@@ -42,6 +42,7 @@ public:
                           unsigned int highAvailBuffer, unsigned int swapReserve);
     void ParseConfig(const xmlNodePtr &rootNodePtr);
     void SetAvailBufferConfig(std::map<std::string, std::string> &param);
+    void Dump(int fd);
 
 private:
     unsigned int availBuffer_;

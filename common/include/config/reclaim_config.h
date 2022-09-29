@@ -76,6 +76,7 @@ public:
     ReclaimConfig();
     void SetDefaultConfig(int minScore, int maxScore, unsigned int mem2zramRatio,
                           unsigned int zram2ufsRatio, unsigned int refaultThreshold);
+    void Dump(int fd);
 private:
     ReclaimConfigSet reclaimConfigSet_;
 };
