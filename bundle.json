@@ -7,6 +7,9 @@
     "author": {},
     "repository": "",
     "license": "Apache License 2.0",
+    "segment": {
+      "destPath": "foundation/resourceschedule/memmgr"
+    },
     "component": {
       "name": "memmgr",
       "subsystem": "resourceschedule",
