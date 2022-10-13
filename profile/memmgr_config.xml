@@ -51,4 +51,7 @@
     <dailySwapOutQuotaMB>0</dailySwapOutQuotaMB>
     <totalSwapOutQuotaMB>0</totalSwapOutQuotaMB>
   </nandLifeConfig>
+  <switchConfig>
+    <bigMemKillSwitch>0</bigMemKillSwitch>
+  </switchConfig>
 </Memmgr>

@@ -118,6 +118,10 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             nandLifeConfig_.ParseConfig(currNode);
             continue;
         }
+        if (name.compare("switchConfig") == 0) {
+            switchConfig_.ParseConfig(currNode);
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
     }
@@ -132,6 +136,11 @@ void MemmgrConfigManager::ClearReclaimConfigSet()
 const NandLifeConfig &MemmgrConfigManager::GetNandLifeConfig()
 {
     return nandLifeConfig_;
+}
+
+const SwitchConfig &MemmgrConfigManager::GetSwitchConfig()
+{
+    return switchConfig_;
 }
 
 const ReclaimPriorityConfig& MemmgrConfigManager::GetReclaimPriorityConfig()
@@ -190,6 +199,7 @@ void MemmgrConfigManager::Dump(int fd)
     reclaimConfig_.Dump(fd);
     nandLifeConfig_.Dump(fd);
     systemMemoryLevelConfig_.Dump(fd);
+    switchConfig_.Dump(fd);
 }
 } // namespace Memory
 } // namespace OHOS
