@@ -60,6 +60,7 @@ ohos_shared_library("memmgrservice") {
     "${memmgr_common_path}/src/config/nand_life_config.cpp",
     "${memmgr_common_path}/src/config/reclaim_config.cpp",
     "${memmgr_common_path}/src/config/reclaim_priority_config.cpp",
+    "${memmgr_common_path}/src/config/switch_config.cpp",
     "${memmgr_common_path}/src/config/system_memory_level_config.cpp",
     "${memmgr_common_path}/src/kernel_interface.cpp",
     "${memmgr_common_path}/src/memmgr_config_manager.cpp",
