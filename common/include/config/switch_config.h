@@ -13,34 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SYSTEM_MEMORY_LEVEL_CONFIG_H
-#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SYSTEM_MEMORY_LEVEL_CONFIG_H
+#ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SWITCH_VALUE_CONFIG_H
+#define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SWITCH_VALUE_CONFIG_H
 
-#include <map>
-#include <string>
-#include <set>
-#include "event_handler.h"
 #include "libxml/parser.h"
-#include "libxml/xpath.h"
 
 namespace OHOS {
 namespace Memory {
-class SystemMemoryLevelConfig {
+class SwitchConfig {
 public:
     void ParseConfig(const xmlNodePtr &rootNodePtr);
-    void SetModerate(unsigned int moderate);
-    unsigned int GetModerate(void);
-    void SetLow(unsigned int low);
-    unsigned int GetLow(void);
-    void SetCritical(unsigned int critical);
-    unsigned int GetCritical(void);
+    void SetBigMemKillSwitch(unsigned long long bigMemKillSwitch);
+    unsigned long long GetBigMemKillSwitch(void);
     void Dump(int fd);
 
 private:
-    unsigned int moderate_ = 0;
-    unsigned int low_ = 0;
-    unsigned int critical_ = 0;
+    unsigned long long bigMemKillSwitch_ = 0;
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SYSTEM_MEMORY_LEVEL_CONFIG_H
+#endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SWITCH_VALUE_CONFIG_H

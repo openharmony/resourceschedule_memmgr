@@ -47,11 +47,11 @@ public:
                 unsigned int zram2ufsRatio, unsigned int refaultThreshold);
 
 private:
-    int minScore_;
-    int maxScore_;
-    unsigned int mem2zramRatio_;
-    unsigned int zram2ufsRatio_;
-    unsigned int refaultThreshold_;
+    int minScore_ = 0;
+    int maxScore_ = 0;
+    unsigned int mem2zramRatio_ = 0;
+    unsigned int zram2ufsRatio_ = 0;
+    unsigned int refaultThreshold_ = 0;
 };
 
 struct ZswapdParamPtrCmp {
