@@ -31,9 +31,12 @@ public:
 
     virtual int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) = 0;
 
+    virtual int32_t GetKillLevelOfLmkd(int32_t &killLevel) = 0;
+
     enum {
         MEM_MGR_GET_BUNDLE_PRIORITY_LIST = 1,
         MEM_MGR_NOTIFY_DIST_DEV_STATUS = 2,
+        MEM_MGR_GET_KILL_LEVEL_OF_LMKD = 3,
     };
 };
 } // namespace Memory

@@ -15,6 +15,9 @@
 
 #include "mem_mgr_stub.h"
 #include "memmgr_log.h"
+#include "memmgr_config_manager.h"
+#include "kernel_interface.h"
+#include "low_memory_killer.h"
 
 namespace OHOS {
 namespace Memory {
@@ -28,6 +31,8 @@ MemMgrStub::MemMgrStub()
         &MemMgrStub::HandleGetBunldePriorityList;
     memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_NOTIFY_DIST_DEV_STATUS)] =
         &MemMgrStub::HandleNotifyDistDevStatus;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_KILL_LEVEL_OF_LMKD)] =
+        &MemMgrStub::HandleGetKillLevelOfLmkd;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -89,6 +94,16 @@ int32_t MemMgrStub::HandleNotifyDistDevStatus(MessageParcel &data, MessageParcel
         return IPC_STUB_ERR;
     }
     return ret;
+}
+
+int32_t MemMgrStub::HandleGetKillLevelOfLmkd(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t killLevel = LowMemoryKiller::GetInstance().GetKillLevel();
+    if (!reply.WriteInt32(killLevel)) {
+        return IPC_STUB_ERR;
+    }
+    return 0;
 }
 } // namespace Memory
 } // namespace OHOS

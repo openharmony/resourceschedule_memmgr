@@ -79,5 +79,35 @@ int32_t MemMgrProxy::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::st
     }
     return ret;
 }
+
+int32_t MemMgrProxy::GetKillLevelOfLmkd(int32_t &killLevel)
+{
+    HILOGI("called");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_KILL_LEVEL_OF_LMKD, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+
+    int32_t curKillLevel = 0;
+    if (!reply.ReadInt32(curKillLevel)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    killLevel = curKillLevel;
+    return ERR_OK;
+}
 } // namespace Memory
 } // namespace OHOS

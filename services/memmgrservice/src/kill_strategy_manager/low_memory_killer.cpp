@@ -69,6 +69,11 @@ bool LowMemoryKiller::GetEventHandler()
     return true;
 }
 
+int32_t LowMemoryKiller::GetKillLevel()
+{
+    return killLevel_;
+}
+
 int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 {
     HILOGE("called. minPrio=%{public}d", minPrio);
@@ -112,10 +117,11 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
 }
 
 std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsigned int currBufferKB,
-    unsigned int &targetBufKB)
+    unsigned int &targetBufKB, int &killLevel)
 {
     unsigned int minBufKB = 0;
     int minPrio = RECLAIM_PRIORITY_UNKNOWN + 1;
+    int tempKillLevel = 0;
 
     targetBufKB = 0; /* default val */
     static const KillConfig::KillLevelsMap levelMap = MemmgrConfigManager::GetInstance().GetKillLevelsMap();
@@ -126,6 +132,7 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
                 HILOGE("error: negative value(%{public}d) of mem in g_minPrioTable", minBufInTable);
                 continue;
             }
+            tempKillLevel++;
             if (currBufferKB < (unsigned int)minBufInTable) {
                 minBufKB = (unsigned int)minBufInTable;
                 minPrio = g_minPrioTable[i][static_cast<int32_t>(MinPrioField::MIN_PRIO)];
@@ -135,11 +142,12 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
         /* set targetBufKB = max mem val in g_minPrioTable */
         int maxMemInTable = g_minPrioTable[LOW_MEM_KILL_LEVELS - 1][static_cast<int32_t>(MinPrioField::MIN_BUFFER)];
         targetBufKB = (maxMemInTable > 0 ? (unsigned int)maxMemInTable : 0);
-
+        killLevel = tempKillLevel;
         return std::make_pair(minBufKB, minPrio);
     }
     /* query from xml */
     for (auto it = levelMap.begin(); it != levelMap.end(); it++) {
+        tempKillLevel++;
         if (currBufferKB < it->first) {
             minBufKB = it->first;
             minPrio = it->second;
@@ -148,7 +156,7 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
     }
     /* set targetBufKB = max mem val in levelMap */
     targetBufKB = levelMap.rbegin()->first;
-
+    killLevel = tempKillLevel;
     HILOGD("(%{public}u) return from xml mem:%{public}u prio:%{public}d target:%{public}u",
         currBufferKB, minBufKB, minPrio, targetBufKB);
     return std::make_pair(minBufKB, minPrio);
@@ -170,7 +178,7 @@ void LowMemoryKiller::PsiHandlerInner()
         return;
     }
 
-    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf, targetBuf);
+    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf, targetBuf, killLevel_);
     minBuf = memPrioPair.first;
     minPrio = memPrioPair.second;
     if (triBuf > 0 && targetBuf > (unsigned int)triBuf) {
@@ -201,6 +209,7 @@ void LowMemoryKiller::PsiHandlerInner()
             goto out;
         }
         if ((unsigned int)availBuf >= targetBuf) {
+            killLevel_ = 0;
             goto out;
         }
     } while (currKillKb < targetKillKb && killCnt < MAX_KILL_CNT_PER_EVENT);

@@ -31,6 +31,7 @@ public:
     ~MemMgrService() = default;
     virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
     virtual int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) override;
+    virtual int32_t GetKillLevelOfLmkd(int32_t &killLevel) override;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual int Dump(int fd, const std::vector<std::u16string> &args) override;
