@@ -35,8 +35,8 @@ public:
     void Dump(int fd);
 
 private:
-    unsigned long long dailySwapOutQuotaMb_;
-    unsigned long long totalSwapOutQuotaMb_;
+    unsigned long long dailySwapOutQuotaMb_ = 0;
+    unsigned long long totalSwapOutQuotaMb_ = 0;
 };
 } // namespace Memory
 } // namespace OHOS
