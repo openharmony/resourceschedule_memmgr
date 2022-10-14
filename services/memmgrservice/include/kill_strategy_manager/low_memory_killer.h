@@ -26,10 +26,12 @@ class  LowMemoryKiller {
 
 public:
     void PsiHandler();
+    int32_t GetKillLevel();
 private:
     LowMemoryKiller();
     ~LowMemoryKiller() = default;
-    std::pair<unsigned int, int> QueryKillMemoryPriorityPair(unsigned int currBufferKB, unsigned int &targetBufKB);
+    std::pair<unsigned int, int> QueryKillMemoryPriorityPair(unsigned int currBufferKB,
+            unsigned int &targetBufKB, int &killLevel);
     void PsiHandlerInner();
     int KillOneBundleByPrio(int minPrio);
     bool GetEventHandler();
@@ -37,6 +39,7 @@ private:
 
     bool initialized_ = false;
     long calledCount = 0;
+    int32_t killLevel_ = 0;
 };
 } // namespace Memory
 } // namespace OHOS

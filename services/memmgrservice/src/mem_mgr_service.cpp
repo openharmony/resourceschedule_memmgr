@@ -22,6 +22,7 @@
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
 #include "multi_account_manager.h"
+#include "low_memory_killer.h"
 
 #include <unistd.h>
 
@@ -118,6 +119,13 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
         connected);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, name,
         connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED);
+    return 0;
+}
+
+int32_t MemMgrService::GetKillLevelOfLmkd(int32_t &killLevel)
+{
+    HILOGI("called");
+    killLevel = LowMemoryKiller::GetInstance().GetKillLevel();
     return 0;
 }
 
