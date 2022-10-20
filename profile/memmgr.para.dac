@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-persist.sys.eswap.permanently.closed = memmgr:memmgr:0664
-persist.sys.eswap.minsToday = memmgr:memmgr:0664
-persist.sys.eswap.swapOutKBToday = memmgr:memmgr:0664
-persist.sys.eswap.minsFromBirth = memmgr:memmgr:0664
-persist.sys.eswap.swapOutKBFromBirth = memmgr:memmgr:0664
+persist.resourceschedule.memmgr.eswap.permanently.closed = memmgr:memmgr:0664
+persist.resourceschedule.memmgr.eswap.minsToday = memmgr:memmgr:0664
+persist.resourceschedule.memmgr.eswap.swapOutKBToday = memmgr:memmgr:0664
+persist.resourceschedule.memmgr.eswap.minsFromBirth = memmgr:memmgr:0664
+persist.resourceschedule.memmgr.eswap.swapOutKBFromBirth = memmgr:memmgr:0664
