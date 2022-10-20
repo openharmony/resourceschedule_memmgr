@@ -31,17 +31,17 @@ const std::string PARAM_VALUE_ZERO = "0";
 const std::string PARAM_VALUE_ONE = "1";
 const std::string PARAM_VALUE_UNKOWN = "-1";
 
-const std::string PERMANENTLY_CLOSED_STATUS_PARAM = "persist.sys.eswap.permanently.closed";
+const std::string PERMANENTLY_CLOSED_STATUS_PARAM = "persist.resourceschedule.memmgr.eswap.permanently.closed";
 const std::string PERMANENTLY_CLOSED = PARAM_VALUE_ONE;
 const std::string NOT_PERMANENTLY_CLOSED = PARAM_VALUE_ZERO;
 
-const std::string MINS_TODAY_PARAM = "persist.sys.eswap.minsToday";
+const std::string MINS_TODAY_PARAM = "persist.resourceschedule.memmgr.eswap.minsToday";
 
-const std::string SWAP_OUT_KB_TODAY_PARAM = "persist.sys.eswap.swapOutKBToday";
+const std::string SWAP_OUT_KB_TODAY_PARAM = "persist.resourceschedule.memmgr.eswap.swapOutKBToday";
 
-const std::string MINS_FROM_BIRTH_PARAM = "persist.sys.eswap.minsFromBirth";
+const std::string MINS_FROM_BIRTH_PARAM = "persist.resourceschedule.memmgr.eswap.minsFromBirth";
 
-const std::string SWAP_OUT_KB_FROM_BIRTH_PARAM = "persist.sys.eswap.swapOutKBFromBirth";
+const std::string SWAP_OUT_KB_FROM_BIRTH_PARAM = "persist.resourceschedule.memmgr.eswap.swapOutKBFromBirth";
 
 const std::string params[] = {
     PERMANENTLY_CLOSED_STATUS_PARAM,
