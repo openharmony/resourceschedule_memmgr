@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-persist.sys.eswap.permanently.closed=0
-persist.sys.eswap.minsToday=0
-persist.sys.eswap.swapOutKBToday=0
-persist.sys.eswap.minsFromBirth=0
-persist.sys.eswap.swapOutKBFromBirth=0
+persist.resourceschedule.memmgr.eswap.permanently.closed=0
+persist.resourceschedule.memmgr.eswap.minsToday=0
+persist.resourceschedule.memmgr.eswap.swapOutKBToday=0
+persist.resourceschedule.memmgr.eswap.minsFromBirth=0
+persist.resourceschedule.memmgr.eswap.swapOutKBFromBirth=0
