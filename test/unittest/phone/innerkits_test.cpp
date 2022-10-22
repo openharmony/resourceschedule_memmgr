@@ -73,5 +73,13 @@ HWTEST_F(InnerkitsTest, NotifyDistDevStatus_Test, TestSize.Level1)
     int32_t ret = MemMgrClient::GetInstance().NotifyDistDevStatus(123, 456, "dist_dev_test", true);
     EXPECT_EQ(ret, 0);
 }
+
+HWTEST_F(InnerkitsTest, GetKillLevelOfLmkd_Test, TestSize.Level1)
+{
+    int32_t killLevel;
+    int32_t ret = MemMgrClient::GetInstance().GetKillLevelOfLmkd(killLevel);
+    EXPECT_EQ(ret, 0);
+    printf("lmkd kill level: %d\n", killLevel);
+}
 }
 }

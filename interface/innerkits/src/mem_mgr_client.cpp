@@ -51,6 +51,16 @@ int32_t MemMgrClient::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::s
     return dps->NotifyDistDevStatus(pid, uid, name, connected);
 }
 
+int32_t MemMgrClient::GetKillLevelOfLmkd(int32_t &killLevel)
+{
+    HILOGE("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->GetKillLevelOfLmkd(killLevel);
+}
 
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
