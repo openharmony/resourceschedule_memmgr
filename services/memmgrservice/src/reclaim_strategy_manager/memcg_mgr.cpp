@@ -144,7 +144,6 @@ SwapInfo* MemcgMgr::GetMemcgSwapInfo(unsigned int userId)
     if (memcg == nullptr) { // no such user
         return nullptr;
     }
-    memcg->UpdateSwapInfoFromKernel();
     return memcg->swapInfo_;
 }
 
