@@ -90,7 +90,6 @@ public:
     Memcg(Memcg&&) = delete;
     Memcg& operator=(Memcg&&) = delete;
 
-    bool UpdateSwapInfoFromKernel();
     bool UpdateMemInfoFromKernel();
 
     void SetScore(int score);
