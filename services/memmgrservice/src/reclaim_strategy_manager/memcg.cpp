@@ -137,47 +137,6 @@ Memcg::~Memcg()
     HILOGI("release memcg success");
 }
 
-bool Memcg::UpdateSwapInfoFromKernel()
-{
-    if (swapInfo_ == nullptr) {
-        HILOGE("swapInfo_ nullptr");
-        return false;
-    }
-    std::string path = KernelInterface::GetInstance().JoinPath(GetMemcgPath_(), "memory.eswap_stat");
-    std::string content;
-    if (!KernelInterface::GetInstance().ReadFromFile(path, content)) {
-        HILOGE("file not found. %{public}s", path.c_str());
-        return false;
-    }
-    content = std::regex_replace(content, std::regex("\n+"), " "); // replace \n with space
-    std::regex re(".*swapOutTotal:([[:d:]]+)[[:s:]]*"
-                  "swapOutSize:([[:d:]]*) MB[[:s:]]*"
-                  "swapInSize:([[:d:]]*) MB[[:s:]]*"
-                  "swapInTotal:([[:d:]]*)[[:s:]]*"
-                  "pageInTotal:([[:d:]]*)[[:s:]]*"
-                  "swapSizeCur:([[:d:]]*) MB[[:s:]]*"
-                  "swapSizeMax:([[:d:]]*) MB[[:s:]]*");
-    std::smatch res;
-    if (!std::regex_match(content, res, re)) {
-        HILOGI("re not match. %{public}s", content.c_str());
-        return false;
-    }
-    try {
-        swapInfo_->swapOutCount_ = (unsigned int)std::stoi(res.str(1)); // 1: swapOutCount index
-        swapInfo_->swapOutSize_ = (unsigned int)std::stoi(res.str(2)); // 2: swapOutSize index
-        swapInfo_->swapInSize_ = (unsigned int)std::stoi(res.str(3)); // 3: swapInSize index
-        swapInfo_->swapInCount_ = (unsigned int)std::stoi(res.str(4)); // 4: swapInCount index
-        swapInfo_->pageInCount_ = (unsigned int)std::stoi(res.str(5)); // 5: pageInCount index
-        swapInfo_->swapSizeCurr_ = (unsigned int)std::stoi(res.str(6)); // 6: swapSizeCurr index
-        swapInfo_->swapSizeMax_ = (unsigned int)std::stoi(res.str(7)); // 7: swapSizeMax index
-    } catch (std::out_of_range&) {
-        HILOGE("stoi() failed: out_of_range");
-        return false;
-    }
-    HILOGI("success. %{public}s", swapInfo_->ToString().c_str());
-    return true;
-}
-
 bool Memcg::UpdateMemInfoFromKernel()
 {
     if (memInfo_ == nullptr) {
