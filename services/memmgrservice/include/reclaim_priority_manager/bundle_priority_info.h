@@ -43,6 +43,7 @@ public:
     int accountId_;
     BundleState state_;
     std::mutex bundleLock_;
+    int64_t createTime_;
 
     bool HasProc(pid_t pid);
     void AddProc(ProcessPriorityInfo &newProcess);
@@ -54,6 +55,8 @@ public:
     void UpdatePriority();
     BundleState GetState();
     void SetState(BundleState state);
+    int64_t GetCreateTime() const;
+    void SetCreateTime(const int64_t createTime);
     void IncreaseProcsPriority(int delta);
 };
 } // namespace Memory

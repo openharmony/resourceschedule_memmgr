@@ -178,6 +178,12 @@ bool KernelInterface::IsDirExists(const std::string& path)
     return false;
 }
 
+int64_t KernelInterface::GetSystemCurTime()
+{
+    return std::chrono::duration_cast<std::chrono::seconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 bool KernelInterface::IsExists(const std::string& path)
 {
     return OHOS::FileExists(path);
