@@ -77,7 +77,6 @@ bool ReclaimPriorityManager::Init()
     GetAllKillableSystemApps();
     if (initialized_) {
         HILOGI("init successed");
-        SetTimer();
     } else {
         HILOGE("init failed");
     }
@@ -503,11 +502,12 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
     } else {
         // need to new BundleInfo ,add to list and map
         MAKE_POINTER(bundle, shared, BundlePriorityInfo, "cannot new account!!", return false,
-            bundleName, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
+            bundleName, bundleUid, RECLAIM_PRIORITY_BACKGROUND);
         AddBundleInfoToSet(bundle);
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
-    ProcessPriorityInfo proc(pid, bundleUid, RECLAIM_PRIORITY_FOREGROUND);
+    
+    ProcessPriorityInfo proc(pid, bundleUid, RECLAIM_PRIORITY_BACKGROUND);
     if (IsKillableSystemApp(bundle)) {
         HILOGI("[bundleName=%{public}s, pid=%{public}d] is a killable system app", bundleName.c_str(), pid);
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;

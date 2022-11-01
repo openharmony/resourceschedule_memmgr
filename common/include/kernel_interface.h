@@ -73,6 +73,7 @@ public:
     bool GetAllProcPids(std::vector<unsigned int>& pids);
     bool GetUidByPid(unsigned int pid, unsigned int& uid);
     bool ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr, unsigned long long &ret);
+    int64_t GetSystemCurTime();
 
     static const std::string ROOT_PROC_PATH;
     static const std::string MEMCG_BASE_PATH;
