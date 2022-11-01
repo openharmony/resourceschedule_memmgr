@@ -15,6 +15,7 @@
 
 #include "bundle_priority_info.h"
 #include "memmgr_log.h"
+#include "kernel_interface.h"
 
 namespace OHOS {
 namespace Memory {
@@ -27,6 +28,7 @@ BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid):n
     this->priority_ = RECLAIM_PRIORITY_UNKNOWN;
     this->accountId_ = bundleUid / USER_ID_SHIFT;
     this->state_ = BundleState::STATE_DEFAULT;
+    this->createTime_ = KernelInterface::GetInstance().GetSystemCurTime();
 }
 
 BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid, int priority):name_(name),
@@ -34,15 +36,18 @@ BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid, i
 {
     this->accountId_ = bundleUid / USER_ID_SHIFT;
     this->state_ = BundleState::STATE_DEFAULT;
+    this->createTime_ = KernelInterface::GetInstance().GetSystemCurTime();
 }
 
 BundlePriorityInfo::BundlePriorityInfo(const std::string &name, int bundleUid, int priority, int accountId,
     BundleState state) : name_(name), uid_(bundleUid), priority_(priority), accountId_(accountId), state_(state)
 {
+    this->createTime_ = KernelInterface::GetInstance().GetSystemCurTime();
 }
 
 BundlePriorityInfo::BundlePriorityInfo(const BundlePriorityInfo &copyBundle) : name_(copyBundle.name_),
-    uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_), state_(copyBundle.state_)
+    uid_(copyBundle.uid_), priority_(copyBundle.priority_), accountId_(copyBundle.accountId_),
+    state_(copyBundle.state_), createTime_(copyBundle.createTime_)
 {
     for (auto itrProcess = copyBundle.procs_.begin(); itrProcess != copyBundle.procs_.end(); itrProcess++) {
         ProcessPriorityInfo processInfo = itrProcess->second;
@@ -116,6 +121,16 @@ BundleState BundlePriorityInfo::GetState()
 void BundlePriorityInfo::SetState(BundleState state)
 {
     state_ = state;
+}
+
+int64_t BundlePriorityInfo::GetCreateTime() const
+{
+    return createTime_;
+}
+
+void BundlePriorityInfo::SetCreateTime(const int64_t createTime)
+{
+    createTime_ = createTime;
 }
 
 void BundlePriorityInfo::IncreaseProcsPriority(int delta)

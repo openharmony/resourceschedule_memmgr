@@ -25,6 +25,7 @@ namespace {
     const std::string TAG = "LowMemoryKiller";
     const int LOW_MEM_KILL_LEVELS = 5;
     const int MAX_KILL_CNT_PER_EVENT = 3;
+    const int NOT_TO_KILL_DURING = 3;
     /*
      * LMKD_DBG_TRIGGER_FILE_PATH:
      * print process meminfo when write 0/1 to the file,
@@ -90,6 +91,12 @@ int LowMemoryKiller::KillOneBundleByPrio(int minPrio)
         if (bundle.priority_ < minPrio) {
             HILOGD("finish to handle all bundles with priority bigger than %{public}d, break!", minPrio);
             break;
+        }
+        if (KernelInterface::GetInstance().GetSystemCurTime() - bundle.GetCreateTime() < NOT_TO_KILL_DURING) {
+            HILOGD("bundle uid<%{public}d> <%{public}s> is protected, skiped.",
+                bundle.uid_, bundle.name_.c_str());
+            count++;
+            continue;
         }
         if (bundle.GetState() == BundleState::STATE_WAITING_FOR_KILL) {
             HILOGD("bundle uid<%{public}d> <%{public}s> is waiting to kill, skiped.",
