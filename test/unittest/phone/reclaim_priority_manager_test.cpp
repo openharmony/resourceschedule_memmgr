@@ -129,7 +129,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSiz
     EXPECT_EQ(hasBundle, true);
 
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
@@ -190,13 +190,13 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayStart, Tes
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
     std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     printf("process suspend delay start!");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_suspend_delay_start", AppStateUpdateReason::SUSPEND_DELAY_START);
     PrintReclaimPriorityList();
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
 
     printf("process go to background!");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
@@ -257,7 +257,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningStart, TestSi
     std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
     int priority = bundle->priority_;
-    EXPECT_EQ(priority, RECLAIM_PRIORITY_FOREGROUND);
+    EXPECT_EQ(priority, RECLAIM_PRIORITY_BG_PERCEIVED);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
@@ -311,7 +311,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventStart, TestSize.L
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
     std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(account_id);
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
-    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_PERCEIVED);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid, uid,
                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
@@ -404,27 +404,27 @@ HWTEST_F(ReclaimPriorityManagerTest, DistDeviceCase, TestSize.Level1)
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     ProcessPriorityInfo &proc1 = bundle->FindProcByPid(pid1);
     ProcessPriorityInfo &proc2 = bundle->FindProcByPid(pid2);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
-    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FOREGROUND);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
     PrintReclaimPriorityList();
 
     // process#1 keep freground, process#2 go to background
     printf("process#1 keep freground, process#2 go to background\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
         AppStateUpdateReason::BACKGROUND);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
     PrintReclaimPriorityList();
 
     // process#2 is connected to a distribute device
     printf("process#1 is connected to a distribute device\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
         AppStateUpdateReason::DIST_DEVICE_CONNECTED);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
     PrintReclaimPriorityList();
 
     // process#1 go to background
@@ -478,18 +478,18 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     ProcessPriorityInfo &proc1 = bundle->FindProcByPid(pid1);
     ProcessPriorityInfo &proc2 = bundle->FindProcByPid(pid2);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
-    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FOREGROUND);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
     PrintReclaimPriorityList();
 
     // process#1 keep freground, process#2 go to background
     printf("process#1 keep freground, process#2 go to background\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(pid2, bundleUid, bundleName2,
         AppStateUpdateReason::BACKGROUND);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
     PrintReclaimPriorityList();
 
     int callerPid = 99999;
@@ -500,9 +500,9 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     printf("process#2 is bind to a process\n");
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityWithCallerInner(callerPid, callerUid, caller, pid2,
         bundleUid, bundleName2, AppStateUpdateReason::BIND_EXTENSION);
-    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     PrintReclaimPriorityList();
 
     // process#1 go to background
