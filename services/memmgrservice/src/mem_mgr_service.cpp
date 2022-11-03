@@ -132,7 +132,7 @@ int32_t MemMgrService::GetKillLevelOfLmkd(int32_t &killLevel)
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
-    MemMgrEventCenter::GetInstance().RetryRegisterEventObserver();
+    MemMgrEventCenter::GetInstance().RetryRegisterEventObserver(systemAbilityId);
 }
 
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)

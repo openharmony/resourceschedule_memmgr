@@ -67,11 +67,6 @@ void MemMgrEventCenter::RemoveEventObserver(int32_t systemAbilityId)
         extConnObserver_ = nullptr;
         ReclaimPriorityManager::GetInstance().Reset();
     }
-#ifdef CONFIG_BGTASK_MGR
-    if (systemAbilityId == BACKGROUND_TASK_MANAGER_SERVICE_ID) {
-        bgTaskObserver_ = nullptr;
-    }
-#endif
     if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
         accountObserver_ = nullptr;
     }
@@ -164,6 +159,8 @@ void MemMgrEventCenter::RegisterBgTaskObserver()
         return;
     }
     HILOGE("register fail, ret = %{public}d", ret);
+    std::function<void()> RegisterBgTaskObserverFunc = std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
+    regObsHandler_->PostTask(RegisterBgTaskObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
 #else
     HILOGI("BackgroundTaskMgr is not enable.");
 #endif
@@ -270,8 +267,13 @@ void MemMgrEventCenter::Dump(int fd)
     dprintf(fd, "-----------------------------------------------------------------\n");
 }
 
-void MemMgrEventCenter::RetryRegisterEventObserver()
+void MemMgrEventCenter::RetryRegisterEventObserver(int32_t systemAbilityId)
 {
+#ifdef CONFIG_BGTASK_MGR
+    if (systemAbilityId == BACKGROUND_TASK_MANAGER_SERVICE_ID) {
+        RegisterBgTaskObserver();
+    }
+#endif
     RegisterEventObserver();
 }
 
