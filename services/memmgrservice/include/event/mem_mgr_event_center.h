@@ -40,7 +40,7 @@ class MemMgrEventCenter {
 public:
     ~MemMgrEventCenter();
     bool Init();
-    void RetryRegisterEventObserver();
+    void RetryRegisterEventObserver(int32_t systemAbilityId);
     void Dump(int fd);
     void RemoveEventObserver(int32_t systemAbilityId);
 private:
