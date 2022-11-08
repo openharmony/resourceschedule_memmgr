@@ -408,6 +408,14 @@ bool KernelInterface::GetUidByPid(unsigned int pid, unsigned int& uid)
     return true;
 }
 
+void DeleteCharArrayIfNotNull(char * charArray)
+{
+    if (charArray) {
+        delete [] charArray;
+        charArray = nullptr;
+    }
+}
+
 bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr,
     unsigned long long &ret)
 {
@@ -422,8 +430,10 @@ bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, cons
     }
     if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
         HILOGE("copy fail");
+        DeleteCharArrayIfNotNull(contentPtr);
         return false;
     }
+    bool success = false;
     char *restPtr;
     char *line = strtok_r(contentPtr, "\n", &restPtr);
     do {
@@ -447,22 +457,17 @@ bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, cons
             iss >> sizeStr >> unitStr;
             try {
                 ret = std::strtoull(sizeStr.c_str(), nullptr, 10); // 10:Decimal
-                return true;
+                success = true;
             } catch (...) {
                 HILOGE("parse [%{public}s] to unsigned long long error!", sizeStr.c_str());
-                return false;
             }
+            break;
         }
 
         line = strtok_r(NULL, "\n", &restPtr);
     } while (line);
-    if (restPtr) {
-        delete [] restPtr;
-    }
-    if (contentPtr) {
-        delete [] contentPtr;
-    }
-    return false;
+    DeleteCharArrayIfNotNull(contentPtr);
+    return success;
 }
 } // namespace Memory
 } // namespace OHOS

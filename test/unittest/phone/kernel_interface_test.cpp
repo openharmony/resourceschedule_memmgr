@@ -312,5 +312,13 @@ HWTEST_F(KernelInterfaceTest, GetCurrentBufferTest, TestSize.Level1)
     printf("buffer=%d", buffer);
     EXPECT_GT(buffer, 0);
 }
+
+HWTEST_F(KernelInterfaceTest, ReadSwapOutKBSinceKernelBoot, TestSize.Level1)
+{
+    unsigned long long retFun;
+    bool ret = KernelInterface::GetInstance().ReadSwapOutKBSinceKernelBoot("/dev/memcg/memory.eswap_info",
+                                                                                "Total Swapout Size", retFun);
+    EXPECT_EQ(ret, true);
+}
 }
 }
