@@ -230,6 +230,22 @@ ohos_unittest("xml_helper_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("system_memory_level_config_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/system_memory_level_config_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 group("memmgr_unittest") {
   testonly = true
   deps = [
@@ -243,6 +259,7 @@ group("memmgr_unittest") {
     ":nandlife_controller_test",
     ":reclaim_priority_manager_test",
     ":reclaim_strategy_manager_test",
+    ":system_memory_level_config_test",
     ":user_memcg_test",
     ":xml_helper_test",
   ]
