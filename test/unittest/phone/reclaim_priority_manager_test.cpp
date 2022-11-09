@@ -52,6 +52,11 @@ void ReclaimPriorityManagerTest::TearDown()
 {
 }
 
+HWTEST_F(ReclaimPriorityManagerTest, InitTest, TestSize.Level1)
+{
+    EXPECT_EQ(ReclaimPriorityManager::GetInstance().Init(), true);
+}
+
 static void PrintReclaimPriorityList()
 {
     ReclaimPriorityManager::BunldeCopySet bundleSet;
@@ -532,5 +537,161 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
         AppStateUpdateReason::PROCESS_TERMINATED);
     PrintReclaimPriorityList();
 }
+
+/**
+ * @tc.name: OsAccountChanged
+ * @tc.desc: Test the value of initialized_ equals to false
+ * @tc.desc: Test the branch of bundle equals to nullptr
+ * @tc.desc: Test the return value
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, OsAccountChangedTest, TestSize.Level1)
+{
+    ReclaimPriorityManager reclPri;
+    reclPri.initialized_ = false;
+    int accountId = 100;
+
+    //Test the value of initialized_ equals to false
+    AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod = AccountSA::OsAccountManager::GetOsAccountSwitchMod();
+    bool accChan = reclPri.OsAccountChanged(accountId, switchMod);
+    EXPECT_EQ(accChan, false);
+
+    //Test the branch of bundle equals to nullptr
+    reclPri.initialized_ = true;
+    accountId = -1;
+    accChan = ReclaimPriorityManager::GetInstance().OsAccountChanged(accountId, switchMod);
+    EXPECT_EQ(accChan, false);
+
+    //Test the return value
+    accountId = 100;
+    accChan = ReclaimPriorityManager::GetInstance().OsAccountChanged(accountId, switchMod);
+    EXPECT_EQ(accChan, true);
+}
+
+/**
+ * @tc.name: AddBundleInfoToSet
+ * @tc.desc: Test the branch into "if"
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, AddBundleInfoToSetTest, TestSize.Level1)
+{
+    int accountId = 100;
+    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
+    ProcessPriorityInfo proc1(1001, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc2(1002, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc3(1003, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc4(1004, bundle->uid_, bundle->priority_);
+    bundle->AddProc(proc1);
+    bundle->AddProc(proc2);
+    bundle->AddProc(proc3);
+    bundle->AddProc(proc4);
+    ReclaimPriorityManager::GetInstance().AddBundleInfoToSet(bundle);
+    ReclaimPriorityManager totBun;
+    auto ret = totBun.totalBundlePrioSet_.insert(bundle);
+    EXPECT_EQ(ret.second, true);
+}
+
+/**
+ * @tc.name: UpdateBundlePriority
+ * @tc.desc: Test Update the value of bundle 
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, UpdateBundlePriorityTest, TestSize.Level1) 
+{
+    int accountId = 100;
+    std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
+    ProcessPriorityInfo proc1(1001, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc2(1002, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc3(1003, bundle->uid_, bundle->priority_);
+    ProcessPriorityInfo proc4(1004, bundle->uid_, bundle->priority_);
+    bundle->AddProc(proc1);
+    bundle->AddProc(proc2);
+    bundle->AddProc(proc3);
+    bundle->AddProc(proc4);
+    ReclaimPriorityManager::GetInstance().UpdateBundlePriority(bundle);
+    ReclaimPriorityManager totBun;
+    auto ret = totBun.totalBundlePrioSet_.insert(bundle);
+    EXPECT_EQ(ret.second, true);
+}
+
+/**
+ * @tc.name: DeleteBundleInfoFromSet
+ * @tc.desc: Test Delete the value of bundle 
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, DeleteBundleInfoFromSetTest, TestSize.Level1) 
+{
+    int accountId = 100;
+    std::shared_ptr<BundlePriorityInfo> bundle1 = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
+    std::shared_ptr<BundlePriorityInfo> bundle2 = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
+    ReclaimPriorityManager::GetInstance().DeleteBundleInfoFromSet(bundle2);
+    EXPECT_NE(bundle1,bundle2);
+}
+
+/**
+ * @tc.name: GetOneKillableBundle
+ * @tc.desc: Test the branch into "for"
+ * @tc.desc: Test the branch into bundle->priority_ < minPrio
+ * @tc.desc: Test the branch into bundle->GetState() == STATE_WAITING_FOR_KILL
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, GetOneKillableBundleTest, TestSize.Level1) 
+{
+    ReclaimPriorityManager tolBun1;
+    ReclaimPriorityManager tolBun2;
+    ReclaimPriorityManager::BunldeCopySet bundleSet;
+    int accountId = 100;
+    int minPrio = 200;
+    std::shared_ptr<BundlePriorityInfo> bundle1 = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100);
+    std::shared_ptr<BundlePriorityInfo> bundle2 = std::make_shared<BundlePriorityInfo>("app",
+            accountId * USER_ID_SHIFT + 1, 100, 1, BundleState::STATE_WAITING_FOR_KILL);
+    tolBun1.totalBundlePrioSet_.insert(bundle1);
+    auto itrBundle1 = tolBun1.totalBundlePrioSet_.rbegin();
+
+    //Test the branch into "for"
+    ReclaimPriorityManager::GetInstance().GetOneKillableBundle(minPrio, bundleSet);
+    EXPECT_NE(itrBundle1, tolBun1.totalBundlePrioSet_.rend());
+
+    tolBun2.totalBundlePrioSet_.insert(bundle2);
+    auto itrBundle2 = tolBun2.totalBundlePrioSet_.rbegin();
+    std::shared_ptr<BundlePriorityInfo> bundle3 = *itrBundle2;
+
+    //Test the branch into bundle->priority_ < minPrio
+    ReclaimPriorityManager::GetInstance().GetOneKillableBundle(minPrio, bundleSet);
+    EXPECT_EQ(bundle3->GetState(), BundleState::STATE_WAITING_FOR_KILL);
+
+    //Test the branch into bundle->GetState() == STATE_WAITING_FOR_KILL
+    ReclaimPriorityManager::GetInstance().GetOneKillableBundle(minPrio, bundleSet);
+    EXPECT_LT(bundle3->priority_, minPrio);
+}
+
+/**
+ * @tc.name: AppStateUpdateResonToString
+ * @tc.desc: Test the branch into "if == true"
+ * @tc.desc: Test the branch into "else"
+ * @tc.type: FUNC
+ */
+HWTEST_F(ReclaimPriorityManagerTest, AppStateUpdateResonToStringTest, TestSize.Level1) 
+{
+    ReclaimPriorityManager appState;
+    AppStateUpdateReason reason1 = AppStateUpdateReason::CREATE_PROCESS;
+    int reason2 = -1;
+
+    //Test the branch into "if == true"
+    ReclaimPriorityManager::GetInstance().AppStateUpdateResonToString(reason1);
+    auto ptr = appState.updateReasonStrMapping_.find(static_cast<int32_t>(reason1));
+    EXPECT_NE(ptr, appState.updateReasonStrMapping_.end());
+
+    //Test the branch into "else"
+    ReclaimPriorityManager::GetInstance().AppStateUpdateResonToString(static_cast<AppStateUpdateReason>(reason2));
+    ptr = appState.updateReasonStrMapping_.find(reason2);
+    EXPECT_EQ(ptr, appState.updateReasonStrMapping_.end());
+}
+
 }
 }
