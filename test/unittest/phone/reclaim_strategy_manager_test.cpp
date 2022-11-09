@@ -169,5 +169,56 @@ HWTEST_F(ReclaimStrategyManagerTest, GetValidScoreTest, TestSize.Level1)
     ReclaimStrategyManager::GetInstance().GetValidScore_(score);
     EXPECT_EQ(score, RECLAIM_SCORE_MAX);
 }
+
+HWTEST_F(ReclaimStrategyManagerTest, HandleAppStateChangedTest, TestSize.Level1)
+{
+    int pid = 1234567;
+    int appId = 111111;
+    std::string appName = "com.test";
+    int userId = 234561;
+    int userId2 = VALID_USER_ID_MIN - 1;
+    int score = 100;
+    std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, appId, appName, userId, score,
+        AppAction::OTHERS);
+    std::shared_ptr<ReclaimParam> para2 = std::make_shared<ReclaimParam>(pid, appId, appName, userId2, score,
+        AppAction::OTHERS);
+    ReclaimStrategyManager::GetInstance().HandleProcessCreate_(para);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAppStateChanged_(para2), false);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAppStateChanged_(nullptr), false);
+    EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(userId), true);
+}
+
+HWTEST_F(ReclaimStrategyManagerTest, HandleAccountDiedTest, TestSize.Level1)
+{
+    int pid = 1234567;
+    int appId = 111111;
+    std::string appName = "com.test";
+    int userId = 234561;
+    int score = 100;
+    std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, appId, appName, userId, score,
+        AppAction::OTHERS);
+    ReclaimStrategyManager::GetInstance().HandleProcessCreate_(para);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountDied_(userId), true);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountDied_(userId), false);
+    userId = 23456;
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountDied_(userId), false);
+    EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(userId), false);
+}
+
+HWTEST_F(ReclaimStrategyManagerTest, HandleAccountPriorityChangedTest, TestSize.Level1)
+{
+    int pid = 1234567;
+    int appId = 111111;
+    std::string appName = "com.test";
+    int userId = 234561;
+    int score = 100;
+    std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, appId, appName, userId, score,
+        AppAction::OTHERS);
+    ReclaimStrategyManager::GetInstance().HandleProcessCreate_(para);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountPriorityChanged_(userId, RECLAIM_SCORE_MIN), true);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountDied_(userId), true);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().HandleAccountDied_(RECLAIM_SCORE_MIN), false);
+    EXPECT_EQ(MemcgMgr::GetInstance().RemoveUserMemcg(userId), false);
+}
 }
 }
