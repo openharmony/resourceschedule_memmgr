@@ -214,6 +214,38 @@ ohos_unittest("memmgr_config_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("default_multi_account_strategy_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/default_multi_account_strategy_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
+ohos_unittest("oom_score_adj_utils_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/oom_score_adj_utils_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 ohos_unittest("xml_helper_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
@@ -266,6 +298,7 @@ group("memmgr_unittest") {
   testonly = true
   deps = [
     ":avail_buffer_manager_test",
+    ":default_multi_account_strategy_test",
     ":innerkits_test",
     ":kernel_interface_test",
     ":memcg_mgr_test",
@@ -274,6 +307,7 @@ group("memmgr_unittest") {
     ":memory_level_manager_test",
     ":multi_account_manager_test",
     ":nandlife_controller_test",
+    ":oom_score_adj_utils_test",
     ":reclaim_priority_manager_test",
     ":reclaim_strategy_manager_test",
     ":system_memory_level_config_test",
