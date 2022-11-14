@@ -124,7 +124,7 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
-    MemMgrEventCenter::GetInstance().RetryRegisterEventObserver();
+    MemMgrEventCenter::GetInstance().RetryRegisterEventObserver(systemAbilityId);
 }
 
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
