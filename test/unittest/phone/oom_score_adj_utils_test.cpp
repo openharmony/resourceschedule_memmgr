@@ -59,7 +59,7 @@ void OomScoreAdjUtilsTest::TearDown()
 /**
  * @tc.name: WriteOomScoreAdjToKernel
  * @tc.desc: Test the branch into "for" branch
- * @tc.desc: Test the branch of bundle equals to nullptr 
+ * @tc.desc: Test the branch of bundle equals to nullptr
  * @tc.type: FUNC
  */
 HWTEST_F(OomScoreAdjUtilsTest, WriteOomScoreAdjToKernelTest1, TestSize.Level1)
@@ -68,7 +68,7 @@ HWTEST_F(OomScoreAdjUtilsTest, WriteOomScoreAdjToKernelTest1, TestSize.Level1)
     std::shared_ptr<BundlePriorityInfo> bundle = std::make_shared<BundlePriorityInfo>("app",
             accountId * USER_ID_SHIFT + 1, 100);
 
-    //Test the branch into "for" branch
+    // Test the branch into "for" branch
     ProcessPriorityInfo proc1(1001, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc2(1002, bundle->uid_, bundle->priority_);
     ProcessPriorityInfo proc3(1003, bundle->uid_, bundle->priority_);
@@ -80,7 +80,7 @@ HWTEST_F(OomScoreAdjUtilsTest, WriteOomScoreAdjToKernelTest1, TestSize.Level1)
     OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundle);
     EXPECT_NE(bundle->procs_.begin(), bundle->procs_.end());
 
-    //Test the branch of bundle equals to nullptr
+    // Test the branch of bundle equals to nullptr
     bundle = nullptr;
     bool ret = OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundle);
     EXPECT_EQ(ret, false);
