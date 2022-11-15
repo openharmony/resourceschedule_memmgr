@@ -69,26 +69,26 @@ HWTEST_F(DefaultMultiAccountStrategyTest, SetAccountProrityTest, TestSize.Level1
     AccountSA::OsAccountType accountType = AccountSA::OsAccountType::ADMIN;
     DefaultMultiAccountStrategy mulAcc;
 
-    //accountInfo->GetIsActived() equals to true
-    //accountInfo->priority_ equals to HIGH_PRIORITY
-    AccountPriorityInfo accPri1(accountId,accountName,accountType,isActived);
+    // the branch of GetIsActived() equals to true
+    // the branch of priority_ equals to HIGH_PRIORITY
+    AccountPriorityInfo accPri1(accountId, accountName, accountType, isActived);
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
     accountInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
     mulAcc.SetAccountPriority(accountInfo);
-    EXPECT_EQ(accountInfo->priority_,static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY));
+    EXPECT_EQ(accountInfo->priority_, static_cast<int>(DefaultMultiAccountPriority::HIGH_PRIORITY));
 
-    //accountInfo->priority_ equals to LOW_PRIORITY
+    // the branch of priority_ equals to LOW_PRIORITY
     isActived = false;
-    AccountPriorityInfo accPri2(accountId,accountName,accountType,isActived);
+    AccountPriorityInfo accPri2(accountId, accountName, accountType, isActived);
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
     accountInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
     mulAcc.SetAccountPriority(accountInfo);
-    EXPECT_EQ(accountInfo->priority_,static_cast<int>(DefaultMultiAccountPriority::LOW_PRIORITY));
+    EXPECT_EQ(accountInfo->priority_, static_cast<int>(DefaultMultiAccountPriority::LOW_PRIORITY));
 
-    //accountInfo->GetIsActived() equals to false
+    // the branch of GetIsActived() equals to false
     accountInfo = nullptr;
     bool setAcc = mulAcc.SetAccountPriority(accountInfo);
-    EXPECT_EQ(setAcc,false);
+    EXPECT_EQ(setAcc, false);
 }
 
 /**
@@ -107,14 +107,14 @@ HWTEST_F(DefaultMultiAccountStrategyTest, RecalcBundlePriortiyTest, TestSize.Lev
     DefaultMultiAccountStrategy mulAcc;
     int bundlePriority = RECLAIM_PRIORITY_VISIBLE;
 
-    //return value not equals to RECLAIM_PRIORITY_VISIBLE
+    // return value not equals to RECLAIM_PRIORITY_VISIBLE
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
     accountInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
     mulAcc.SetAccountPriority(accountInfo);
     int recalcPriority = mulAcc.RecalcBundlePriority(accountInfo, bundlePriority);
     EXPECT_NE(recalcPriority, RECLAIM_PRIORITY_VISIBLE);
 
-    //accountInfo equals to nullptr
+    // the branch of accountInfo equals to nullptr
     accountInfo = nullptr;
     mulAcc.SetAccountPriority(accountInfo);
     recalcPriority = mulAcc.RecalcBundlePriority(accountInfo, bundlePriority);
