@@ -156,7 +156,8 @@ HWTEST_F(MultiAccountManagerTest, AddAccountPriorityInfoTest, TestSize.Level1)
     bool isActived = true;
 
     MultiAccountManager::GetInstance().SetAccountPriority(accountId, accountName, accountType, isActived);
-    std::shared_ptr<AccountPriorityInfo> accountInfo = MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
+    std::shared_ptr<AccountPriorityInfo> accountInfo =
+        MultiAccountManager::GetInstance().GetAccountPriorityInfo(accountId);
     MultiAccountManager::GetInstance().AddAccountPriorityInfo(accountInfo);
     EXPECT_EQ(accountInfo->GetId(), accountId);
     EXPECT_STREQ(accountInfo->GetName().c_str(), accountName.c_str());
@@ -172,12 +173,12 @@ HWTEST_F(MultiAccountManagerTest, AddAccountPriorityInfoTest, TestSize.Level1)
  */
 HWTEST_F(MultiAccountManagerTest, SetMultiAccountStrategyTest, TestSize.Level1)
 {
-    //strategy_ equals to nullptr
+    // strategy_ equals to nullptr
     std::shared_ptr<MultiAccountStrategy> strategy = nullptr;
     bool retMul = MultiAccountManager::GetInstance().SetMultiAccountStrategy(strategy);
     EXPECT_EQ(retMul, false);
 
-    //set and get value of strategy_
+    // set and get value of strategy_
     strategy = MultiAccountManager::GetInstance().GetMultiAccountStratgy();
     retMul = MultiAccountManager::GetInstance().SetMultiAccountStrategy(strategy);
     EXPECT_EQ(retMul, true);
@@ -191,9 +192,9 @@ HWTEST_F(MultiAccountManagerTest, SetMultiAccountStrategyTest, TestSize.Level1)
 HWTEST_F(MultiAccountManagerTest, GetSwitchedAccountIdsTest, TestSize.Level1)
 {
     MultiAccountManager oldAct;
-    oldAct.oldActiveAccountIds_ = {1,3,5,7,9};
+    oldAct.oldActiveAccountIds_ = {1, 3, 5, 7, 9};
     std::vector<int> accountIds;
-    std::vector<int> accountIds1 = {1,3,5,7,9};
+    std::vector<int> accountIds1 = {1, 3, 5, 7, 9};
     oldAct.GetSwitchedAccountIds(accountIds);
     EXPECT_EQ(accountIds, accountIds1);
 }
@@ -229,19 +230,19 @@ HWTEST_F(MultiAccountManagerTest, HandleOsAccountsChangedTest, TestSize.Level1)
     AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod3 = AccountSA::HOT_SWITCH;
     std::map<int, std::shared_ptr<AccountBundleInfo>> osAccountsInfoMap;
 
-    //test initialized_ == false
+    // the branch of test initialized_ equals to false
     bool ret = mulAcc.HandleOsAccountsChanged(accountId, switchMod1, osAccountsInfoMap);
     EXPECT_EQ(ret, false);
 
-    //the branch of UpdateAccountPriorityInfo(updatedAccountIds) equals to false
+    // the branch of UpdateAccountPriorityInfo(updatedAccountIds) equals to false
     ret = mulAcc.HandleOsAccountsChanged(accountId, switchMod1, osAccountsInfoMap);
     EXPECT_EQ(ret, false);
 
-    //the branch of switchMod equals to AccountSA::COLD_SWITCH
+    // the branch of switchMod equals to AccountSA::COLD_SWITCH
     ret = MultiAccountManager::GetInstance().HandleOsAccountsChanged(accountId, switchMod2, osAccountsInfoMap);
     EXPECT_EQ(ret, true);
 
-    //the branch of switchMod equals to AccountSA::HOT_SWITCH
+    // the branch of switchMod equals to AccountSA::HOT_SWITCH
     ret = MultiAccountManager::GetInstance().HandleOsAccountsChanged(accountId, switchMod3, osAccountsInfoMap);
     EXPECT_EQ(ret, true);
 }
