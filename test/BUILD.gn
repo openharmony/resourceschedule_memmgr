@@ -294,6 +294,22 @@ ohos_unittest("memory_level_manager_test") {
   subsystem_name = "resourceschedule"
 }
 
+ohos_unittest("low_memory_killer_test") {
+  module_out_path = module_output_path
+  configs = memmgr_service_configs
+
+  sources = [ "unittest/phone/low_memory_killer_test.cpp" ]
+
+  deps = memmgr_deps
+  if (is_standard_system) {
+    external_deps = memmgr_external_deps
+    public_deps = memmgr_public_deps
+  }
+
+  part_name = "memmgr"
+  subsystem_name = "resourceschedule"
+}
+
 group("memmgr_unittest") {
   testonly = true
   deps = [
@@ -301,6 +317,7 @@ group("memmgr_unittest") {
     ":default_multi_account_strategy_test",
     ":innerkits_test",
     ":kernel_interface_test",
+    ":low_memory_killer_test",
     ":memcg_mgr_test",
     ":memcg_test",
     ":memmgr_config_manager_test",
