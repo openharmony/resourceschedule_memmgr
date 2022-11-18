@@ -90,11 +90,7 @@ bool MemMgrEventCenter::RegisterEventObserver()
     if (!extConnObserver_) {
         RegisterExtConnObserver();
     }
-#ifdef CONFIG_BGTASK_MGR
-    if (!bgTaskObserver_) {
-        RegisterBgTaskObserver();
-    }
-#endif
+
     if (!accountObserver_) {
         RegisterAccountObserver();
     }
