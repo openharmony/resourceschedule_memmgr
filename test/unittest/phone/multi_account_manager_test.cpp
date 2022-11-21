@@ -208,7 +208,7 @@ HWTEST_F(MultiAccountManagerTest, UpdateAccountPriorityInfoTest, TestSize.Level1
 {
     std::vector<int> accountIds;
     EXPECT_EQ(MultiAccountManager::GetInstance().UpdateAccountPriorityInfo(accountIds), true);
-    std::vector<int> accountIds1 = {1,3,5,7,9};
+    std::vector<int> accountIds1 = {1, 3, 5, 7, 9};
     EXPECT_EQ(MultiAccountManager::GetInstance().UpdateAccountPriorityInfo(accountIds1), false);
 }
 
