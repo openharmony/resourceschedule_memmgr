@@ -214,7 +214,7 @@ HWTEST_F(MemcgTest, RemoveMemcgDirTest, TestSize.Level1)
 
 HWTEST_F(MemcgTest, AddProcTest, TestSize.Level1)
 {
-    unsigned int userId = 10;
+    unsigned int userId = 23456;
     UserMemcg usermemcg= UserMemcg(userId);
     EXPECT_EQ(usermemcg.CreateMemcgDir(), true);
     EXPECT_EQ(usermemcg.AddProc(userId), false);
