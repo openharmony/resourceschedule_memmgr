@@ -105,9 +105,9 @@ int32_t MemMgrService::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
     ReclaimPriorityManager::BunldeCopySet bundleSet;
     ReclaimPriorityManager::GetInstance().GetBundlePrioSet(bundleSet);
     for (auto bundlePriorityInfo : bundleSet) {
-        Memory::BundlePriority *bi = new Memory::BundlePriority(bundlePriorityInfo.uid_,
+        Memory::BundlePriority bi = Memory::BundlePriority(bundlePriorityInfo.uid_,
             bundlePriorityInfo.name_, bundlePriorityInfo.priority_, bundlePriorityInfo.accountId_);
-        bundlePrioList.AddBundleInfo(*bi);
+        bundlePrioList.AddBundleInfo(bi);
     }
     bundlePrioList.SetCount(bundlePrioList.Size());
     return 0;
