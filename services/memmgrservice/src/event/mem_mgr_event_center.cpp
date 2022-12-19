@@ -61,19 +61,9 @@ bool MemMgrEventCenter::CreateRegisterHandler()
 void MemMgrEventCenter::RemoveEventObserver(int32_t systemAbilityId)
 {
     HILOGI("called");
-
     if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == APP_MGR_SERVICE_ID) {
-        appStateObserver_ = nullptr;
-        extConnObserver_ = nullptr;
         ReclaimPriorityManager::GetInstance().Reset();
     }
-    if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
-        accountObserver_ = nullptr;
-    }
-
-    if (systemAbilityId == COMMON_EVENT_SERVICE_ID || systemAbilityId == COMMON_EVENT_SERVICE_ABILITY_ID) {
-        commonEventObserver_ = nullptr;
-    }    
 }
 
 bool MemMgrEventCenter::RegisterEventObserver()
@@ -270,6 +260,17 @@ void MemMgrEventCenter::RetryRegisterEventObserver(int32_t systemAbilityId)
         RegisterBgTaskObserver();
     }
 #endif
+    if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == APP_MGR_SERVICE_ID) {
+        RegisterAppStateObserver();
+    }
+
+    if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
+        RegisterAccountObserver();
+    }
+
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID || systemAbilityId == COMMON_EVENT_SERVICE_ABILITY_ID) {
+        RegisterCommonEventObserver();
+    }    
     RegisterEventObserver();
 }
 
