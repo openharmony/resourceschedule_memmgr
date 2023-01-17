@@ -62,6 +62,100 @@ int32_t MemMgrClient::GetKillLevelOfLmkd(int32_t &killLevel)
     return dps->GetKillLevelOfLmkd(killLevel);
 }
 
+#ifdef USE_PURGEABLE_MEMORY
+int32_t MemMgrClient::RegisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->RegisterActiveApps(pid, uid);
+}
+
+int32_t MemMgrClient::DeregisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->DeregisterActiveApps(pid, uid);
+}
+
+int32_t MemMgrClient::SubscribeAppState(const AppStateSubscriber &subscriber)
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    sptr<AppStateSubscriber::AppStateSubscriberImpl> subscriberSptr = subscriber.GetImpl();
+    if (subscriberSptr == nullptr) {
+        HILOGE("subscriberSptr is null");
+        return -1;
+    }
+    return dps->SubscribeAppState(subscriberSptr);
+}
+
+int32_t MemMgrClient::UnsubscribeAppState(const AppStateSubscriber &subscriber)
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    sptr<AppStateSubscriber::AppStateSubscriberImpl> subscriberSptr = subscriber.GetImpl();
+    if (subscriberSptr == nullptr) {
+        HILOGE("subscriberSptr is null");
+        return -1;
+    }
+    return dps->UnsubscribeAppState(subscriberSptr);
+}
+
+int32_t MemMgrClient::GetAvailableMemory()
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->GetAvailableMemory();
+}
+
+#else
+int32_t MemMgrClient::RegisterActiveApps(int32_t pid, int32_t uid)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::DeregisterActiveApps(int32_t pid, int32_t uid)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::SubscribeAppState(const AppStateSubscriber &subscriber)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::UnsubscribeAppState(const AppStateSubscriber &subscriber)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::GetAvailableMemory()
+{
+    return -1;
+}
+
+#endif // USE_PURGEABLE_MEMORY
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");

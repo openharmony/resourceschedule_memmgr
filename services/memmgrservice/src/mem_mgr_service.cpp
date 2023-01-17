@@ -23,6 +23,10 @@
 #include "reclaim_strategy_manager.h"
 #include "multi_account_manager.h"
 #include "low_memory_killer.h"
+#ifdef USE_PURGEABLE_MEMORY
+#include "purgeable_mem_manager.h"
+#include "kernel_interface.h"
+#endif
 
 #include <unistd.h>
 
@@ -129,6 +133,43 @@ int32_t MemMgrService::GetKillLevelOfLmkd(int32_t &killLevel)
     return 0;
 }
 
+#ifdef USE_PURGEABLE_MEMORY
+int32_t MemMgrService::RegisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    PurgeableMemManager::GetInstance().RegisterActiveApps(pid, uid);
+    return 0;
+}
+
+int32_t MemMgrService::DeregisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    PurgeableMemManager::GetInstance().DeregisterActiveApps(pid, uid);
+    return 0;
+}
+
+int32_t MemMgrService::SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber)
+{
+    HILOGI("called");
+    PurgeableMemManager::GetInstance().AddSubscriber(subscriber);
+    return 0;
+}
+
+int32_t MemMgrService::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber)
+{
+    HILOGI("called");
+    PurgeableMemManager::GetInstance().RemoveSubscriber(subscriber);
+    return 0;
+}
+
+int32_t MemMgrService::GetAvailableMemory()
+{
+    HILOGI("called");
+    int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
+    return currentBuffer;
+}
+#endif // USE_PURGEABLE_MEMORY
+
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
@@ -148,6 +189,12 @@ void ShowHelpInfo(int fd) {
     dprintf(fd, "-e                          |dump event observer\n");
     dprintf(fd, "-r                          |dump reclaim info and adj\n");
     dprintf(fd, "-c                          |dump config\n");
+#ifdef USE_PURGEABLE_MEMORY
+    dprintf(fd, "-t                          |triger onTrim, 0:moderate, 1:low, 2:critical\n");
+    dprintf(fd, "-f                          |triger Reclaim\n");
+    dprintf(fd, "   -p                          |the pid of process to reclaim, default to reclaim all\n");
+    dprintf(fd, "-s                          |show all the pid which can be reclaimed\n");
+#endif
 }
 
 int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
@@ -169,6 +216,10 @@ int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
         ReclaimPriorityManager::GetInstance().Dump(fd);
     } else if (params.size() == 1 && params[0] == "-c") {
         MemmgrConfigManager::GetInstance().Dump(fd);
+#ifdef USE_PURGEABLE_MEMORY
+    } else if (params.size() >= 1 && (params[0] == "-t" || params[0] == "-f" || params[0] == "-s")) {
+        PurgeableMemManager::GetInstance().Test(fd, params);
+#endif
     } 
     return 0;
 }

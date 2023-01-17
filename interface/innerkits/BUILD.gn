@@ -21,7 +21,13 @@ config("memmgr_client_config") {
     "include",
     "${memmgr_common_path}/include",
     "//utils/system/safwk/native/include/",
+    "${memmgr_service_path}/include/memory_level_manager/",
   ]
+  defines = []
+  if (memmgr_purgeable_memory) {
+    defines += [ "USE_PURGEABLE_MEMORY" ]
+    include_dirs += [ "${memmgr_service_path}/include/purgeable_mem_manager/" ]
+  }
 }
 
 ohos_shared_library("memmgrclient") {
@@ -41,6 +47,14 @@ ohos_shared_library("memmgrclient") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
+
+  if (memmgr_purgeable_memory) {
+    sources += [
+      "${memmgr_service_path}/src/purgeable_mem_manager/app_state_subscriber_proxy.cpp",
+      "${memmgr_service_path}/src/purgeable_mem_manager/app_state_subscriber_stub.cpp",
+      "src/app_state_subscriber.cpp",
+    ]
+  }
 
   part_name = "memmgr"
   subsystem_name = "resourceschedule"

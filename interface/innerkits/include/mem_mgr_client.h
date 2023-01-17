@@ -18,6 +18,7 @@
 
 #include "i_mem_mgr.h"
 #include "single_instance.h"
+#include "app_state_subscriber.h"
 
 namespace OHOS {
 namespace Memory {
@@ -28,6 +29,11 @@ public:
     int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList);
     int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected);
     int32_t GetKillLevelOfLmkd(int32_t &killLevel);
+    int32_t RegisterActiveApps(int32_t pid, int32_t uid);
+    int32_t DeregisterActiveApps(int32_t pid, int32_t uid);
+    int32_t SubscribeAppState(const AppStateSubscriber &subscriber);
+    int32_t UnsubscribeAppState(const AppStateSubscriber &subscriber);
+    int32_t GetAvailableMemory();
 
 private:
     sptr<IMemMgr> GetMemMgrService();
