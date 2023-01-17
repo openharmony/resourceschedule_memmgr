@@ -58,6 +58,9 @@
         "test": [
             "//foundation/resourceschedule/memmgr/test:memmgr_unittest"
         ]
-      }
+      },
+      "features": [
+        "memmgr_purgeable_memory"
+      ]
     }
   }

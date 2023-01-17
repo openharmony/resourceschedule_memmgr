@@ -36,6 +36,13 @@ private:
     int32_t HandleGetBunldePriorityList(MessageParcel &data, MessageParcel &reply);
     int32_t HandleNotifyDistDevStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetKillLevelOfLmkd(MessageParcel &data, MessageParcel &reply);
+#ifdef USE_PURGEABLE_MEMORY
+    int32_t HandleRegisterActiveApps(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleDeregisterActiveApps(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleSubscribeAppState(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleUnsubscribeAppState(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleGetAvailableMemory(MessageParcel &data, MessageParcel &reply);
+#endif
 
     using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, MemMgrFunc> memberFuncMap_;
