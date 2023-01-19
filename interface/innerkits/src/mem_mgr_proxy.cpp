@@ -121,7 +121,7 @@ int32_t MemMgrProxy::RegisterActiveApps(int32_t pid, int32_t uid)
         return ERR_FLATTEN_OBJECT;
     }
     if (!data.WriteInt32(pid) || !data.WriteInt32(uid)) {
-        HILOGE("wirte param failed");
+        HILOGE("write param failed");
         return ERR_INVALID_DATA;
     }
     MessageParcel reply;
@@ -149,7 +149,7 @@ int32_t MemMgrProxy::DeregisterActiveApps(int32_t pid, int32_t uid)
         return ERR_FLATTEN_OBJECT;
     }
     if (!data.WriteInt32(pid) || !data.WriteInt32(uid)) {
-        HILOGE("wirte param failed");
+        HILOGE("write param failed");
         return ERR_INVALID_DATA;
     }
     MessageParcel reply;
@@ -184,7 +184,6 @@ int32_t MemMgrProxy::SubscribeAppState(const sptr<IAppStateSubscriber> &subscrib
         HILOGE("write subscriber failed");
         return ERR_INVALID_DATA;
     }
-
     MessageParcel reply;
     MessageOption option;
     int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_SUBSCRIBE_APP_STATE, data, reply, option);
@@ -213,7 +212,7 @@ int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscr
         HILOGE("write interface token failed");
         return ERR_FLATTEN_OBJECT;
     }
-    if (data.WriteRemoteObject(subscriber->AsObject())) {
+    if (!data.WriteRemoteObject(subscriber->AsObject())) {
         HILOGE("write subscriber failed");
         return ERR_INVALID_DATA;
     }
@@ -235,6 +234,7 @@ int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscr
 
 int32_t MemMgrProxy::GetAvailableMemory()
 {
+    HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {

@@ -74,7 +74,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnConnected()
 void AppStateSubscriber::AppStateSubscriberImpl::OnDisconnected()
 {
     if (GetMemMgrProxy() && recipient_ != nullptr) {
-        proxy_->AsObject()->AddDeathRecipient(recipient_);
+        proxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
@@ -87,9 +87,6 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnDisconnected()
 
 void AppStateSubscriber::AppStateSubscriberImpl::OnAppStateChanged(int32_t pid, int32_t uid, int32_t state)
 {
-    if (GetMemMgrProxy() && recipient_ != nullptr) {
-        proxy_->AsObject()->AddDeathRecipient(recipient_);
-    }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
     if (!isListenerAlive) {
@@ -101,9 +98,6 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnAppStateChanged(int32_t pid, 
 
 void AppStateSubscriber::AppStateSubscriberImpl::ForceReclaim(int32_t pid, int32_t uid)
 {
-    if (GetMemMgrProxy() && recipient_ != nullptr) {
-        proxy_->AsObject()->AddDeathRecipient(recipient_);
-    }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
     if (!isListenerAlive) {
@@ -115,9 +109,6 @@ void AppStateSubscriber::AppStateSubscriberImpl::ForceReclaim(int32_t pid, int32
 
 void AppStateSubscriber::AppStateSubscriberImpl::OnTrim(SystemMemoryLevel level)
 {
-    if (GetMemMgrProxy() && recipient_ != nullptr) {
-        proxy_->AsObject()->AddDeathRecipient(recipient_);
-    }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
     if (!isListenerAlive) {
@@ -147,7 +138,7 @@ bool AppStateSubscriber::AppStateSubscriberImpl::GetMemMgrProxy()
     }
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(MEMORY_MANAGER_SA_ID);
-    if (remoteObject) {
+    if (!remoteObject) {
         return false;
     }
 

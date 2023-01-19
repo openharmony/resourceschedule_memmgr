@@ -134,10 +134,10 @@ private:
          *
          * @param level current memory level.
          */
-        virtual void OnTrim(SystemMemoryLevel level) override;
+        void OnTrim(SystemMemoryLevel level) override;
 
         /* *
-         * @brief Get managed proxy of appstate observer.
+         * @brief Get managed proxy of memory manager.
          *
          * @return True if success, else false.
          */

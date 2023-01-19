@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MEMORY_MEMMGR_REPORT_DEATH_RECIPIENT_H
-#define OHOS_MEMORY_MEMMGR_REPORT_DEATH_RECIPIENT_H
+#ifndef OHOS_MEMORY_MEMMGR_REMOTE_DEATH_RECIPIENT_H
+#define OHOS_MEMORY_MEMMGR_REMOTE_DEATH_RECIPIENT_H
 
 #include <functional>
 
@@ -46,4 +46,4 @@ private:
 };
 } // namespace Memory
 } // namespace OHOS
-#endif // OHOS_MEMORY_MEMMGR_REPORT_DEATH_RECIPIENT_H
+#endif // OHOS_MEMORY_MEMMGR_REMOTE_DEATH_RECIPIENT_H
