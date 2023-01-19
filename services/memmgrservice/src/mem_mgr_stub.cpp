@@ -154,10 +154,8 @@ int32_t MemMgrStub::HandleDeregisterActiveApps(MessageParcel &data, MessageParce
 int32_t MemMgrStub::HandleSubscribeAppState(MessageParcel &data, MessageParcel &reply)
 {
     HILOGI("called");
-    int32_t pid = 0;
-    int32_t uid = 0;
     sptr<IRemoteObject> subscriber = data.ReadRemoteObject();
-    if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
+    if (subscriber == nullptr) {
         HILOGE("read params failed");
         return IPC_STUB_ERR;
     }
