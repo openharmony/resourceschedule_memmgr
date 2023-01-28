@@ -131,9 +131,9 @@ ohos_shared_library("memmgrservice") {
 
   if (memmgr_purgeable_memory) {
     sources += [
-      "src/purgeable_mem_manager/purgeable_mem_manager.cpp",
       "src/purgeable_mem_manager/app_state_subscriber_proxy.cpp",
       "src/purgeable_mem_manager/app_state_subscriber_stub.cpp",
+      "src/purgeable_mem_manager/purgeable_mem_manager.cpp",
     ]
     external_deps += [ "access_token:libaccesstoken_sdk" ]
   }
