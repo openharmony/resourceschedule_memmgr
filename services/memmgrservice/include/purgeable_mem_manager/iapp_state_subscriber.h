@@ -39,7 +39,7 @@ public:
     virtual void OnConnected() = 0;
 
     /* *
-     * Called back when the subscriber is disconnected to Memory Manager Service.
+     * @brief Called back when the subscriber is disconnected to Memory Manager Service.
      */
     virtual void OnDisconnected() = 0;
 

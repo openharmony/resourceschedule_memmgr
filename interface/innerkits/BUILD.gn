@@ -36,6 +36,7 @@ ohos_shared_library("memmgrclient") {
     "src/bundle_priority_list.cpp",
     "src/mem_mgr_client.cpp",
     "src/mem_mgr_proxy.cpp",
+    "src/app_state_subscriber.cpp",
   ]
 
   public_configs = [ ":memmgr_client_config" ]
@@ -52,7 +53,6 @@ ohos_shared_library("memmgrclient") {
     sources += [
       "${memmgr_service_path}/src/purgeable_mem_manager/app_state_subscriber_proxy.cpp",
       "${memmgr_service_path}/src/purgeable_mem_manager/app_state_subscriber_stub.cpp",
-      "src/app_state_subscriber.cpp",
     ]
   }
 

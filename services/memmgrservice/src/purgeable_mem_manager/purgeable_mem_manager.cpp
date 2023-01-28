@@ -362,7 +362,7 @@ void PurgeableMemManager::ReclaimInner(int32_t pid)
     }
     std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
     auto iter = appStateSubscribers_.begin();
-    while (iter != appStateSubscribers_.begin()) {
+    while (iter != appStateSubscribers_.end()) {
         HILOGI("do ForceReclaim");
         (*iter)->ForceReclaim(pid, uid);
         iter++;

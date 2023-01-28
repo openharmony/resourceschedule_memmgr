@@ -121,6 +121,7 @@ int32_t MemMgrStub::HandleGetKillLevelOfLmkd(MessageParcel &data, MessageParcel 
 #ifdef USE_PURGEABLE_MEMORY
 int32_t MemMgrStub::HandleRegisterActiveApps(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("called");
     int32_t pid = 0;
     int32_t uid = 0;
     if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
@@ -137,6 +138,7 @@ int32_t MemMgrStub::HandleRegisterActiveApps(MessageParcel &data, MessageParcel 
 
 int32_t MemMgrStub::HandleDeregisterActiveApps(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("called");
     int32_t pid = 0;
     int32_t uid = 0;
     if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
@@ -184,6 +186,7 @@ int32_t MemMgrStub::HandleUnsubscribeAppState(MessageParcel &data, MessageParcel
 
 int32_t MemMgrStub::HandleGetAvailableMemory(MessageParcel &data, MessageParcel &reply)
 {
+    HILOGI("called");
     int32_t ret = GetAvailableMemory();
     if (!reply.WriteInt32(ret)) {
         return IPC_STUB_ERR;

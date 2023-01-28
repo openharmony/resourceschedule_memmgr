@@ -166,7 +166,47 @@ HWTEST_F(InnerkitsTest, GetAvailableMemory_Test, TestSize.Level1)
     int32_t ret = MemMgrClient::GetInstance().GetAvailableMemory();
     EXPECT_NE(ret, 0);
 }
-#endif
+#else
+HWTEST_F(InnerkitsTest, RegisterActiveApps_Test, TestSize.Level1)
+{
+    int32_t pid = 1234;
+    int32_t uid = 20012001;
+    int32_t ret = MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(InnerkitsTest, DeregisterActiveApps_Test, TestSize.Level1)
+{
+    int32_t pid = 1234;
+    int32_t uid = 20012001;
+    int32_t ret = MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(InnerkitsTest, SubscribeAppState_Test, TestSize.Level1)
+{
+    std::shared_ptr<AppStateSubscriberTest> appStateSubscriberTest_1 = std::make_shared<AppStateSubscriberTest>();
+    EXPECT_NE(appStateSubscriberTest_1, nullptr);
+    int32_t ret = MemMgrClient::GetInstance().SubscribeAppState(*appStateSubscriberTest_1);
+    appStateSubscriberTests.emplace_back(appStateSubscriberTest_1);
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(InnerkitsTest, UnsubscribeAppState_Test, TestSize.Level1)
+{
+    std::shared_ptr<AppStateSubscriberTest> appStateSubscriberTest_1 = std::make_shared<AppStateSubscriberTest>();
+    EXPECT_NE(appStateSubscriberTest_1, nullptr);
+    int32_t ret = MemMgrClient::GetInstance().UnsubscribeAppState(*appStateSubscriberTest_1);
+    appStateSubscriberTests.emplace_back(appStateSubscriberTest_1);
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(InnerkitsTest, GetAvailableMemory_Test, TestSize.Level1)
+{
+    int32_t ret = MemMgrClient::GetInstance().GetAvailableMemory();
+    EXPECT_NE(ret, -1);
+}
+#endif // USE_PURGEABLE_MEMORY
 
 }
 }
