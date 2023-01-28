@@ -30,6 +30,6 @@ declare_args() {
       defined(global_parts_info.resourceschedule_background_task_mgr)) {
     memmgr_report_has_bg_task_mgr = true
   }
-  
+
   memmgr_purgeable_memory = false
 }
