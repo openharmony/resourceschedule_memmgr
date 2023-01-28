@@ -131,7 +131,7 @@ void PurgeableMemManager::RemoveSubscriberInner(const sptr<IAppStateSubscriber> 
     }
     subscriber->OnDisconnected();
     appStateSubscribers_.erase(subscriberIter);
-    HILOGI("remote subscriber succeed, subscriber list size is: %{public}d",
+    HILOGI("remove subscriber succeed, subscriber list size is: %{public}d",
         static_cast<int>(appStateSubscribers_.size()));
 }
 
@@ -164,7 +164,7 @@ void PurgeableMemManager::OnRemoteSubscriberDiedInner(const wptr<IRemoteObject> 
     while (iter != appStateSubscribers_.end()) {
         if ((*iter)->AsObject() == objectProxy) {
             iter = appStateSubscribers_.erase(iter);
-            HILOGI("remote the subscriber");
+            HILOGI("remove the subscriber");
         } else {
             iter++;
         }
