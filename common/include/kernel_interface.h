@@ -74,11 +74,14 @@ public:
     bool GetUidByPid(unsigned int pid, unsigned int& uid);
     bool ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr, unsigned long long &ret);
     int64_t GetSystemCurTime();
+    int GetTotalBuffer();
 
     static const std::string ROOT_PROC_PATH;
     static const std::string MEMCG_BASE_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_BUFFER_SIZE;
+    static const std::string MEMINFO_PATH;
+    static const std::string TOTAL_MEMORY;
     static constexpr mode_t FILE_MODE_666 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // -rw-rw-rw--
     static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
     static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
@@ -87,6 +90,8 @@ public:
     static constexpr mode_t FILE_MODE_775 = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
     static constexpr mode_t FILE_MODE_770 = S_IRWXU | S_IRWXG;
     static constexpr mode_t FILE_MODE_700 = S_IRWXU;
+private:
+    int totalBuffer = -1;
 };
 } // namespace Memory
 } // namespace OHOS

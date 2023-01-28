@@ -168,6 +168,13 @@ int32_t MemMgrService::GetAvailableMemory()
     int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
     return currentBuffer;
 }
+
+int32_t MemMgrService::GetTotalMemory()
+{
+    HILOGI("called");
+    int totalBuffer = KernelInterface::GetInstance().GetTotalBuffer();
+    return totalBuffer;  
+}
 #endif // USE_PURGEABLE_MEMORY
 
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)

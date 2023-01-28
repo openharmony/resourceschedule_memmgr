@@ -71,7 +71,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.resourceschedule.IAppStateSubscriber");
 
 protected:
-    enum InterfaceID : uint32_t {
+    enum InterfaceId : uint32_t {
         ON_CONNECTED = FIRST_CALL_TRANSACTION,
         ON_DISCONNECTED,
         ON_APP_STATE_CHANGED,

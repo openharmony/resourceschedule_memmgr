@@ -42,6 +42,7 @@ private:
     int32_t HandleSubscribeAppState(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUnsubscribeAppState(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetAvailableMemory(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleGetTotalMemory(MessageParcel &data, MessageParcel &reply);
 #endif
 
     using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);

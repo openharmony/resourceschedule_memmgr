@@ -35,7 +35,7 @@ public:
     void OnConnected() override;
 
     /* *
-     * Called back when the subscriber is disconnected to Memory Manager Service.
+     * @brief Called back when the subscriber is disconnected to Memory Manager Service.
      */
     void OnDisconnected() override;
 

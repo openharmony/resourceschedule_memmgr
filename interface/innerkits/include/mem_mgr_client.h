@@ -34,6 +34,7 @@ public:
     int32_t SubscribeAppState(const AppStateSubscriber &subscriber);
     int32_t UnsubscribeAppState(const AppStateSubscriber &subscriber);
     int32_t GetAvailableMemory();
+    int32_t GetTotalMemory();
 
 private:
     sptr<IMemMgr> GetMemMgrService();

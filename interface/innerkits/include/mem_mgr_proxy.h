@@ -33,6 +33,7 @@ public:
     int32_t SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
     int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
     int32_t GetAvailableMemory() override;
+    int32_t GetTotalMemory() override;
 #endif
 
 private:
