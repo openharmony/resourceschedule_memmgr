@@ -61,7 +61,7 @@ public:
         MEM_MGR_SUBSCRIBE_APP_STATE = 6,
         MEM_MGR_UNSUBSCRIBE_APP_STATE = 7,
         MEM_MGR_GET_AVAILABLE_MEMORY = 8,
-        MEM_MGR_GET_TOTAL_MEMORY = 9;
+        MEM_MGR_GET_TOTAL_MEMORY = 9,
 #endif
     };
 };
