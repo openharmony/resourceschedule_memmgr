@@ -189,7 +189,8 @@ void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::st
     MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
 }
 
-void ShowHelpInfo(int fd) {
+void ShowHelpInfo(int fd)
+{
     dprintf(fd, "Usage:\n");
     dprintf(fd, "-h                          |help for memmgrservice dumper\n");
     dprintf(fd, "-a                          |dump all info\n");

@@ -139,6 +139,7 @@ void PurgeableMemManager::RemoveSubscriber(const sptr<IAppStateSubscriber> &subs
 {
     if (!CheckCallingToken()) {
         HILOGW("RemoveSubscriber not allowed");
+        return;
     }
     if (!initialized_) {
         HILOGE("is not initialized");
