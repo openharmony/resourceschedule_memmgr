@@ -44,6 +44,8 @@ MemMgrStub::MemMgrStub()
         &MemMgrStub::HandleUnsubscribeAppState;
     memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_AVAILABLE_MEMORY)] =
         &MemMgrStub::HandleGetAvailableMemory;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY)] =
+        &MemMgrStub::HandleGetTotalMemory;
 #endif
 }
 
@@ -188,6 +190,16 @@ int32_t MemMgrStub::HandleGetAvailableMemory(MessageParcel &data, MessageParcel 
 {
     HILOGI("called");
     int32_t ret = GetAvailableMemory();
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleGetTotalMemory(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t ret = GetTotalMemory();
     if (!reply.WriteInt32(ret)) {
         return IPC_STUB_ERR;
     }

@@ -128,6 +128,17 @@ int32_t MemMgrClient::GetAvailableMemory()
     return dps->GetAvailableMemory();
 }
 
+int32_t MemMgrClient::GetTotalMemory()
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->GetTotalMemory();
+}
+
 #else
 int32_t MemMgrClient::RegisterActiveApps(int32_t pid, int32_t uid)
 {
@@ -150,6 +161,11 @@ int32_t MemMgrClient::UnsubscribeAppState(const AppStateSubscriber &subscriber)
 }
 
 int32_t MemMgrClient::GetAvailableMemory()
+{
+    return -1;
+}
+
+int32_t MemMgrClient::GetTotalMemory()
 {
     return -1;
 }

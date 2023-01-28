@@ -38,6 +38,7 @@ public:
     virtual int32_t SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
     virtual int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
     virtual int32_t GetAvailableMemory() override;
+    virtual int32_t GetTotalMemory() override;
 #endif
 
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;

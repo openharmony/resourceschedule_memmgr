@@ -254,6 +254,30 @@ int32_t MemMgrProxy::GetAvailableMemory()
     }
     return ret;
 }
+
+int32_t MemMgrProxy::GetTotalMemory()
+{
+    HILOGI("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
 #endif // USE_PURGEABLE_MEMORY
 } // namespace Memory
 } // namespace OHOS

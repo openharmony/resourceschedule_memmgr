@@ -47,6 +47,8 @@ public:
     virtual int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) = 0;
 
     virtual int32_t GetAvailableMemory() = 0;
+
+    virtual int32_t GetTotalMemory() = 0;
 #endif
 
     enum {
@@ -59,6 +61,7 @@ public:
         MEM_MGR_SUBSCRIBE_APP_STATE = 6,
         MEM_MGR_UNSUBSCRIBE_APP_STATE = 7,
         MEM_MGR_GET_AVAILABLE_MEMORY = 8,
+        MEM_MGR_GET_TOTAL_MEMORY = 9;
 #endif
     };
 };
