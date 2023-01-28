@@ -113,7 +113,7 @@ void AppStateSubscriberProxy::OnTrim(SystemMemoryLevel level)
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(FORCE_RECLAIM, data, reply, option);
+    int32_t ret = remote->SendRequest(ON_TRIM, data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
@@ -138,7 +138,7 @@ void AppStateSubscriberProxy::ForceReclaim(int32_t pid, int32_t uid)
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(ON_TRIM, data, reply, option);
+    int32_t ret = remote->SendRequest(FORCE_RECLAIM, data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }

@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace Memory {
-constexpr unsigned int PURGEABLE_SUBSCRIBER_MAX_NUM = 1;
+constexpr unsigned int PURGEABLE_SUBSCRIBER_MAX_NUM = 100;
 constexpr unsigned int PURGEABLE_APPSTATE_MAX_NUM = 100;
 constexpr unsigned int PARAM_SIZE_ONTRIM = 2;
 constexpr unsigned int PARAM_SIZE_RECLAIMALL = 1;

@@ -57,7 +57,7 @@ private:
     void ShowRegistedApps(int fd);
     bool GetEventHandler();
     bool CheckCallingToken();
-    bool isNumeric(std::string const &tr);
+    bool isNumeric(std::string const &str);
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     bool initialized_ = false;
     std::map<int32_t, std::pair<int32_t, int32_t>> appList_;
