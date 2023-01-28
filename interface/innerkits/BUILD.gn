@@ -33,10 +33,10 @@ config("memmgr_client_config") {
 ohos_shared_library("memmgrclient") {
   install_enable = true
   sources = [
+    "src/app_state_subscriber.cpp",
     "src/bundle_priority_list.cpp",
     "src/mem_mgr_client.cpp",
     "src/mem_mgr_proxy.cpp",
-    "src/app_state_subscriber.cpp",
   ]
 
   public_configs = [ ":memmgr_client_config" ]
