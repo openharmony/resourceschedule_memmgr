@@ -42,6 +42,10 @@ void ReclaimPriorityConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
             ParseReclaimPriorityKillableSystemAppsConfig(currNode);
             continue;
         }
+        if (name.compare("importantBgApps") == 0) {
+            ParseReclaimPriorityImportantBgAppsConfig(currNode);
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return;
     }
@@ -81,9 +85,57 @@ void ReclaimPriorityConfig::ParseReclaimPriorityKillableSystemAppsConfig(const x
     return;
 }
 
+void ReclaimPriorityConfig::ParseReclaimPriorityImportantBgAppsConfig(const xmlNodePtr &rootNodePtr)
+{
+    HILOGI("called");
+    if (!XmlHelper::CheckNode(rootNodePtr) || !XmlHelper::HasChild(rootNodePtr)) {
+        HILOGD("Node exsist:%{public}d,has child node:%{public}d",
+               XmlHelper::CheckNode(rootNodePtr), XmlHelper::HasChild(rootNodePtr));
+        return;
+    }
+    for (xmlNodePtr currNode = rootNodePtr->xmlChildrenNode; currNode != nullptr; currNode = currNode->next) {
+        if (!XmlHelper::CheckNode(currNode)) {
+            return;
+        }
+        std::string name = std::string(reinterpret_cast<const char *>(currNode->name));
+        if (name.compare("importantBgApp") == 0) {
+            
+            std::map<std::string, std::string> param;
+            std::string procName;
+            int minPriority;
+
+            XmlHelper::GetModuleParam(currNode, param);
+            XmlHelper::SetStringParam(param, "procName", procName, "");
+            XmlHelper::SetIntParam(param, "minPriority", minPriority, RECLAIM_PRIORITY_MAX + 1);
+
+            if (procName.size() == 0 || minPriority > RECLAIM_PRIORITY_MAX + 1) {
+                HILOGE("read fail, ignore it!");
+                continue;
+            }
+            importantBgApps_.insert(std::make_pair(procName, minPriority));
+            continue;
+        }
+        HILOGW("unknown node :<%{public}s>", name.c_str());
+    }
+    return;
+}
+
 std::set<std::string> ReclaimPriorityConfig::GetkillalbeSystemApps()
 {
     return killalbeSystemApps_;
+}
+
+std::map<std::string, int> ReclaimPriorityConfig::GetImportantBgApps()
+{
+    return importantBgApps_;
+}
+
+void ReclaimPriorityConfig::Dump(int fd)
+{
+    dprintf(fd, "ImportantBgApps:   \n");
+    for (auto it = importantBgApps_.begin(); it != importantBgApps_.end(); it++) {
+        dprintf(fd, "              procName:%s  ---->  prio:%d \n", it->first.c_str(), it->second);
+    }
 }
 } // namespace Memory
 } // namespace OHOS

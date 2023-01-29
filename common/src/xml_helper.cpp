@@ -119,5 +119,18 @@ bool XmlHelper::ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsi
     }
     return false;
 }
+
+void XmlHelper::SetStringParam(std::map<std::string, std::string> &param,
+                                    std::string key, std::string &dst, std::string defaultValue)
+{
+    HILOGI("called");
+    dst = defaultValue;
+    std::map<std::string, std::string>::iterator iter = param.find(key);
+    if (iter != param.end() && (iter->second).size() > 0) {
+        dst = iter->second;
+        return;
+    }
+    HILOGW("find param failed key:<%{public}s>", key.c_str());
+}
 } // namespace Memory
 } // namespace OHOS
