@@ -19,6 +19,12 @@
     <killalbeSystemApps>
       <killableSysApp></killableSysApp>
     </killalbeSystemApps>
+    <importantBgApps>
+      <importantBgApp>
+            <procName>default</procName>
+            <minPriority>400</minPriority>
+      </importantBgApp>
+    </importantBgApps>
   </reclaimPriorityConfig>
   <systemMemoryLevelConfig>
       <moderate>800</moderate>
