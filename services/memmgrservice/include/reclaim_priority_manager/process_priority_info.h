@@ -39,15 +39,24 @@ public:
     bool isSuspendDelay;
     bool isEventStart;
     bool isDistDeviceConnected;
+    bool isExtension;
     int extensionBindStatus; // 0: unkown, 1:fg bind, 2:bg bind, 3:no bind
     std::set<int32_t> extensionConnectors; // contains all pid of connectors
+    std::set<int32_t> extensionCallerUid_;
+    std::set<int32_t> extensionConnectorUid_;
 
     void SetPriority(int targetPriority);
     int32_t ExtensionConnectorsCount();
     void AddExtensionConnector(int32_t pid);
     void RemoveExtensionConnector(int32_t pid);
+    void AddExtensionCallersUid(int32_t pid);
+    void RemoveExtensionCallersUid(int32_t pid);
+    void AddExtensionConnectorsUid(int32_t pid);
+    void RemoveExtensionConnectorsUid(int32_t pid);
     bool ContainsConnector(int32_t pid);
     std::string ConnectorsToString();
+    std::string CallersUidToString();
+    std::string ConnectorsUidToString();
 };
 } // namespace Memory
 } // namespace OHOS
