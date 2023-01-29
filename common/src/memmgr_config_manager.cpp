@@ -200,6 +200,7 @@ void MemmgrConfigManager::Dump(int fd)
     nandLifeConfig_.Dump(fd);
     systemMemoryLevelConfig_.Dump(fd);
     switchConfig_.Dump(fd);
+    reclaimPriorityConfig_.Dump(fd);
 }
 } // namespace Memory
 } // namespace OHOS
