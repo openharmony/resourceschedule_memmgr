@@ -643,6 +643,18 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid
     return ret;
 }
 
+bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> bundle, int &dstPriority)
+{
+    std::map<std::string, int> importantApps = config_.GetImportantBgApps();
+    std::string targetAppName = bundle->name_;
+
+    if (importantApps.count(targetAppName)) {
+        dstPriority = importantApps.at(targetAppName);
+        return true;
+    }
+    return false;
+}
+
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
                                                         ProcessPriorityInfo &proc)
 {
@@ -658,9 +670,15 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
         }
     } else { // is a background process
-        HILOGD("%{public}d is a background process, set process priority to %{public}d first", proc.pid_,
-            RECLAIM_PRIORITY_BACKGROUND);
-        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
+        int bgPriority = RECLAIM_PRIORITY_BACKGROUND;
+        if(IsImportantApp(bundle, bgPriority)) {
+            HILOGD("%{public}d is a important background process, set process priority to %{public}d first",
+                proc.pid_, bgPriority); 
+        } else {
+            HILOGD("%{public}d is a background process, set process priority to %{public}d first",
+                    proc.pid_, bgPriority);        
+        }
+        proc.SetPriority(bgPriority);
     }
     if (proc.isSuspendDelay) { // is a background process with transient task
         HILOGD("%{public}d is a background process with transient task", proc.pid_);

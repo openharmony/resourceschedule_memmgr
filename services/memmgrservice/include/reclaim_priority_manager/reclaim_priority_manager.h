@@ -156,6 +156,7 @@ private:
     void AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account);
     bool IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
     void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
+    bool IsImportantApp(std::shared_ptr<BundlePriorityInfo> bundle, int &dstPriority);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
