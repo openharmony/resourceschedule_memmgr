@@ -28,10 +28,14 @@ class ReclaimPriorityConfig {
 public:
     void ParseConfig(const xmlNodePtr &rootNodePtr);
     void ParseReclaimPriorityKillableSystemAppsConfig(const xmlNodePtr &rootNodePtr);
+    void ParseReclaimPriorityImportantBgAppsConfig(const xmlNodePtr &rootNodePtr);
     std::set<std::string> GetkillalbeSystemApps();
+    std::map<std::string, int> GetImportantBgApps();
+    void Dump(int fd);
 
 private:
     std::set<std::string> killalbeSystemApps_;
+    std::map<std::string, int> importantBgApps_;
 };
 } // namespace Memory
 } // namespace OHOS

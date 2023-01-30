@@ -37,6 +37,8 @@ static void SetIntParam(std::map<std::string, std::string> &param,
                         std::string key, int &dst, int defaultValue);
 static void SetUnsignedIntParam(std::map<std::string, std::string> &param,
                                 std::string key, unsigned int &dst, unsigned int defaultValue);
+static void SetStringParam(std::map<std::string, std::string> &param,
+                                    std::string key, std::string &dst, std::string defaultValue);
 static bool GetModuleParam(const xmlNodePtr &rootNodePtr, std::map<std::string, std::string> &param);
 static bool ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsigned long long &value);
 };
