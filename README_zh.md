@@ -1,18 +1,19 @@
 # 内存管理部件
 
 - [内存管理部件](#内存管理部件)
-	- [简介<a name="section_introduction"></a>](#简介)
-	- [目录<a name="section_catalogue"></a>](#目录)
-	- [框架<a name="section_framework"></a>](#框架)
-		- [进程回收优先级列表<a name="section_prio"></a>](#进程回收优先级列表)
-		- [回收策略/查杀策略<a name="section_reclaim"></a>](#回收策略查杀策略)
-	- [使用说明<a name="section_usage"></a>](#使用说明)
-	- [参数配置说明<a name="section_usage"></a>](#参数配置说明)
+	- [简介](#简介)
+	- [目录](#目录)
+	- [框架](#框架)
+		- [进程回收优先级列表](#进程回收优先级列表)
+			- [补充](#补充)
+		- [回收策略/查杀策略](#回收策略查杀策略)
+	- [使用说明](#使用说明)
+	- [参数配置说明](#参数配置说明)
 		- [availbufferSize](#availbuffersize)
 		- [ZswapdParam](#zswapdparam)
 		- [killConfig](#killconfig)
 		- [nandlife](#nandlife)
-	- [相关仓<a name="section_projects"></a>](#相关仓)
+	- [相关仓](#相关仓)
 
 ## 简介<a name="section_introduction"></a>
 
@@ -81,6 +82,9 @@
 | 200 | 后台可感知应用，如正在执行导航、播放音乐等长时任务的应用 |
 | 260 | 连接着分布式设备的后台应用 |
 | 400 | 普通后台应用及无被任何进程关联的extension进程 |
+
+#### 补充
+1. extension进程的优先级根据其关联进程组进行更新，其值在关联进程组最小优先级基础上增加100
 
 
 ### 回收策略/查杀策略<a name="section_reclaim"></a>

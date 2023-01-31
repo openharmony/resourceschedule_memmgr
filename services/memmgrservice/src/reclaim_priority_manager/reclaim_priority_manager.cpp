@@ -105,16 +105,17 @@ void ReclaimPriorityManager::Dump(int fd)
     }
     dprintf(fd, "-----------------------------------------------------------------\n\n");
 
-    dprintf(fd, "priority list of all managed processes, status:(fg,bgtask,trantask,evt,dist,ext)\n");
+    dprintf(fd, "priority list of all managed processes, status:(fg,bgtask,trantask,evt,dist,extb,ext)\n");
     dprintf(fd, "    pid       uid                                   bundle priority status\
-                      connnectors\n");
+                      connnectorpids               connnectoruids               processuids\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
         dprintf(fd, "|-----------------------------------------\n");
         for (auto procEntry : bundlePtr->procs_) {
             ProcessPriorityInfo &proc = procEntry.second;
-            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d %30s\n", proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
+            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d %30s %30s %30s\n", proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
                 proc.priority_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
-                proc.isDistDeviceConnected, proc.extensionBindStatus, proc.ConnectorsToString().c_str());
+                proc.isDistDeviceConnected, proc.extensionBindStatus, proc.isExtension, proc.ConnectorsToString().c_str(),
+                proc.ExtensionConnectorsUidToString().c_str(), proc.ExtensionProcessUidToString().c_str());
         }
     }
     dprintf(fd, "-----------------------------------------------------------------\n");
@@ -423,6 +424,17 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCaller(int32_t callerPid, 
     return handler_->PostImmediateTask(updateReclaimPriorityCallerInnerFunc);
 }
 
+bool ReclaimPriorityManager::UpdateReclaimPriorityByUid(int bundleUid, AppStateUpdateReason reason)
+{
+    if (!initialized_) {
+        HILOGE("has not been initialized_, skiped!");
+        return false;
+    }
+    std::function<bool()> updateReclaimPriorityByUidInnerFunc =
+        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityByUidInner, this, bundleUid, reason);
+    return handler_->PostImmediateTask(updateReclaimPriorityByUidInnerFunc);
+}
+
 sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
 {
     sptr<ISystemAbilityManager> saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -562,7 +574,7 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePrio
     return ret;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid,
+bool ReclaimPriorityManager::UpdateConnectorsForExtension(int32_t callerPid, int32_t callerUid,
     const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
     AppStateUpdateReason priorityReason)
 {
@@ -577,24 +589,88 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
 
     if (proc.priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM || bundle->priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM ||
         IsKillableSystemApp(bundle)) {
-        HILOGI("%{public}s is system app, skip!", bundleName.c_str());
+        HILOGD("%{public}s is system app, skip!", bundleName.c_str());
         return true;
     }
 
     if (priorityReason == AppStateUpdateReason::BIND_EXTENSION) {
         proc.isFreground = false; // current process is a extension, it never be a fg app.
+        proc.isExtension = true;
         proc.AddExtensionConnector(callerPid);
-        HILOGI("add connector %{public}d to %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
+        proc.AddExtensionConnectorUid(callerUid);
+        HILOGD("add connector %{public}d to %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
             bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     } else if (priorityReason == AppStateUpdateReason::UNBIND_EXTENSION) {
         proc.isFreground = false; // current process is a extension, it never be a fg app.
+        proc.isExtension = true;
         proc.RemoveExtensionConnector(callerPid);
-        HILOGI("del connector %{public}d from %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
+        proc.RemoveExtensionConnectorUid(callerUid);
+        HILOGD("del connector %{public}d from %{public}s(%{public}d,%{public}d), now connectors:%{public}s", callerPid,
             bundleName.c_str(), pid, bundleUid, proc.ConnectorsToString().c_str());
     }
     AppAction action = AppAction::OTHERS;
     HandleUpdateProcess(priorityReason, bundle, proc, action);
     return ApplyReclaimPriority(bundle, pid, action);
+}
+
+bool ReclaimPriorityManager::UpdateProcessForExtension(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason)
+{
+    int callerAccountId = GetOsAccountLocalIdFromUid(callerUid);
+    if (!IsProcExist(callerPid, callerUid, callerAccountId)) {
+        HILOGE("caller process not exist and not to create it!!");
+        return false;
+    }
+    std::shared_ptr<AccountBundleInfo> callerAccount = FindOsAccountById(callerAccountId);
+    std::shared_ptr<BundlePriorityInfo> callerBundle = callerAccount->FindBundleById(callerUid);
+    ProcessPriorityInfo &callerProc = callerBundle->FindProcByPid(callerPid);
+
+    if (priorityReason == AppStateUpdateReason::BIND_EXTENSION) {
+        callerProc.AddExtensionProcessUid(bundleUid);
+        HILOGD("add caller %{public}d to %{public}s(%{public}d,%{public}d), now calling:%{public}s", callerPid,
+            bundleName.c_str(), pid, bundleUid, callerProc.ExtensionProcessUidToString().c_str());
+    } else if (priorityReason == AppStateUpdateReason::UNBIND_EXTENSION) {
+        callerProc.RemoveExtensionProcessUid(bundleUid);
+        HILOGD("del caller %{public}d from %{public}s(%{public}d,%{public}d), now calling:%{public}s ", callerPid,
+            bundleName.c_str(), pid, bundleUid, callerProc.ExtensionProcessUidToString().c_str());
+    }
+    return true;
+}
+
+bool ReclaimPriorityManager::UpdateReclaimPriorityByUidInner(int bundleUid, AppStateUpdateReason reason)
+{
+    bool ret = false;
+    if (reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
+        HILOGD("call HandleCreateProcess");
+        ret = HandleUpdateExtensionBundle(bundleUid);
+    }
+    return ret;
+}
+
+bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
+{
+    int accountId = GetOsAccountLocalIdFromUid(bundleUid);
+    std::shared_ptr<AccountBundleInfo> accountPtr = FindOsAccountById(accountId);
+    if (accountPtr == nullptr || !accountPtr->HasBundle(bundleUid)) {
+        return false;
+    }   
+    std::shared_ptr<BundlePriorityInfo> bundlePtr = accountPtr->FindBundleById(bundleUid);
+    for (auto i = bundlePtr->procs_.begin(); i != bundlePtr->procs_.end(); ++i) {
+        UpdatePriorityByProcConnector(i->second);
+    }
+    UpdateBundlePriority(bundlePtr);
+    return true;
+}
+
+bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason)
+{
+    UpdateProcessForExtension(callerPid, callerUid,
+        callerBundleName, pid, bundleUid, bundleName, priorityReason);
+    return UpdateConnectorsForExtension(callerPid, callerUid,
+        callerBundleName, pid, bundleUid, bundleName, priorityReason);
 }
 
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
@@ -655,6 +731,35 @@ bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> 
     return false;
 }
 
+void ReclaimPriorityManager::UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc)
+{
+    for (auto callerUid : proc.extensionProcessUids_) {
+        UpdateReclaimPriorityByUid(callerUid, AppStateUpdateReason::UPDATE_EXTENSION_PROCESS);
+    }
+}
+
+void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &proc)
+{
+    if (proc.extensionConnectorUids_.size() == 0) {
+        return;
+    }
+    int minPriority = RECLAIM_PRIORITY_UNKNOWN;
+    for (auto connectorUid : proc.extensionConnectorUids_) {
+        int connectorAccountId = GetOsAccountLocalIdFromUid(connectorUid);
+        std::shared_ptr<AccountBundleInfo> connectorAccount = FindOsAccountById(connectorAccountId);
+        if (connectorAccount == nullptr || !connectorAccount->HasBundle(connectorUid)) {
+            minPriority = 0; // native
+            continue;
+        }   
+        std::shared_ptr<BundlePriorityInfo> connectorBundle = connectorAccount->FindBundleById(connectorUid);
+        for (auto procEntry : connectorBundle->procs_) {
+            ProcessPriorityInfo &connectorProc = procEntry.second;
+            minPriority = connectorProc.priority_ < minPriority ? connectorProc.priority_ : minPriority;
+        }
+    }
+    proc.SetPriority(minPriority + 100);
+}
+
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
                                                         ProcessPriorityInfo &proc)
 {
@@ -669,6 +774,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         if (proc.priority_ > RECLAIM_PRIORITY_FOREGROUND) {
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
         }
+        UpdatePriorityByProcForExtension(proc);
     } else { // is a background process
         int bgPriority = RECLAIM_PRIORITY_BACKGROUND;
         if(IsImportantApp(bundle, bgPriority)) {
@@ -679,6 +785,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
                     proc.pid_, bgPriority);        
         }
         proc.SetPriority(bgPriority);
+        UpdatePriorityByProcForExtension(proc);
     }
     if (proc.isSuspendDelay) { // is a background process with transient task
         HILOGD("%{public}d is a background process with transient task", proc.pid_);
@@ -713,6 +820,9 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         }
     } else {
         // is a plain background process
+    }
+    if (proc.isExtension) {
+        UpdatePriorityByProcConnector(proc);
     }
     HILOGI(": bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d, "
         "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d, "

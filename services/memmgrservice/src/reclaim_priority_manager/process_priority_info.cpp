@@ -35,6 +35,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->isSuspendDelay = false;
     this->isEventStart = false;
     this->isDistDeviceConnected = false;
+    this->isExtension = false;
     this->extensionBindStatus = EXTENSION_STATUS_BIND_UNKOWN;
 }
 
@@ -44,6 +45,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->pid_ = copyProcess.pid_;
     this->priority_ = copyProcess.priority_;
     this->isFreground = copyProcess.isFreground;
+    this->isExtension = copyProcess.isExtension;
     this->isBackgroundRunning = copyProcess.isBackgroundRunning;
     this->isSuspendDelay = copyProcess.isSuspendDelay;
     this->isEventStart = copyProcess.isEventStart;
@@ -52,11 +54,19 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     for (auto connectors : copyProcess.extensionConnectors) {
         this->AddExtensionConnector(connectors);
     }
+    for (auto callerUid : copyProcess.extensionProcessUids_) {
+        this->AddExtensionProcessUid(callerUid);
+    }
+    for (auto connectorUid : copyProcess.extensionConnectorUids_) {
+        this->AddExtensionConnectorUid(connectorUid);
+    }
 }
 
 ProcessPriorityInfo::~ProcessPriorityInfo()
 {
     extensionConnectors.clear();
+    extensionProcessUids_.clear();
+    extensionConnectorUids_.clear();
 }
 
 void ProcessPriorityInfo::SetPriority(int targetPriority)
@@ -80,6 +90,26 @@ void ProcessPriorityInfo::RemoveExtensionConnector(int32_t pid)
     extensionConnectors.erase(pid);
 }
 
+void ProcessPriorityInfo::AddExtensionProcessUid(int32_t uid)
+{
+    extensionProcessUids_.insert(uid);
+}
+
+void ProcessPriorityInfo::RemoveExtensionProcessUid(int32_t uid)
+{
+    extensionProcessUids_.erase(uid);
+}
+
+void ProcessPriorityInfo::AddExtensionConnectorUid(int32_t uid)
+{
+    extensionConnectorUids_.insert(uid);
+}
+
+void ProcessPriorityInfo::RemoveExtensionConnectorUid(int32_t uid)
+{
+    extensionConnectorUids_.erase(uid);
+}
+
 bool ProcessPriorityInfo::ContainsConnector(int32_t pid)
 {
     return extensionConnectors.count(pid) != 0;
@@ -91,6 +121,28 @@ std::string ProcessPriorityInfo::ConnectorsToString()
     ss << "[";
     for (auto connector : extensionConnectors) {
         ss << connector << " ";
+    }
+    ss << "]";
+    return ss.str();
+}
+
+std::string ProcessPriorityInfo::ExtensionProcessUidToString()
+{
+    std::stringstream ss;
+    ss << "[";
+    for (auto callerUid : extensionProcessUids_) {
+        ss << callerUid << " ";
+    }
+    ss << "]";
+    return ss.str();
+}
+
+std::string ProcessPriorityInfo::ExtensionConnectorsUidToString()
+{
+    std::stringstream ss;
+    ss << "[";
+    for (auto connectorUid : extensionConnectorUids_) {
+        ss << connectorUid << " ";
     }
     ss << "]";
     return ss.str();
