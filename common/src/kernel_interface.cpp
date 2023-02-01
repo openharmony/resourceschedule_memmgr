@@ -472,20 +472,9 @@ bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, cons
     return success;
 }
 
-
-
-int KernelInterface::GetTotalBuffer()
+int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::string &itemName)
 {
-    if (totalBuffer >= 0) {
-        return totalBuffer;
-    }
-
-    std::string contentStr;
-    if (!ReadFromFile(MEMINFO_PATH, contentStr)) {
-        HILOGE("read %{public}s faild, content=[%{public}s]", MEMINFO_PATH.c_str(), contentStr.c_str());
-        return -1;
-    }
-    char *contentPtr = new char[contentStr.size() + 1];
+    char *contentPtr = new (std::nothrow) char[contentStr.size() + 1];
     if (contentPtr == nullptr) {
         HILOGE("alloc buffer fail");
         return -1;
@@ -509,12 +498,12 @@ int KernelInterface::GetTotalBuffer()
         std::istringstream is(lineStr);
 
         is >> name >> value;
-        if (name == TOTAL_MEMORY) {
+        if (name == itemName) {
             findTotalMem = true;
             break;
         }
         line = strtok_r(NULL, "\n", &restPtr);
-    } while(true);
+    } while (line);
     if (contentPtr) {
         delete [] contentPtr;
     }
@@ -528,9 +517,22 @@ int KernelInterface::GetTotalBuffer()
             valueTemp = valueTemp + c;
         }
     }
-    totalBuffer = atoi(valueTemp.c_str());
-    return totalBuffer;
+    return atoi(valueTemp.c_str());
 }
 
+int KernelInterface::GetTotalBuffer()
+{
+    if (totalBuffer >= 0) {
+        return totalBuffer;
+    }
+
+    std::string contentStr;
+    if (!ReadFromFile(MEMINFO_PATH, contentStr)) {
+        HILOGE("read %{public}s faild, content=[%{public}s]", MEMINFO_PATH.c_str(), contentStr.c_str());
+        return -1;
+    }
+    totalBuffer = ParseMeminfo(contentStr, TOTAL_MEMORY);
+    return totalBuffer;
+}
 } // namespace Memory
 } // namespace OHOS

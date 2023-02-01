@@ -149,8 +149,7 @@ void PurgeableMemManager::RemoveSubscriber(const sptr<IAppStateSubscriber> &subs
         HILOGE("subscriber is null");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::RemoveSubscriberInner, this, subscriber);
-    handler_->PostImmediateTask(func);
+    RemoveSubscriberInner(subscriber);
 }
 
 void PurgeableMemManager::OnRemoteSubscriberDiedInner(const wptr<IRemoteObject> &object)

@@ -173,7 +173,7 @@ int32_t MemMgrService::GetTotalMemory()
 {
     HILOGI("called");
     int totalBuffer = KernelInterface::GetInstance().GetTotalBuffer();
-    return totalBuffer;  
+    return totalBuffer;
 }
 #endif // USE_PURGEABLE_MEMORY
 

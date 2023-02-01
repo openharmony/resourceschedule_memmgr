@@ -91,6 +91,8 @@ public:
     static constexpr mode_t FILE_MODE_770 = S_IRWXU | S_IRWXG;
     static constexpr mode_t FILE_MODE_700 = S_IRWXU;
 private:
+    int ParseMeminfo(const std::string &contentStr, const std::string &itemName);
+
     int totalBuffer = -1;
 };
 } // namespace Memory
