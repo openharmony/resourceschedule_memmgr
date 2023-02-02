@@ -157,6 +157,17 @@ private:
     bool IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
     void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
     bool IsImportantApp(std::shared_ptr<BundlePriorityInfo> bundle, int &dstPriority);
+    bool UpdateProcessForExtension(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason);
+    bool UpdateConnectorsForExtension(int32_t callerPid, int32_t callerUid,
+    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
+    AppStateUpdateReason priorityReason);
+    void UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc);
+    void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
+    bool UpdateReclaimPriorityByUid(int bundleUid, AppStateUpdateReason reason);
+    bool UpdateReclaimPriorityByUidInner(int bundleUid, AppStateUpdateReason reason);
+    bool HandleUpdateExtensionBundle(int bundleUid);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {

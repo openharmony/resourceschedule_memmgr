@@ -36,7 +36,12 @@ bool AccountBundleInfo::HasBundle(int bundleUid)
 
 std::shared_ptr<BundlePriorityInfo> AccountBundleInfo::FindBundleById(int bundleUid)
 {
-    return bundleIdInfoMapping_.at(bundleUid);
+    auto iter = bundleIdInfoMapping_.find(bundleUid);
+    if (iter != bundleIdInfoMapping_.end()) {
+        return iter->second;
+    }
+    HILOGD("not found the bundle info");
+    return nullptr;
 }
 
 void AccountBundleInfo::AddBundleToOsAccount(std::shared_ptr<BundlePriorityInfo> bundle)

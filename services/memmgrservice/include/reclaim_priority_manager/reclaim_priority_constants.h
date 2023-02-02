@@ -75,6 +75,7 @@ enum class AppStateUpdateReason {
     DIST_DEVICE_DISCONNECTED,
     BIND_EXTENSION,
     UNBIND_EXTENSION,
+    UPDATE_EXTENSION_PROCESS,
 };
 
 enum class BundleState {
