@@ -209,6 +209,5 @@ HWTEST_F(InnerkitsTest, GetAvailableMemory_Test, TestSize.Level1)
     EXPECT_EQ(ret, -1);
 }
 #endif // USE_PURGEABLE_MEMORY
-
 }
 }

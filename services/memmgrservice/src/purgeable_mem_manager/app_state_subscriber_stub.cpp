@@ -15,6 +15,7 @@
 
 #include "memmgr_log.h"
 #include "app_state_subscriber_stub.h"
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -109,4 +110,3 @@ int32_t AppStateSubscriberStub::HandleForceReclaim(MessageParcel &data)
 }
 } // namespace Memory
 } // namespace OHOS
-

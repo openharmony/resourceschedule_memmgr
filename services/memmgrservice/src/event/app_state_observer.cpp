@@ -31,7 +31,6 @@ void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppState
     // no pid here !
     HILOGI("uid=%{public}d, bundleName=%{public}s, state=%{public}d, ",
         appStateData.uid, appStateData.bundleName.c_str(), appStateData.state);
-
 #ifdef USE_PURGEABLE_MEMORY
     PurgeableMemManager::GetInstance().ChangeAppState(appStateData.pid, appStateData.uid, appStateData.state);
 #endif

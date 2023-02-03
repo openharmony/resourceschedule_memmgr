@@ -131,6 +131,7 @@ int32_t MemMgrStub::HandleRegisterActiveApps(MessageParcel &data, MessageParcel 
         return IPC_STUB_ERR;
     }
     HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+
     int32_t ret = RegisterActiveApps(pid, uid);
     if (!reply.WriteInt32(ret)) {
         return IPC_STUB_ERR;
@@ -148,6 +149,7 @@ int32_t MemMgrStub::HandleDeregisterActiveApps(MessageParcel &data, MessageParce
         return IPC_STUB_ERR;
     }
     HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+
     int32_t ret = DeregisterActiveApps(pid, uid);
     if (!reply.WriteInt32(ret)) {
         return IPC_STUB_ERR;

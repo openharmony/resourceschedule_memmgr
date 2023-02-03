@@ -24,7 +24,6 @@
 #include "iapp_state_subscriber.h"
 #endif
 
-
 namespace OHOS {
 namespace Memory {
 class IMemMgr : public IRemoteBroker {

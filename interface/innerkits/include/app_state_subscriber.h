@@ -98,6 +98,7 @@ private:
         private:
             AppStateSubscriberImpl &subscriberImpl_;
         };
+
     public:
         AppStateSubscriberImpl(AppStateSubscriber &subscriber);
         ~AppStateSubscriberImpl() {}
@@ -144,6 +145,7 @@ private:
         bool GetMemMgrProxy();
 
         void OnListenerDied();
+
     public:
         AppStateSubscriber &subscriber_;
         sptr<DeathRecipient> recipient_ { nullptr };
@@ -156,6 +158,7 @@ private:
     };
 private:
     const sptr<AppStateSubscriberImpl> GetImpl() const;
+
 private:
     sptr<AppStateSubscriberImpl> impl_ { nullptr };
 

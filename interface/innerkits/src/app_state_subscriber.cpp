@@ -39,10 +39,15 @@ AppStateSubscriber::~AppStateSubscriber()
 }
 
 void AppStateSubscriber::OnConnected() {}
+
 void AppStateSubscriber::OnDisconnected() {}
+
 void AppStateSubscriber::OnAppStateChanged(int32_t pid, int32_t uid, int32_t state) {}
+
 void AppStateSubscriber::OnTrim(SystemMemoryLevel level) {}
+
 void AppStateSubscriber::ForceReclaim(int32_t pid, int32_t uid) {}
+
 void AppStateSubscriber::OnRemoteDied(const wptr<IRemoteObject> &object) {}
 
 #ifdef USE_PURGEABLE_MEMORY

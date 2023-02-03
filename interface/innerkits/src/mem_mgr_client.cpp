@@ -169,7 +169,6 @@ int32_t MemMgrClient::GetTotalMemory()
 {
     return -1;
 }
-
 #endif // USE_PURGEABLE_MEMORY
 
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()

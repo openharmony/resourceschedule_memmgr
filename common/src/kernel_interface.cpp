@@ -484,7 +484,7 @@ int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::stri
         delete [] contentPtr;
         return -1;
     }
-    char *restPtr;
+    char *restPtr = nullptr;
     char *line = strtok_r(contentPtr, "\n", &restPtr);
     std::string name, value;
     bool findTotalMem = false;
