@@ -117,8 +117,13 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
 {
     HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
         connected);
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(pid, uid, name,
-        connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED);
+    ReclaimHandleRequest request;
+    request.pid = pid;
+    request.uid = uid;
+    request.bundleName = name;
+    request.reason =
+        connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED;
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
     return 0;
 }
 
