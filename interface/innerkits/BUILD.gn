@@ -25,7 +25,7 @@ config("memmgr_client_config") {
   ]
   defines = []
   if (memmgr_purgeable_memory) {
-    defines += [ "USE_PURGEABLE_MEMORY" ]
+    defines += [ "USE_PURGEGABLE_MEMORY" ]
     include_dirs += [ "${memmgr_service_path}/include/purgeable_mem_manager/" ]
   }
 }
