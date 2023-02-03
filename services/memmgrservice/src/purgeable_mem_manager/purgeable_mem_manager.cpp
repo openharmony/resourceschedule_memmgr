@@ -208,12 +208,10 @@ void PurgeableMemManager::RegisterActiveApps(int32_t pid, int32_t uid)
         HILOGW("AddSubscriber not allowed");
         return;
     }
-
     if (!initialized_) {
         HILOGE("is not initialized");
         return;
     }
-
     std::function<void()> func = std::bind(&PurgeableMemManager::RegisterActiveAppsInner, this, pid, uid);
     handler_->PostImmediateTask(func);
 }

@@ -40,6 +40,7 @@ void AppStateSubscriberProxy::OnConnected()
         HILOGE("write interface token failed");
         return;
     }
+
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
     int32_t ret = remote->SendRequest(ON_CONNECTED, data, reply, option);
@@ -86,6 +87,7 @@ void AppStateSubscriberProxy::OnAppStateChanged(int32_t pid, int32_t uid, int32_
         HILOGE("write app state failed");
         return;
     }
+
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
     int32_t ret = remote->SendRequest(ON_APP_STATE_CHANGED, data, reply, option);
@@ -93,6 +95,7 @@ void AppStateSubscriberProxy::OnAppStateChanged(int32_t pid, int32_t uid, int32_
         HILOGE("send request failed, error code: %d", ret);
     }
 }
+
 void AppStateSubscriberProxy::OnTrim(SystemMemoryLevel level)
 {
     sptr<IRemoteObject> remote = Remote();
@@ -118,6 +121,7 @@ void AppStateSubscriberProxy::OnTrim(SystemMemoryLevel level)
         HILOGE("send request failed, error code: %d", ret);
     }
 }
+
 void AppStateSubscriberProxy::ForceReclaim(int32_t pid, int32_t uid)
 {
     sptr<IRemoteObject> remote = Remote();
@@ -145,4 +149,3 @@ void AppStateSubscriberProxy::ForceReclaim(int32_t pid, int32_t uid)
 }
 } // namespace Memory
 } // namespace OHOS
-
