@@ -50,7 +50,7 @@ config("memory_memmgr_config") {
     defines += [ "CONFIG_BGTASK_MGR" ]
   }
   if (memmgr_purgeable_memory) {
-    defines += [ "USE_PURGEGABLE_MEMORY" ]
+    defines += [ "USE_PURGEGBLE_MEMORY" ]
     include_dirs += [ "include/purgeable_mem_manager/" ]
   }
 }
