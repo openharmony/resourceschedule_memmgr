@@ -134,7 +134,6 @@ int32_t MemMgrService::GetKillLevelOfLmkd(int32_t &killLevel)
 }
 
 #ifdef USE_PURGEABLE_MEMORY
-1111
 int32_t MemMgrService::RegisterActiveApps(int32_t pid, int32_t uid)
 {
     HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
