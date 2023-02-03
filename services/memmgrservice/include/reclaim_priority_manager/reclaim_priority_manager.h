@@ -33,6 +33,16 @@
 
 namespace OHOS {
 namespace Memory {
+struct ReclaimHandleRequest {
+    int32_t callerPid;
+    int32_t callerUid;
+    pid_t pid;
+    int uid;
+    std::string callerBundleName;
+    std::string bundleName;
+    AppStateUpdateReason reason;
+};
+
 class ReclaimPriorityManager {
     DECLARE_SINGLE_INSTANCE_BASE(ReclaimPriorityManager);
 
@@ -80,10 +90,7 @@ public:
     using BundlePrioMap = std::map<int, std::shared_ptr<BundlePriorityInfo>>;
     using OsAccountsMap = std::map<int, std::shared_ptr<AccountBundleInfo>>;
     bool Init();
-    bool UpdateReclaimPriority(pid_t pid, int bundleUid, const std::string &bundleName,
-        AppStateUpdateReason priorityReason);
-    bool UpdateReclaimPriorityWithCaller(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
-        pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
+    bool UpdateReclaimPriority(const ReclaimHandleRequest &request);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
@@ -135,9 +142,8 @@ private:
     void GetAllKillableSystemApps();
     void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
     void HandlePreStartedProcs();
-    bool UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
-            AppStateUpdateReason priorityReason);
-    bool UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
+    bool UpdateReclaimPriorityInner(const ReclaimHandleRequest &request);
+    bool HandleExtensionProcess(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
         pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
@@ -165,8 +171,6 @@ private:
     AppStateUpdateReason priorityReason);
     void UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc);
     void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
-    bool UpdateReclaimPriorityByUid(int bundleUid, AppStateUpdateReason reason);
-    bool UpdateReclaimPriorityByUidInner(int bundleUid, AppStateUpdateReason reason);
     bool HandleUpdateExtensionBundle(int bundleUid);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
