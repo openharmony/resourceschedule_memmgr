@@ -33,6 +33,20 @@ MemMgrStub::MemMgrStub()
         &MemMgrStub::HandleNotifyDistDevStatus;
     memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_KILL_LEVEL_OF_LMKD)] =
         &MemMgrStub::HandleGetKillLevelOfLmkd;
+#ifdef USE_PURGEABLE_MEMORY
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_REGISTER_ACTIVE_APPS)] =
+        &MemMgrStub::HandleRegisterActiveApps;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_DEREGISTER_ACTIVE_APPS)] =
+        &MemMgrStub::HandleDeregisterActiveApps;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_SUBSCRIBE_APP_STATE)] =
+        &MemMgrStub::HandleSubscribeAppState;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_UNSUBSCRIBE_APP_STATE)] =
+        &MemMgrStub::HandleUnsubscribeAppState;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_AVAILABLE_MEMORY)] =
+        &MemMgrStub::HandleGetAvailableMemory;
+    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY)] =
+        &MemMgrStub::HandleGetTotalMemory;
+#endif
 }
 
 MemMgrStub::~MemMgrStub()
@@ -105,5 +119,94 @@ int32_t MemMgrStub::HandleGetKillLevelOfLmkd(MessageParcel &data, MessageParcel 
     }
     return 0;
 }
+
+#ifdef USE_PURGEABLE_MEMORY
+int32_t MemMgrStub::HandleRegisterActiveApps(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t pid = 0;
+    int32_t uid = 0;
+    if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+
+    int32_t ret = RegisterActiveApps(pid, uid);
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleDeregisterActiveApps(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t pid = 0;
+    int32_t uid = 0;
+    if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+
+    int32_t ret = DeregisterActiveApps(pid, uid);
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleSubscribeAppState(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    sptr<IRemoteObject> subscriber = data.ReadRemoteObject();
+    if (subscriber == nullptr) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+    int32_t ret = SubscribeAppState(iface_cast<IAppStateSubscriber>(subscriber));
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleUnsubscribeAppState(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    sptr<IRemoteObject> subscriber = data.ReadRemoteObject();
+    if (subscriber == nullptr) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+
+    int32_t ret = UnsubscribeAppState(iface_cast<IAppStateSubscriber>(subscriber));
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleGetAvailableMemory(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t ret = GetAvailableMemory();
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleGetTotalMemory(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("called");
+    int32_t ret = GetTotalMemory();
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+#endif // USE_PURGEABLE_MEMORY
 } // namespace Memory
 } // namespace OHOS

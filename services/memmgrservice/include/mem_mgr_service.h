@@ -32,6 +32,15 @@ public:
     virtual int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
     virtual int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) override;
     virtual int32_t GetKillLevelOfLmkd(int32_t &killLevel) override;
+#ifdef USE_PURGEABLE_MEMORY
+    virtual int32_t RegisterActiveApps(int32_t pid, int32_t uid) override;
+    virtual int32_t DeregisterActiveApps(int32_t pid, int32_t uid) override;
+    virtual int32_t SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
+    virtual int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
+    virtual int32_t GetAvailableMemory() override;
+    virtual int32_t GetTotalMemory() override;
+#endif
+
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual int Dump(int fd, const std::vector<std::u16string> &args) override;

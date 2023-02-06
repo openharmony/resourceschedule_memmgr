@@ -42,6 +42,8 @@ const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
 
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
+const std::string KernelInterface::MEMINFO_PATH = "proc/meminfo";
+const std::string KernelInterface::TOTAL_MEMORY = "MemTotal";
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
@@ -468,6 +470,69 @@ bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, cons
     } while (line);
     DeleteCharArrayIfNotNull(contentPtr);
     return success;
+}
+
+int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::string &itemName)
+{
+    char *contentPtr = new (std::nothrow) char[contentStr.size() + 1];
+    if (contentPtr == nullptr) {
+        HILOGE("alloc buffer fail");
+        return -1;
+    }
+    if (strcpy_s(contentPtr, contentStr.size() + 1, contentStr.c_str()) != EOK) {
+        HILOGE("copy fail");
+        delete [] contentPtr;
+        return -1;
+    }
+    char *restPtr = nullptr;
+    char *line = strtok_r(contentPtr, "\n", &restPtr);
+    std::string name, value;
+    bool findTotalMem = false;
+    do {
+        for (size_t i = 0; i < strlen(line); i++) {
+            if (line[i] == ':') {
+                line[i] = ' ';
+            }
+        }
+        std::string lineStr(line);
+        std::istringstream is(lineStr);
+
+        is >> name >> value;
+        if (name == itemName) {
+            findTotalMem = true;
+            break;
+        }
+        line = strtok_r(NULL, "\n", &restPtr);
+    } while (line);
+    if (contentPtr) {
+        delete [] contentPtr;
+    }
+
+    if (findTotalMem == false) {
+        return -1;
+    }
+    std::string valueTemp = "";
+    for (auto c : value) {
+        if (c >= '0' && c <= '9') {
+            valueTemp = valueTemp + c;
+        }
+    }
+    return atoi(valueTemp.c_str());
+}
+
+int KernelInterface::GetTotalBuffer()
+{
+    if (totalBuffer >= 0) {
+        return totalBuffer;
+    }
+
+    std::string contentStr;
+    if (!ReadFromFile(MEMINFO_PATH, contentStr)) {
+        HILOGE("read %{public}s faild, content=[%{public}s]", MEMINFO_PATH.c_str(), contentStr.c_str());
+        return -1;
+    }
+    totalBuffer = ParseMeminfo(contentStr, TOTAL_MEMORY);
+    return totalBuffer;
 }
 } // namespace Memory
 } // namespace OHOS
