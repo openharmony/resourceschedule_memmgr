@@ -43,8 +43,12 @@ void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData 
     if (stateReasonPair != stateReasonMap_.end() && stateReasonStrPair != stateReasonStrMap_.end()) {
         AppStateUpdateReason reason = stateReasonPair->second;
         std::string reasonStr = stateReasonStrPair->second;
-        ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-            abilityStateData.pid, abilityStateData.uid, abilityStateData.bundleName, reason);
+        ReclaimHandleRequest request;
+        request.pid = abilityStateData.pid;
+        request.uid = abilityStateData.uid;
+        request.bundleName = abilityStateData.bundleName;
+        request.reason = reason;
+        ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
         HILOGI("called, uid=%{public}d, pid=%{public}d, bundleName=%{public}s %{public}s",
             abilityStateData.uid, abilityStateData.pid, abilityStateData.bundleName.c_str(), reasonStr.c_str());
     } else {
@@ -61,16 +65,26 @@ void AppStateObserver::OnProcessCreated(const AppExecFwk::ProcessData &processDa
 {
     HILOGI("uid=%{public}d, pid=%{public}d, bundleName=%{public}s",
         processData.uid, processData.pid, processData.bundleName.c_str());
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(processData.pid, processData.uid,
-        processData.bundleName, AppStateUpdateReason::CREATE_PROCESS);
+
+    ReclaimHandleRequest request;
+    request.pid = processData.pid;
+    request.uid = processData.uid;
+    request.bundleName = processData.bundleName;
+    request.reason = AppStateUpdateReason::CREATE_PROCESS;
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
 }
 
 void AppStateObserver::OnProcessDied(const AppExecFwk::ProcessData &processData)
 {
     HILOGI("uid=%{public}d, pid=%{public}d, bundleName=%{public}s",
         processData.uid, processData.pid, processData.bundleName.c_str());
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(processData.pid, processData.uid,
-        processData.bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
+
+    ReclaimHandleRequest request;
+    request.pid = processData.pid;
+    request.uid = processData.uid;
+    request.bundleName = processData.bundleName;
+    request.reason = AppStateUpdateReason::PROCESS_TERMINATED;
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
 }
 } // namespace Memory
 } // namespace OHOS

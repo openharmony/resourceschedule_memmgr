@@ -162,7 +162,12 @@ void ReclaimPriorityManager::UpdateForegroundApps()
             if (!IsFrontApp(bundle->name_, bundle->uid_, pid)) {
                 HILOGE("%{public}s(uid=%{public}d,pid=%{public}d) is not a fg app but with priority %{public}d, "
                     "adjust it!", bundle->name_.c_str(), bundle->uid_, pid, bundle->priority_);
-                UpdateReclaimPriority(pid, bundle->uid_, bundle->name_, AppStateUpdateReason::BACKGROUND);
+                ReclaimHandleRequest request;
+                request.pid = pid;
+                request.uid = bundle->uid_;
+                request.bundleName = bundle->name_;
+                request.reason =  AppStateUpdateReason::BACKGROUND;
+                UpdateReclaimPriority(request);
             } else {
                 HILOGI("%{public}s(uid=%{public}d,pid=%{public}d) is a real fg app.", bundle->name_.c_str(),
                     bundle->uid_, pid);
@@ -398,41 +403,15 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
     return true;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriority(pid_t pid, int bundleUid, const std::string &name,
-    AppStateUpdateReason reason)
+bool ReclaimPriorityManager::UpdateReclaimPriority(const ReclaimHandleRequest &request)
 {
     if (!initialized_) {
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
     std::function<bool()> updateReclaimPriorityInnerFunc =
-        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, pid, bundleUid, name, reason);
+                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, request);
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
-}
-
-bool ReclaimPriorityManager::UpdateReclaimPriorityWithCaller(int32_t callerPid, int32_t callerUid,
-    const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
-    AppStateUpdateReason priorityReason)
-{
-    if (!initialized_) {
-        HILOGE("has not been initialized_, skiped!");
-        return false;
-    }
-    std::function<bool()> updateReclaimPriorityCallerInnerFunc =
-        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner, this, callerPid, callerUid,
-        callerBundleName, pid, bundleUid, bundleName, priorityReason);
-    return handler_->PostImmediateTask(updateReclaimPriorityCallerInnerFunc);
-}
-
-bool ReclaimPriorityManager::UpdateReclaimPriorityByUid(int bundleUid, AppStateUpdateReason reason)
-{
-    if (!initialized_) {
-        HILOGE("has not been initialized_, skiped!");
-        return false;
-    }
-    std::function<bool()> updateReclaimPriorityByUidInnerFunc =
-        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityByUidInner, this, bundleUid, reason);
-    return handler_->PostImmediateTask(updateReclaimPriorityByUidInnerFunc);
 }
 
 sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
@@ -638,16 +617,6 @@ bool ReclaimPriorityManager::UpdateProcessForExtension(int32_t callerPid, int32_
     return true;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityByUidInner(int bundleUid, AppStateUpdateReason reason)
-{
-    bool ret = false;
-    if (reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
-        HILOGD("call HandleCreateProcess");
-        ret = HandleUpdateExtensionBundle(bundleUid);
-    }
-    return ret;
-}
-
 bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
 {
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
@@ -663,7 +632,7 @@ bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
     return true;
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t callerPid, int32_t callerUid,
+bool ReclaimPriorityManager::HandleExtensionProcess(int32_t callerPid, int32_t callerUid,
     const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
     AppStateUpdateReason priorityReason)
 {
@@ -673,49 +642,62 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
         callerBundleName, pid, bundleUid, bundleName, priorityReason);
 }
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
-    AppStateUpdateReason reason)
+bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleRequest &request)
 {
     HILOGI("called, pid=%{public}d, bundleUid=%{public}d, bundleName=%{public}s, reason=%{public}s",
-        pid, bundleUid, bundleName.c_str(), AppStateUpdateResonToString(reason).c_str());
-    int accountId = GetOsAccountLocalIdFromUid(bundleUid);
+        request.pid, request.uid, request.bundleName.c_str(), AppStateUpdateResonToString(request.reason).c_str());
+    int accountId = GetOsAccountLocalIdFromUid(request.uid);
     HILOGD("accountId=%{public}d", accountId);
 
-    if (reason == AppStateUpdateReason::CREATE_PROCESS) {
-        HILOGD("call HandleCreateProcess");
-        bool ret = HandleCreateProcess(pid, bundleUid, bundleName, accountId);
+    if (request.reason == AppStateUpdateReason::BIND_EXTENSION
+                    || request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
+        HILOGD("call HandleExtensionProcess");
+        bool ret = HandleExtensionProcess(request.callerPid, request.callerUid,
+                        request.callerBundleName, request.pid, request.uid, request.bundleName, request.reason);
         return ret;
     }
 
-    if (!IsProcExist(pid, bundleUid, accountId)) {
+    if (request.reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
+        HILOGD("call HandleUpdateExtensionBundle");
+        bool ret = HandleUpdateExtensionBundle(request.callerUid);
+        return ret;
+    }
+
+    if (request.reason == AppStateUpdateReason::CREATE_PROCESS) {
+        HILOGD("call HandleCreateProcess");
+        bool ret = HandleCreateProcess(request.pid, request.uid, request.bundleName, accountId);
+        return ret;
+    }
+
+    if (!IsProcExist(request.pid, request.uid, accountId)) {
         HILOGE("process not exist and not to create it!!");
         return false;
     }
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
-    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(request.uid);
     if (bundle->priority_ <= RECLAIM_PRIORITY_KILLABLE_SYSTEM) {
-        HILOGI("%{public}s is system app, skip!", bundleName.c_str());
+        HILOGI("%{public}s is system app, skip!", request.bundleName.c_str());
         return true;
     }
 
-    if (reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
+    if (request.reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
         HILOGD("call HandleApplicationSuspend");
         bool ret = HandleApplicationSuspend(bundle);
         return ret;
     }
 
-    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(request.pid);
     bool ret = true;
     AppAction action = AppAction::OTHERS;
-    if (reason == AppStateUpdateReason::PROCESS_TERMINATED) {
+    if (request.reason == AppStateUpdateReason::PROCESS_TERMINATED) {
         HILOGD("call HandleTerminateProcess");
         ret = HandleTerminateProcess(proc, bundle, account);
         return ret;
     } else {
         HILOGD("call HandleUpdateProcess");
-        HandleUpdateProcess(reason, bundle, proc, action);
+        HandleUpdateProcess(request.reason, bundle, proc, action);
     }
-    ret = ApplyReclaimPriority(bundle, pid, action);
+    ret = ApplyReclaimPriority(bundle, request.pid, action);
     return ret;
 }
 
@@ -734,7 +716,10 @@ bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> 
 void ReclaimPriorityManager::UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc)
 {
     for (auto callerUid : proc.extensionProcessUids_) {
-        UpdateReclaimPriorityByUid(callerUid, AppStateUpdateReason::UPDATE_EXTENSION_PROCESS);
+        ReclaimHandleRequest request;
+        request.callerUid = callerUid;
+        request.reason = AppStateUpdateReason::UPDATE_EXTENSION_PROCESS;
+        UpdateReclaimPriority(request);
     }
 }
 
