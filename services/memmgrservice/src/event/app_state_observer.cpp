@@ -16,7 +16,9 @@
 #include "app_state_observer.h"
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
-
+#ifdef USE_PURGEABLE_MEMORY
+#include "purgeable_mem_manager.h"
+#endif
 
 namespace OHOS {
 namespace Memory {
@@ -29,6 +31,9 @@ void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppState
     // no pid here !
     HILOGI("uid=%{public}d, bundleName=%{public}s, state=%{public}d, ",
         appStateData.uid, appStateData.bundleName.c_str(), appStateData.state);
+#ifdef USE_PURGEABLE_MEMORY
+    PurgeableMemManager::GetInstance().ChangeAppState(appStateData.pid, appStateData.uid, appStateData.state);
+#endif
 }
 
 void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData &abilityStateData)

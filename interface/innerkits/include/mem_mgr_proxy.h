@@ -27,6 +27,15 @@ public:
     int32_t GetBundlePriorityList(BundlePriorityList &bundlePrioList) override;
     int32_t NotifyDistDevStatus(int32_t pid, int32_t uid, const std::string &name, bool connected) override;
     int32_t GetKillLevelOfLmkd(int32_t &killLevel) override;
+#ifdef USE_PURGEABLE_MEMORY
+    int32_t RegisterActiveApps(int32_t pid, int32_t uid) override;
+    int32_t DeregisterActiveApps(int32_t pid, int32_t uid) override;
+    int32_t SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
+    int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
+    int32_t GetAvailableMemory() override;
+    int32_t GetTotalMemory() override;
+#endif
+
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;
 };

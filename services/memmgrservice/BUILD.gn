@@ -49,6 +49,10 @@ config("memory_memmgr_config") {
   if (memmgr_report_has_bg_task_mgr) {
     defines += [ "CONFIG_BGTASK_MGR" ]
   }
+  if (memmgr_purgeable_memory) {
+    defines += [ "USE_PURGEGBLE_MEMORY" ]
+    include_dirs += [ "include/purgeable_mem_manager/" ]
+  }
 }
 
 ohos_shared_library("memmgrservice") {
@@ -123,6 +127,15 @@ ohos_shared_library("memmgrservice") {
   if (memmgr_report_has_bg_task_mgr) {
     sources += [ "src/event/bg_task_observer.cpp" ]
     external_deps += [ "background_task_mgr:bgtaskmgr_innerkits" ]
+  }
+
+  if (memmgr_purgeable_memory) {
+    sources += [
+      "src/purgeable_mem_manager/app_state_subscriber_proxy.cpp",
+      "src/purgeable_mem_manager/app_state_subscriber_stub.cpp",
+      "src/purgeable_mem_manager/purgeable_mem_manager.cpp",
+    ]
+    external_deps += [ "access_token:libaccesstoken_sdk" ]
   }
 
   part_name = "${memmgr_part_name}"

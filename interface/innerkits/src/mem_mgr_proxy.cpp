@@ -109,5 +109,175 @@ int32_t MemMgrProxy::GetKillLevelOfLmkd(int32_t &killLevel)
     killLevel = curKillLevel;
     return ERR_OK;
 }
+
+#ifdef USE_PURGEABLE_MEMORY
+int32_t MemMgrProxy::RegisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid) || !data.WriteInt32(uid)) {
+        HILOGE("write params failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_REGISTER_ACTIVE_APPS, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::DeregisterActiveApps(int32_t pid, int32_t uid)
+{
+    HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid) || !data.WriteInt32(uid)) {
+        HILOGE("write params failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_DEREGISTER_ACTIVE_APPS, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber)
+{
+    HILOGI("called");
+    if (subscriber == nullptr) {
+        HILOGE("subscriber is null");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteRemoteObject(subscriber->AsObject())) {
+        HILOGE("write subscriber failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_SUBSCRIBE_APP_STATE, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber)
+{
+    HILOGI("called");
+    if (subscriber == nullptr) {
+        HILOGE("subscriber is null");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteRemoteObject(subscriber->AsObject())) {
+        HILOGE("write subscriber failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_UNSUBSCRIBE_APP_STATE, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::GetAvailableMemory()
+{
+    HILOGI("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_AVAILABLE_MEMORY, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::GetTotalMemory()
+{
+    HILOGI("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+#endif // USE_PURGEABLE_MEMORY
 } // namespace Memory
 } // namespace OHOS

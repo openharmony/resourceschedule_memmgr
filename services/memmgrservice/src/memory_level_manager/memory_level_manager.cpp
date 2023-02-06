@@ -20,6 +20,9 @@
 #include "kernel_interface.h"
 #include "reclaim_priority_manager.h"
 #include "memmgr_config_manager.h"
+#ifdef USE_PURGEABLE_MEMORY
+#include "purgeable_mem_manager.h"
+#endif
 
 namespace OHOS {
 namespace Memory {
@@ -100,15 +103,27 @@ void MemoryLevelManager::PsiHandlerInner()
     MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
         /* no param */);
     switch (level) {
-        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
+        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE: {
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
+#ifdef USE_PURGEABLE_MEMORY
+            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
+#endif
             break;
-        case SystemMemoryLevel::MEMORY_LEVEL_LOW:
+        }
+        case SystemMemoryLevel::MEMORY_LEVEL_LOW: {
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
+#ifdef USE_PURGEABLE_MEMORY
+            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_LOW);
+#endif
             break;
-        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
+        }
+        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: {
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
+#ifdef USE_PURGEABLE_MEMORY
+            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
+#endif
             break;
+        }
         default:
             break;
     }
