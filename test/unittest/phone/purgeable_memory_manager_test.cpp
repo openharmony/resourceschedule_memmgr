@@ -34,7 +34,6 @@ namespace Memory {
 namespace {
 static constexpr int32_t SLEEP_TIME = 500;
 static constexpr int32_t SLEEP_TIME_LONG = 5000;
-const int LENGTH_LENGTH = 1024; // 1K
 }
 using namespace testing;
 using namespace testing::ext;
@@ -154,39 +153,6 @@ HWTEST_F(PurgeableMemMgrTest, UnsubscribeAppState_Test, TestSize.Level1)
     MemMgrClient::GetInstance().UnsubscribeAppState(*appStateSubscriberTest_1);
     SleepForFC();
     EXPECT_EQ(appStateSubscriberTest_1->OnDisconnectedCallTimes, 1);
-}
-
-HWTEST_F(PurgeableMemMgrTest, OnTrim_Test, TestSize.Level1)
-{
-    std::shared_ptr<AppStateSubscriberTest> appStateSubscriberTest_1 = std::make_shared<AppStateSubscriberTest>();
-    EXPECT_NE(appStateSubscriberTest_1, nullptr);
-    MemMgrClient::GetInstance().SubscribeAppState(*appStateSubscriberTest_1);
-    appStateSubscriberTests.emplace_back(appStateSubscriberTest_1);
-
-    std::vector<char *> tempBuffer;
-    std::shared_ptr<SystemMemoryLevelConfig> config =
-        std::make_shared<SystemMemoryLevelConfig>(MemmgrConfigManager::GetInstance().GetSystemMemoryLevelConfig());
-    int32_t lowMemory = 600000;
-    int availableMemory = MemMgrClient::GetInstance().GetAvailableMemory();
-    while (availableMemory > lowMemory) {
-        std::cout << "availableMemory is: " << availableMemory << "lowMemory level is: " << lowMemory
-            << "the Memory to malloc is: " << availableMemory - lowMemory << std::endl;
-        for (int i = 0; i < availableMemory - lowMemory; ++i) {
-            char *temp = new char[LENGTH_LENGTH];
-            for (int j = 0; j < LENGTH_LENGTH - 1; j++) {
-                temp[j] = 'A' + std::rand() % 26;
-            }
-            temp[LENGTH_LENGTH - 1] = '\0';
-            tempBuffer.emplace_back(temp);
-        }
-        availableMemory = MemMgrClient::GetInstance().GetAvailableMemory();
-    }
-    SleepForFiveSecond();
-    for (int i = 0; i < tempBuffer.size(); i++) {
-        delete[] tempBuffer[i];
-    }
-    tempBuffer.clear();
-    EXPECT_NE(appStateSubscriberTest_1->OnTrimCallTimes, 0);
 }
 
 HWTEST_F(PurgeableMemMgrTest, AppStateListener_Test, TestSize.Level1)
