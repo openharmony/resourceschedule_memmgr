@@ -74,6 +74,7 @@ public:
     void AddReclaimConfigToSet(std::shared_ptr<ZswapdParam> reclaimConfig);
     void ClearReclaimConfigSet();
     ReclaimConfig();
+    void CheckZswapdParam(std::shared_ptr<ZswapdParam> zswapdParam);
     void SetDefaultConfig(int minScore, int maxScore, unsigned int mem2zramRatio,
                           unsigned int zram2ufsRatio, unsigned int refaultThreshold);
     void Dump(int fd);
