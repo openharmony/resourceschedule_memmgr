@@ -35,6 +35,7 @@ AppStateSubscriber::~AppStateSubscriber()
 {
 #ifdef USE_PURGEABLE_MEMORY
     impl_->OnListenerDied();
+    delete impl_;
 #endif
 }
 
@@ -60,6 +61,11 @@ AppStateSubscriber::AppStateSubscriberImpl::AppStateSubscriberImpl(AppStateSubsc
     : subscriber_(subscriber)
 {
     recipient_ = new (std::nothrow) DeathRecipient(*this);
+}
+
+AppStateSubscriber::AppStateSubscriberImpl::~AppStateSubscriberImpl()
+{
+    delete recipient_;
 }
 
 void AppStateSubscriber::AppStateSubscriberImpl::OnConnected()
@@ -132,10 +138,10 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnListenerDied()
 
 bool AppStateSubscriber::AppStateSubscriberImpl::GetMemMgrProxy()
 {
-    if (proxy_) {
+    std::lock_guard<std::mutex> lock(mutex_proxy);
+    if (proxy_ && proxy_->AsObject() != nullptr) {
         return true;
     }
-    std::lock_guard<std::mutex> lock(mutex_proxy);
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
