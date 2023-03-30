@@ -16,6 +16,9 @@
 #include "xml_helper.h"
 #include "reclaim_config.h"
 
+#define MAX_UNINTPARAM 100
+#define MAX_INTPARAM 1000
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -54,6 +57,25 @@ void ReclaimConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
     }
 }
 
+void ReclaimConfig::CheckZswapdParam(std::shared_ptr<ZswapdParam> zswapdParam)
+{
+    int minScore = (zswapdParam->GetMinScore() < 0) ? 0 : ((zswapdParam->
+        GetMinScore() > MAX_INTPARAM) ? 0 : zswapdParam->GetMinScore());
+    int maxScore = (zswapdParam->GetMaxScore() < 0) ? RECLAIM_PRIORITY_MAX : ((zswapdParam->
+        GetMaxScore() > MAX_INTPARAM) ? RECLAIM_PRIORITY_MAX : zswapdParam->GetMaxScore());
+    zswapdParam->SetMaxScore(maxScore);
+    zswapdParam->SetMinScore(minScore);
+    unsigned int mem2zramRatio = (zswapdParam->GetMem2zramRatio() < 0) ? MEMCG_MEM_2_ZRAM_RATIO : ((zswapdParam->
+        GetMem2zramRatio() > MAX_UNINTPARAM) ? MEMCG_MEM_2_ZRAM_RATIO : zswapdParam->GetMem2zramRatio());
+    unsigned int zram2ufsRatio = (zswapdParam->GetZram2ufsRatio() < 0) ? MEMCG_ZRAM_2_UFS_RATIO : ((zswapdParam->
+        GetZram2ufsRatio() > MAX_UNINTPARAM) ? MEMCG_ZRAM_2_UFS_RATIO : zswapdParam->GetZram2ufsRatio());
+    unsigned int refaultThreshold = (zswapdParam->GetRefaultThreshold() < 0) ? MEMCG_REFAULT_THRESHOLD : ((zswapdParam->
+        GetRefaultThreshold() > MAX_UNINTPARAM) ? MEMCG_REFAULT_THRESHOLD : zswapdParam->GetRefaultThreshold());
+    zswapdParam->SetMem2zramRatio(mem2zramRatio);
+    zswapdParam->SetZram2ufsRatio(zram2ufsRatio);
+    zswapdParam->SetRefaultThreshold(refaultThreshold);
+}
+
 void ReclaimConfig::SetZswapdParamConfig(std::map<std::string, std::string> &param)
 {
     int minScore, maxScore;
@@ -68,6 +90,7 @@ void ReclaimConfig::SetZswapdParamConfig(std::map<std::string, std::string> &par
     DECLARE_SHARED_POINTER(ZswapdParam, zswapdParam);
     MAKE_POINTER(zswapdParam, shared, ZswapdParam, "make ZswapdParam failed", return,
         minScore, maxScore, mem2zramRatio, zram2ufsRatio, refaultThreshold);
+    CheckZswapdParam(zswapdParam);
 
     AddReclaimConfigToSet(zswapdParam);
 }

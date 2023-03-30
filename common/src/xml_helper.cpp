@@ -14,6 +14,7 @@
  */
 #include <fstream>
 #include <string>
+#include <climits>
 
 #include "xml_helper.h"
 
@@ -71,6 +72,9 @@ void XmlHelper::SetUnsignedIntParam(std::map<std::string, std::string> &param,
     if (iter != param.end() && (iter->second).size() > 0) {
         try {
             unsigned long src = std::stoul(iter->second);
+            if (src > INT_MAX) {
+                src = defaultValue;
+            }
             dst = static_cast<unsigned int>(src);
             return;
         } catch (std::out_of_range&) {
