@@ -34,6 +34,16 @@
 
 namespace OHOS {
 namespace Memory {
+    enum RegisterEvent : int64_t {
+        REG_ALLOBS_EVENT = 0,
+        REG_MEMPRESSOBS_EVENT,
+        REG_APPOBS_EVENT,
+        REG_EXTOBS_EVENT,
+        REG_ACCOUNTOBS_EVENT,
+        REG_COMMONOBS_EVENT,
+        REG_BGTASKOBS_EVENT,
+    };
+
 class MemMgrEventCenter {
     DECLARE_SINGLE_INSTANCE_BASE(MemMgrEventCenter);
 
@@ -54,6 +64,7 @@ private:
     void RegisterAppStateObserver();
     void RegisterCommonEventObserver();
     void RegisterMemoryPressureObserver();
+    void HandlerRegisterEvent(int64_t registerEventId);
     int regAccountObsRetry_ = 0;
     int regAppStatusObsRetry_ = 0;
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;
