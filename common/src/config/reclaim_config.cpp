@@ -57,25 +57,6 @@ void ReclaimConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
     }
 }
 
-void ReclaimConfig::CheckZswapdParam(std::shared_ptr<ZswapdParam> zswapdParam)
-{
-    int minScore = (zswapdParam->GetMinScore() < 0) ? 0 : ((zswapdParam->
-        GetMinScore() > MAX_INTPARAM) ? 0 : zswapdParam->GetMinScore());
-    int maxScore = (zswapdParam->GetMaxScore() < 0) ? RECLAIM_PRIORITY_MAX : ((zswapdParam->
-        GetMaxScore() > MAX_INTPARAM) ? RECLAIM_PRIORITY_MAX : zswapdParam->GetMaxScore());
-    zswapdParam->SetMaxScore(maxScore);
-    zswapdParam->SetMinScore(minScore);
-    unsigned int mem2zramRatio = (zswapdParam->GetMem2zramRatio() < 0) ? MEMCG_MEM_2_ZRAM_RATIO : ((zswapdParam->
-        GetMem2zramRatio() > MAX_UNINTPARAM) ? MEMCG_MEM_2_ZRAM_RATIO : zswapdParam->GetMem2zramRatio());
-    unsigned int zram2ufsRatio = (zswapdParam->GetZram2ufsRatio() < 0) ? MEMCG_ZRAM_2_UFS_RATIO : ((zswapdParam->
-        GetZram2ufsRatio() > MAX_UNINTPARAM) ? MEMCG_ZRAM_2_UFS_RATIO : zswapdParam->GetZram2ufsRatio());
-    unsigned int refaultThreshold = (zswapdParam->GetRefaultThreshold() < 0) ? MEMCG_REFAULT_THRESHOLD : ((zswapdParam->
-        GetRefaultThreshold() > MAX_UNINTPARAM) ? MEMCG_REFAULT_THRESHOLD : zswapdParam->GetRefaultThreshold());
-    zswapdParam->SetMem2zramRatio(mem2zramRatio);
-    zswapdParam->SetZram2ufsRatio(zram2ufsRatio);
-    zswapdParam->SetRefaultThreshold(refaultThreshold);
-}
-
 void ReclaimConfig::SetZswapdParamConfig(std::map<std::string, std::string> &param)
 {
     int minScore, maxScore;
@@ -93,6 +74,50 @@ void ReclaimConfig::SetZswapdParamConfig(std::map<std::string, std::string> &par
     CheckZswapdParam(zswapdParam);
 
     AddReclaimConfigToSet(zswapdParam);
+}
+
+void ReclaimConfig::CheckZswapdParam(std::shared_ptr<ZswapdParam> zswapdParam)
+{
+    int minScore = 0;
+    int maxScore = 0;
+    unsigned int mem2zramRatio = 0;
+    unsigned int zram2ufsRatio = 0;
+    unsigned int refaultThreshold = 0;
+
+    if (zswapdParam->GetMinScore() < 0 || zswapdParam->GetMinScore() > MAX_INTPARAM) {
+        minScore = 0;
+    } else {
+        minScore = zswapdParam->GetMinScore();
+    }
+    zswapdParam->SetMinScore(minScore);
+
+    if (zswapdParam->GetMaxScore() < 0 || zswapdParam->GetMaxScore() > MAX_INTPARAM) {
+        maxScore = RECLAIM_PRIORITY_MAX;
+    } else {
+        maxScore = zswapdParam->GetMaxScore();
+    }
+    zswapdParam->SetMaxScore(maxScore);
+
+    if (zswapdParam->GetMem2zramRatio() < 0 || zswapdParam->GetMem2zramRatio() > MAX_UNINTPARAM) {
+        mem2zramRatio = MEMCG_MEM_2_ZRAM_RATIO;
+    } else {
+        mem2zramRatio = zswapdParam->GetMem2zramRatio();
+    }
+    zswapdParam->SetMem2zramRatio(mem2zramRatio);
+
+    if (zswapdParam->GetZram2ufsRatio() < 0 || zswapdParam->GetZram2ufsRatio() > MAX_UNINTPARAM) {
+        zram2ufsRatio = MEMCG_ZRAM_2_UFS_RATIO;
+    } else {
+        zram2ufsRatio = zswapdParam->GetZram2ufsRatio();
+    }
+    zswapdParam->SetZram2ufsRatio(zram2ufsRatio);
+
+    if (zswapdParam->GetRefaultThreshold() < 0 || zswapdParam->GetRefaultThreshold() > MAX_UNINTPARAM) {
+        refaultThreshold = MEMCG_REFAULT_THRESHOLD;
+    } else {
+        refaultThreshold = zswapdParam->GetRefaultThreshold();
+    }
+    zswapdParam->SetRefaultThreshold(refaultThreshold);
 }
 
 void ReclaimConfig::AddReclaimConfigToSet(std::shared_ptr<ZswapdParam> zswapdParam)
