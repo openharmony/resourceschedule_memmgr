@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isEventStart = copyProcess.isEventStart;
     this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
     this->extensionBindStatus = copyProcess.extensionBindStatus;
-    for (auto connectors : copyProcess.extensionConnectors) {
+    for (auto connectors : copyProcess.extensionConnectors_) {
         this->AddExtensionConnector(connectors);
     }
     for (auto callerUid : copyProcess.extensionProcessUids_) {
@@ -64,7 +64,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
 
 ProcessPriorityInfo::~ProcessPriorityInfo()
 {
-    extensionConnectors.clear();
+    extensionConnectors_.clear();
     extensionProcessUids_.clear();
     extensionConnectorUids_.clear();
 }
@@ -77,17 +77,17 @@ void ProcessPriorityInfo::SetPriority(int targetPriority)
 
 int32_t ProcessPriorityInfo::ExtensionConnectorsCount()
 {
-    return extensionConnectors.size();
+    return extensionConnectors_.size();
 }
 
 void ProcessPriorityInfo::AddExtensionConnector(int32_t pid)
 {
-    extensionConnectors.insert(pid);
+    extensionConnectors_.insert(pid);
 }
 
 void ProcessPriorityInfo::RemoveExtensionConnector(int32_t pid)
 {
-    extensionConnectors.erase(pid);
+    extensionConnectors_.erase(pid);
 }
 
 void ProcessPriorityInfo::AddExtensionProcessUid(int32_t uid)
@@ -112,14 +112,14 @@ void ProcessPriorityInfo::RemoveExtensionConnectorUid(int32_t uid)
 
 bool ProcessPriorityInfo::ContainsConnector(int32_t pid)
 {
-    return extensionConnectors.count(pid) != 0;
+    return extensionConnectors_.count(pid) != 0;
 }
 
 std::string ProcessPriorityInfo::ConnectorsToString()
 {
     std::stringstream ss;
     ss << "[";
-    for (auto connector : extensionConnectors) {
+    for (auto connector : extensionConnectors_) {
         ss << connector << " ";
     }
     ss << "]";
