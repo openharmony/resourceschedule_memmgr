@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -396,6 +396,9 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
         return false;
     }
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+    if (bundle == nullptr) {
+        return false;
+    }
     if (!bundle->HasProc(pid)) {
         HILOGE("pid not exist");
         return false;
@@ -625,6 +628,9 @@ bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
         return false;
     }   
     std::shared_ptr<BundlePriorityInfo> bundlePtr = accountPtr->FindBundleById(bundleUid);
+    if (bundlePtr == nullptr) {
+        return false;
+    }
     for (auto i = bundlePtr->procs_.begin(); i != bundlePtr->procs_.end(); ++i) {
         UpdatePriorityByProcConnector(i->second);
     }
@@ -649,22 +655,19 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     int accountId = GetOsAccountLocalIdFromUid(request.uid);
     HILOGD("accountId=%{public}d", accountId);
 
-    if (request.reason == AppStateUpdateReason::BIND_EXTENSION
-                    || request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
-        HILOGD("call HandleExtensionProcess");
+    if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
+                            request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
         bool ret = HandleExtensionProcess(request.callerPid, request.callerUid,
                         request.callerBundleName, request.pid, request.uid, request.bundleName, request.reason);
         return ret;
     }
 
     if (request.reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
-        HILOGD("call HandleUpdateExtensionBundle");
         bool ret = HandleUpdateExtensionBundle(request.callerUid);
         return ret;
     }
 
     if (request.reason == AppStateUpdateReason::CREATE_PROCESS) {
-        HILOGD("call HandleCreateProcess");
         bool ret = HandleCreateProcess(request.pid, request.uid, request.bundleName, accountId);
         return ret;
     }
@@ -681,7 +684,6 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     }
 
     if (request.reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
-        HILOGD("call HandleApplicationSuspend");
         bool ret = HandleApplicationSuspend(bundle);
         return ret;
     }
@@ -690,11 +692,9 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     bool ret = true;
     AppAction action = AppAction::OTHERS;
     if (request.reason == AppStateUpdateReason::PROCESS_TERMINATED) {
-        HILOGD("call HandleTerminateProcess");
         ret = HandleTerminateProcess(proc, bundle, account);
         return ret;
     } else {
-        HILOGD("call HandleUpdateProcess");
         HandleUpdateProcess(request.reason, bundle, proc, action);
     }
     ret = ApplyReclaimPriority(bundle, request.pid, action);
@@ -713,7 +713,7 @@ bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> 
     return false;
 }
 
-void ReclaimPriorityManager::UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc)
+void ReclaimPriorityManager::UpdatePriorityByProcForExtension(const ProcessPriorityInfo &proc)
 {
     for (auto callerUid : proc.extensionProcessUids_) {
         ReclaimHandleRequest request;
@@ -737,6 +737,9 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
             continue;
         }   
         std::shared_ptr<BundlePriorityInfo> connectorBundle = connectorAccount->FindBundleById(connectorUid);
+        if (connectorBundle == nullptr) {
+            return;
+        }
         for (auto procEntry : connectorBundle->procs_) {
             ProcessPriorityInfo &connectorProc = procEntry.second;
             minPriority = connectorProc.priority_ < minPriority ? connectorProc.priority_ : minPriority;
