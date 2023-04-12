@@ -30,6 +30,7 @@ ohos_prebuilt_etc("memmgrservice_init") {
 
 config("memory_memmgr_config") {
   visibility = [ ":*" ]
+  visibility += [ "//foundation/resourceschedule/memmgr/test/*" ]
   include_dirs = [
     "include",
     "${memmgr_root_path}/common/include",
