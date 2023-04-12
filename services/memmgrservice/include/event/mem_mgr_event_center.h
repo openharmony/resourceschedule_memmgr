@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,16 @@
 
 namespace OHOS {
 namespace Memory {
+enum RegisterEvent : int64_t {
+    REG_ALLOBS_EVENT = 0,
+    REG_MEMPRESSOBS_EVENT,
+    REG_APPOBS_EVENT,
+    REG_EXTOBS_EVENT,
+    REG_ACCOUNTOBS_EVENT,
+    REG_COMMONOBS_EVENT,
+    REG_BGTASKOBS_EVENT,
+};
+
 class MemMgrEventCenter {
     DECLARE_SINGLE_INSTANCE_BASE(MemMgrEventCenter);
 
@@ -54,6 +64,7 @@ private:
     void RegisterAppStateObserver();
     void RegisterCommonEventObserver();
     void RegisterMemoryPressureObserver();
+    void HandlerRegisterEvent(int64_t registerEventId);
     int regAccountObsRetry_ = 0;
     int regAppStatusObsRetry_ = 0;
     std::unique_ptr<AppExecFwk::AppMgrClient> appMgrClient_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemMgrEventCenter";
+const std::string MEMMGR_CENTER_HANDLER = "MemMgrEventCenterHandler";
 const int ACCOUNT_MAX_RETRY_TIMES = 10;
 const int ACCOUNT_RETRY_DELAY = 3000;
 const int EXTCONN_RETRY_TIME = 1000;
@@ -44,7 +45,8 @@ bool MemMgrEventCenter::Init()
 {
     HILOGI("called");
     if (CreateRegisterHandler()) {
-        return RegisterEventObserver();
+        HandlerRegisterEvent(RegisterEvent::REG_ALLOBS_EVENT);
+        return true;
     }
     return false;
 }
@@ -53,7 +55,7 @@ bool MemMgrEventCenter::CreateRegisterHandler()
 {
     if (!regObsHandler_) {
         MAKE_POINTER(regObsHandler_, shared, AppExecFwk::EventHandler, "failed to create register handler",
-        return false, AppExecFwk::EventRunner::Create());
+        return false, AppExecFwk::EventRunner::Create(MEMMGR_CENTER_HANDLER));
     }
     return true;
 }
@@ -99,7 +101,71 @@ bool MemMgrEventCenter::RegisterEventObserver()
         RegisterCommonEventObserver();
     }
 
+#ifdef CONFIG_BGTASK_MGR
+    if (!bgTaskObserver_) {
+        RegisterBgTaskObserver();
+    }
+#endif
     return true;
+}
+
+void MemMgrEventCenter::HandlerRegisterEvent(int64_t registerEventId)
+{
+    switch (registerEventId)
+    {
+        case RegisterEvent::REG_ALLOBS_EVENT:
+            {
+                std::function<void()> RegisterEventObserverFunc =
+                                std::bind(&MemMgrEventCenter::RegisterEventObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterEventObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_MEMPRESSOBS_EVENT:
+            {
+                std::function<void()> RegisterMemoryPressureObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterMemoryPressureObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterMemoryPressureObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_APPOBS_EVENT:
+            {
+                std::function<void()> RegisterAppStateObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterAppStateObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterAppStateObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_EXTOBS_EVENT:
+            {
+                std::function<void()> RegisterExtConnObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterExtConnObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_ACCOUNTOBS_EVENT:
+            {
+                std::function<void()> RegisterAccountObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterAccountObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterAccountObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_COMMONOBS_EVENT:
+            {
+                std::function<void()> RegisterCommonEventObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterCommonEventObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterCommonEventObserverFunc);
+            }
+            break;
+        case RegisterEvent::REG_BGTASKOBS_EVENT:
+#ifdef CONFIG_BGTASK_MGR
+            {
+                std::function<void()> RegisterBgTaskObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterBgTaskObserverFunc);
+            }
+            break;
+#endif
+    }
+    return;
 }
 
 void MemMgrEventCenter::RegisterAppStateObserver()
@@ -147,16 +213,17 @@ void MemMgrEventCenter::RegisterBgTaskObserver()
 {
     HILOGI("called");
 #ifdef CONFIG_BGTASK_MGR
+    if (bgTaskObserver_) {
+        return;
+    }
     MAKE_POINTER(bgTaskObserver_, shared, BgTaskObserver, "make BgTaskObserver failed",
-        /* no return */, /* no param */);
+            return, /* no param */);
     ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*bgTaskObserver_);
     if (ret == ERR_OK) {
         HILOGI("register success");
         return;
     }
     HILOGE("register fail, ret = %{public}d", ret);
-    std::function<void()> RegisterBgTaskObserverFunc = std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
-    regObsHandler_->PostTask(RegisterBgTaskObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
 #else
     HILOGI("BackgroundTaskMgr is not enable.");
 #endif
@@ -267,11 +334,20 @@ void MemMgrEventCenter::RetryRegisterEventObserver(int32_t systemAbilityId)
 {
 #ifdef CONFIG_BGTASK_MGR
     if (systemAbilityId == BACKGROUND_TASK_MANAGER_SERVICE_ID) {
-        RegisterBgTaskObserver();
+        HandlerRegisterEvent(RegisterEvent::REG_BGTASKOBS_EVENT);
     }
 #endif
-    RegisterEventObserver();
-}
+    if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == APP_MGR_SERVICE_ID) {
+        HandlerRegisterEvent(RegisterEvent::REG_APPOBS_EVENT);
+    }
 
+    if (systemAbilityId == SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN) {
+        HandlerRegisterEvent(RegisterEvent::REG_ACCOUNTOBS_EVENT);
+    }
+
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID || systemAbilityId == COMMON_EVENT_SERVICE_ABILITY_ID) {
+        HandlerRegisterEvent(RegisterEvent::REG_COMMONOBS_EVENT);
+    }
+}
 } // namespace Memory
 } // namespace OHOS
