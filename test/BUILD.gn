@@ -14,16 +14,14 @@
 import("//build/ohos.gni")
 import("//build/ohos_var.gni")
 import("//build/test.gni")
+import("//foundation/resourceschedule/memmgr/memmgr.gni")
 
 module_output_path = "memmgrtest/"
 
-memmgr_path = "//foundation/resourceschedule/memmgr"
-memmgr_service = "${memmgr_path}/services/memmgrservice"
-memmgr_service_configs = [ "${memmgr_service}:memory_memmgr_config" ]
+memmgr_service_configs = [ "${memmgr_service_path}:memory_memmgr_config" ]
 
 memmgr_deps = [
-  "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-  "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
+  "${memmgr_service_path}:memmgrservice",
   "//third_party/libxml2:xml2",
 ]
 
