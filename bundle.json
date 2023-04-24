@@ -14,6 +14,8 @@
       "name": "memmgr",
       "subsystem": "resourceschedule",
       "adapted_system_type": [ "standard" ],
+      "rom": "1000KB",
+      "ram": "4316KB",
       "deps": {
         "components": [
 	  "ipc",
