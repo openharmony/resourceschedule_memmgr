@@ -41,12 +41,11 @@ ohos_shared_library("memmgrclient") {
 
   public_configs = [ ":memmgr_client_config" ]
 
-  deps = [ "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy" ]
-
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   if (memmgr_purgeable_memory) {
