@@ -99,17 +99,12 @@ ohos_shared_library("memmgrservice") {
 
   deps = [ "//third_party/libxml2:libxml2" ]
 
-  include_dirs = [
-    "//foundation/ability/ability_runtime/interfaces/inner_api/wantagent/include",
-    "//foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime",
-    "//base/global/resource_management/interfaces/inner_api/include",
-    "//foundation/ability/ability_runtime/services/abilitymgr/include",
-  ]
-
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_context",
     "ability_runtime:app_manager",
     "ability_runtime:connection_obs_manager",
+    "ability_runtime:wantagent_innerkits",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
@@ -121,6 +116,7 @@ ohos_shared_library("memmgrservice") {
     "ipc:ipc_core",
     "memmgr:memmgrclient",
     "os_account:os_account_innerkits",
+    "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
