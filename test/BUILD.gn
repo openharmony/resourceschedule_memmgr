@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//build/ohos_var.gni")
 import("//build/test.gni")
-import("//foundation/resourceschedule/memmgr/memmgr.gni")
+import("../memmgr.gni")
 
 module_output_path = "memmgrtest/"
 
