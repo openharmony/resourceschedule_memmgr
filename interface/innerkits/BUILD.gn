@@ -13,14 +13,13 @@
 
 import("//build/ohos.gni")
 import("//build/ohos_var.gni")
-import("//foundation/resourceschedule/memmgr/memmgr.gni")
+import("../../memmgr.gni")
 
 config("memmgr_client_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
     "${memmgr_common_path}/include",
-    "//utils/system/safwk/native/include/",
     "${memmgr_service_path}/include/memory_level_manager/",
   ]
   defines = []

@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//build/ohos_var.gni")
 
-import("//foundation/resourceschedule/memmgr/memmgr.gni")
+import("../../memmgr.gni")
 
 ## Install .rc or .cfg file to /system/etc/init/
 ohos_prebuilt_etc("memmgrservice_init") {
@@ -30,7 +30,7 @@ ohos_prebuilt_etc("memmgrservice_init") {
 
 config("memory_memmgr_config") {
   visibility = [ ":*" ]
-  visibility += [ "//foundation/resourceschedule/memmgr/test/*" ]
+  visibility += [ "${memmgr_root_path}/test/*" ]
   include_dirs = [
     "include",
     "${memmgr_root_path}/common/include",
