@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/resourceschedule/memmgr/memmgr.gni")
+import("../memmgr.gni")
 
 ohos_prebuilt_etc("memmgr_config") {
   source = "memmgr_config.xml"
