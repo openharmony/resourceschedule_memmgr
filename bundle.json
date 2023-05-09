@@ -51,7 +51,8 @@
               "header_files": [
                 "mem_mgr_client.h",
                 "i_mem_mgr.h",
-                "mem_mgr_proxy.h"
+                "mem_mgr_proxy.h",
+                "mem_mgr_constant.h"
               ],
               "header_base": "//foundation/resourceschedule/memmgr/interface/innerkits/include/"
             }
