@@ -16,11 +16,10 @@
 #ifndef OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_KERNEL_INTERFACE_H
 #define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_KERNEL_INTERFACE_H
 
-#include <sys/types.h>
 #include <fcntl.h>
-
 #include <map>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
 #include "single_instance.h"
@@ -65,6 +64,9 @@ public:
     std::string JoinPath(const std::string& prefixPath, const std::string& subPath);
     std::string JoinPath(const std::string& prefixPath, const std::string& midPath, const std::string& subPath);
 
+    void SplitOneLineByDelim(const std::string &input, const char delimiter, std::vector<std::string> &res);
+    void SplitOneLineByBlank(const std::string &input, std::vector<std::string> &res);
+
     bool GetPidProcInfo(struct ProcInfo &procInfo);
     bool GetProcNameByPid(int pid, std::string &name);
     void ReadZswapdPressureShow(std::map<std::string, std::string>& result);
@@ -75,13 +77,18 @@ public:
     bool ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr, unsigned long long &ret);
     int64_t GetSystemCurTime();
     int GetTotalBuffer();
+    bool GetMemcgPids(const std::string &memcgPath, std::vector<int> &memcgPids);
+    bool GetAllUserIds(std::vector<int> &userIds);
 
     static const std::string ROOT_PROC_PATH;
     static const std::string MEMCG_BASE_PATH;
+    static const std::string FILE_MEMCG_PROCS;
     static const std::string ZWAPD_PRESSURE_SHOW_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_BUFFER_SIZE;
     static const std::string MEMINFO_PATH;
+    static const std::string FILE_PROC_STATUS;
     static const std::string TOTAL_MEMORY;
+
     static constexpr mode_t FILE_MODE_666 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH; // -rw-rw-rw--
     static constexpr mode_t FILE_MODE_664 = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH; // -rw-rw-r--
     static constexpr mode_t FILE_MODE_644 = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH; // -rw-r--r--
