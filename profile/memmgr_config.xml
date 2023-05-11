@@ -27,6 +27,7 @@
     </importantBgApps>
   </reclaimPriorityConfig>
   <systemMemoryLevelConfig>
+      <purgeable>1024</purgeable>
       <moderate>800</moderate>
       <low>700</low>
       <critical>600</critical>

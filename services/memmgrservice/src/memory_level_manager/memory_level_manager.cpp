@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 #include "memory_level_manager.h"
-#include "memmgr_log.h"
-#include "memmgr_ptr_util.h"
+
 #include "app_mem_info.h"
 #include "app_mgr_client.h"
 #include "kernel_interface.h"
-#include "reclaim_priority_manager.h"
 #include "memmgr_config_manager.h"
+#include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
+#include "reclaim_priority_manager.h"
 #ifdef USE_PURGEABLE_MEMORY
 #include "purgeable_mem_manager.h"
 #endif
@@ -27,7 +28,7 @@
 namespace OHOS {
 namespace Memory {
 namespace {
-    const std::string TAG = "MemoryLevelManager";
+const std::string TAG = "MemoryLevelManager";
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MemoryLevelManager);
@@ -46,12 +47,12 @@ bool MemoryLevelManager::GetEventHandler()
 {
     if (!handler_) {
         MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
-            AppExecFwk::EventRunner::Create());
+                     AppExecFwk::EventRunner::Create());
     }
     return true;
 }
 
-bool MemoryLevelManager::CalcSystemMemoryLevel(SystemMemoryLevel &level)
+bool MemoryLevelManager::CalcSystemMemoryLevel(SystemMemoryInfo &info)
 {
     int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
     std::shared_ptr<SystemMemoryLevelConfig> config =
@@ -62,17 +63,21 @@ bool MemoryLevelManager::CalcSystemMemoryLevel(SystemMemoryLevel &level)
     }
 
     if (currentBuffer <= config->GetCritical()) {
-        level = SystemMemoryLevel::MEMORY_LEVEL_CRITICAL;
+        info.level = SystemMemoryLevel::MEMORY_LEVEL_CRITICAL;
     } else if (currentBuffer <= config->GetLow()) {
-        level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
+        info.level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
     } else if (currentBuffer <= config->GetModerate()) {
-        level = SystemMemoryLevel::MEMORY_LEVEL_MODERATE;
+        info.level = SystemMemoryLevel::MEMORY_LEVEL_MODERATE;
+    } else if (currentBuffer <= config->GetPurgeable()) {
+        info.level = SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE;
     } else {
         return false;
     }
 
-    HILOGI("critical:%{public}d low:%{public}d moderate:%{public}d in config, curBuf:%{public}dKB, level:%{public}d.",
-           config->GetCritical(), config->GetLow(), config->GetModerate(), currentBuffer, static_cast<int>(level));
+    HILOGI("critical:%{public}d low:%{public}d moderate:%{public}d purgeable:%{public}d in config, curBuf:%{public}dKB,"
+           "level:%{public}d.",
+           config->GetCritical(), config->GetLow(), config->GetModerate(), config->GetPurgeable(), currentBuffer,
+           static_cast<int>(info.level));
     return true;
 }
 
@@ -89,44 +94,47 @@ bool MemoryLevelManager::CalcReclaimAppList(std::vector<std::shared_ptr<AppEntit
     return true;
 }
 
+void MemoryLevelManager::NotifyMemoryLevel(SystemMemoryInfo &info)
+{
+    HILOGD("called!");
+    DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
+    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
+        /* no param */);
+    switch (info.level) {
+        case SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE: {
+            // no need notify appMgrClient_
+            break;
+        }
+        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE: {
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
+            break;
+        }
+        case SystemMemoryLevel::MEMORY_LEVEL_LOW: {
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
+            break;
+        }
+        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: {
+            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
+            break;
+        }
+        default:
+            return;
+    }
+#ifdef USE_PURGEABLE_MEMORY
+    PurgeableMemManager::GetInstance().NotifyMemoryLevel(info);
+#endif
+}
+
 void MemoryLevelManager::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount_);
 
     /* Calculate the system memory level */
-    SystemMemoryLevel level;
-    if (!CalcSystemMemoryLevel(level)) {
+    SystemMemoryInfo info = {MemorySource::PSI_MEMORY, SystemMemoryLevel::UNKNOWN};
+    if (!CalcSystemMemoryLevel(info)) {
         return;
     }
-
-    DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
-    MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
-        /* no param */);
-    switch (level) {
-        case SystemMemoryLevel::MEMORY_LEVEL_MODERATE: {
-            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
-#ifdef USE_PURGEABLE_MEMORY
-            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
-#endif
-            break;
-        }
-        case SystemMemoryLevel::MEMORY_LEVEL_LOW: {
-            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
-#ifdef USE_PURGEABLE_MEMORY
-            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_LOW);
-#endif
-            break;
-        }
-        case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: {
-            appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
-#ifdef USE_PURGEABLE_MEMORY
-            PurgeableMemManager::GetInstance().NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
-#endif
-            break;
-        }
-        default:
-            break;
-    }
+    NotifyMemoryLevel(info);
 }
 
 void MemoryLevelManager::PsiHandler()

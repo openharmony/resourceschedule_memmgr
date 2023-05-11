@@ -29,9 +29,10 @@ constexpr unsigned int PID_INDEX = 2;
 constexpr unsigned int SYSTEM_MEMORY_LEVEL_INDEX = 1;
 constexpr unsigned int SECOND_ARG_INDEX = 1;
 
-constexpr unsigned int MEMORY_LEVEL_MODERATE = 0;
-constexpr unsigned int MEMORY_LEVEL_LOW = 1;
-constexpr unsigned int MEMORY_LEVEL_CRITICAL = 2;
+constexpr unsigned int MEMORY_LEVEL_PURGEABLE = 1;
+constexpr unsigned int MEMORY_LEVEL_MODERATE = 2;
+constexpr unsigned int MEMORY_LEVEL_LOW = 3;
+constexpr unsigned int MEMORY_LEVEL_CRITICAL = 4;
 
 constexpr unsigned int APP_STATE_FOREGROUND = 2;
 } // namespace Memory

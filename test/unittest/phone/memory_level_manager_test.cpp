@@ -14,7 +14,6 @@
  */
 
 #include "gtest/gtest.h"
-
 #include "utils.h"
 
 #define private public
@@ -94,8 +93,9 @@ HWTEST_F(MemoryLevelManagerTest, GetEventHandlerTest, TestSize.Level1)
  */
 HWTEST_F(MemoryLevelManagerTest, CalcSystemMemoryLevelTest, TestSize.Level1)
 {
-    SystemMemoryLevel level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
-    bool ret = MemoryLevelManager::GetInstance().CalcSystemMemoryLevel(level);
+    SystemMemoryInfo info;
+    info.level = SystemMemoryLevel::MEMORY_LEVEL_LOW;
+    bool ret = MemoryLevelManager::GetInstance().CalcSystemMemoryLevel(info);
     EXPECT_EQ(ret, false);
 }
 
@@ -111,5 +111,5 @@ HWTEST_F(MemoryLevelManagerTest, CalcReclaimAppListTest, TestSize.Level1)
     bool ret = MemoryLevelManager::GetInstance().CalcReclaimAppList(appList);
     EXPECT_EQ(ret, true);
 }
-}
-}
+} // namespace Memory
+} // namespace OHOS

@@ -17,8 +17,8 @@
 #define OHOS_MEMORY_MEMMGR_MEMORY_LEVEL_MANAGER_H
 
 #include "event_handler.h"
-#include "single_instance.h"
 #include "memory_level_constants.h"
+#include "single_instance.h"
 
 namespace OHOS {
 namespace Memory {
@@ -34,12 +34,14 @@ class MemoryLevelManager {
 
 public:
     void PsiHandler();
+
 private:
     MemoryLevelManager();
     ~MemoryLevelManager() = default;
     void PsiHandlerInner();
+    void NotifyMemoryLevel(SystemMemoryInfo &info);
     bool GetEventHandler();
-    bool CalcSystemMemoryLevel(SystemMemoryLevel &level);
+    bool CalcSystemMemoryLevel(SystemMemoryInfo &info);
     bool CalcReclaimAppList(std::vector<std::shared_ptr<AppEntity>> &appList);
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     bool initialized_ = false;
