@@ -21,18 +21,36 @@
 
 namespace OHOS {
 namespace Memory {
+// default value of the purgeable memory level
+constexpr unsigned int MEMORY_LEVEL_PURGEABLE_DEFAULT = 1024; /* 1024M */
 // default value of the moderate memory level
-constexpr unsigned int MEMORY_LEVEL_MODERATE_DEFAULT = 800; /* 800 */
+constexpr unsigned int MEMORY_LEVEL_MODERATE_DEFAULT = 800; /* 800M */
 // default value of the low memory level
-constexpr unsigned int MEMORY_LEVEL_LOW_DEFAULT = 700; /* 700 */
+constexpr unsigned int MEMORY_LEVEL_LOW_DEFAULT = 700; /* 700M */
 // default value of the critical memory level
-constexpr unsigned int MEMORY_LEVEL_CRITICAL_DEFAULT = 600; /* 600 */
+constexpr unsigned int MEMORY_LEVEL_CRITICAL_DEFAULT = 600; /* 600M */
 
 enum class SystemMemoryLevel {
-    MEMORY_LEVEL_MODERATE = 0,
-    MEMORY_LEVEL_LOW = 1,
-    MEMORY_LEVEL_CRITICAL = 2,
+    UNKNOWN = 0,
+    MEMORY_LEVEL_PURGEABLE = 1,
+    MEMORY_LEVEL_MODERATE = 2,
+    MEMORY_LEVEL_LOW = 3,
+    MEMORY_LEVEL_CRITICAL = 4,
 };
+
+enum class MemorySource {
+    UNKNOWN = 0,
+    PSI_MEMORY = 1,
+    KSWAPD = 2,
+    MANUAL_DUMP = 3,
+};
+
+struct SystemMemoryInfo {
+    MemorySource source;
+    SystemMemoryLevel level;
+};
+
+typedef struct SystemMemoryInfo SystemMemoryInfo;
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_MEMORY_LEVEL_CONSTANTS_H

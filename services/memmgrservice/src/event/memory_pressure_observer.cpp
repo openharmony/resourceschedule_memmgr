@@ -200,6 +200,9 @@ MemoryPressureObserver::~MemoryPressureObserver()
 {
     HILOGI("called");
     UnMonitorLevel(MemPressureLevel::LEVEL_0);
+    if (epollfd_ >= 0) {
+        close(epollfd_);
+    }
 }
 
 void MemoryPressureObserver::UnMonitorLevel(MemPressureLevel level)
