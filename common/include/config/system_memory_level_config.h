@@ -17,8 +17,9 @@
 #define OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_CONFIG_SYSTEM_MEMORY_LEVEL_CONFIG_H
 
 #include <map>
-#include <string>
 #include <set>
+#include <string>
+
 #include "event_handler.h"
 #include "libxml/parser.h"
 #include "libxml/xpath.h"
@@ -28,6 +29,8 @@ namespace Memory {
 class SystemMemoryLevelConfig {
 public:
     void ParseConfig(const xmlNodePtr &rootNodePtr);
+    void SetPurgeable(unsigned int purgeable);
+    unsigned int GetPurgeable(void);
     void SetModerate(unsigned int moderate);
     unsigned int GetModerate(void);
     void SetLow(unsigned int low);
@@ -37,6 +40,7 @@ public:
     void Dump(int fd);
 
 private:
+    unsigned int purgeable_ = 0;
     unsigned int moderate_ = 0;
     unsigned int low_ = 0;
     unsigned int critical_ = 0;

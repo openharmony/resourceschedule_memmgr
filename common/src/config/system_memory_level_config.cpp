@@ -12,15 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "memmgr_log.h"
-#include "xml_helper.h"
-#include "memory_level_constants.h"
 #include "system_memory_level_config.h"
+
+#include "memmgr_log.h"
+#include "memory_level_constants.h"
+#include "xml_helper.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
     const std::string TAG = "SystemMemoryLevelConfig";
+}
+
+void SystemMemoryLevelConfig::SetPurgeable(unsigned int purgeable)
+{
+    purgeable_ = purgeable;
+}
+
+unsigned int SystemMemoryLevelConfig::GetPurgeable(void)
+{
+    return purgeable_;
 }
 
 void SystemMemoryLevelConfig::SetModerate(unsigned int moderate)
@@ -67,26 +78,34 @@ void SystemMemoryLevelConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
         return;
     }
 
-    unsigned int moderate, low, critical;
+    unsigned int purgeable;
+    unsigned int moderate;
+    unsigned int low;
+    unsigned int critical;
+    XmlHelper::SetUnsignedIntParam(param, "purgeable", purgeable, MEMORY_LEVEL_PURGEABLE_DEFAULT);
     XmlHelper::SetUnsignedIntParam(param, "moderate", moderate, MEMORY_LEVEL_MODERATE_DEFAULT);
     XmlHelper::SetUnsignedIntParam(param, "low", low, MEMORY_LEVEL_LOW_DEFAULT);
     XmlHelper::SetUnsignedIntParam(param, "critical", critical, MEMORY_LEVEL_CRITICAL_DEFAULT);
 
     /* change MB to KB */
+    purgeable *= KB_PER_MB;
     moderate *= KB_PER_MB;
     low *= KB_PER_MB;
     critical *= KB_PER_MB;
 
+    SetPurgeable(purgeable);
     SetModerate(moderate);
     SetLow(low);
     SetCritical(critical);
 
-    HILOGI("moderate=%{public}u, low=%{public}u, critical=%{public}u.", moderate, low, critical);
+    HILOGI("purgeable=%{public}u, moderate=%{public}u, low=%{public}u, critical=%{public}u.", purgeable, moderate, low,
+           critical);
 }
 
 void SystemMemoryLevelConfig::Dump(int fd)
 {
     dprintf(fd, "SystemMemoryLevelConfig:   \n");
+    dprintf(fd, "                     purgeable: %u\n", purgeable_);
     dprintf(fd, "                      moderate: %u\n", moderate_);
     dprintf(fd, "                           low: %u\n", low_);
     dprintf(fd, "                      critical: %u\n", critical_);
