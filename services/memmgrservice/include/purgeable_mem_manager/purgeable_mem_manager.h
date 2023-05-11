@@ -31,7 +31,7 @@ class PurgeableMemManager {
     DECLARE_SINGLE_INSTANCE_BASE(PurgeableMemManager);
 
 public:
-    void NotifyMemoryLevel(SystemMemoryLevel level);
+    void NotifyMemoryLevel(const SystemMemoryInfo &info);
     void RegisterActiveApps(int32_t pid, int32_t uid);
     void DeregisterActiveApps(int32_t pid, int32_t uid);
     void ChangeAppState(int32_t pid, int32_t uid, int32_t state);
@@ -43,13 +43,15 @@ public:
 private:
     PurgeableMemManager();
     ~PurgeableMemManager() = default;
-    void NotifyMemoryLevelInner(SystemMemoryLevel level);
+    void NotifyMemoryLevelInner(const SystemMemoryInfo &info);
+    void TriggerByPsi(const SystemMemoryInfo &info);
     void RegisterActiveAppsInner(int32_t pid, int32_t uid);
     void DeregisterActiveAppsInner(int32_t pid, int32_t uid);
     void AddSubscriberInner(const sptr<IAppStateSubscriber> &subscriber);
     void RemoveSubscriberInner(const sptr<IAppStateSubscriber> &subscriber);
     void OnRemoteSubscriberDiedInner(const wptr<IRemoteObject> &object);
     void ChangeAppStateInner(int32_t pid, int32_t uid, int32_t state);
+    void TrimAllSubscribers(const SystemMemoryLevel &level);
     void ReclaimInner(int32_t pid);
     void ReclaimAllInner();
     void Reclaim(int32_t pid);

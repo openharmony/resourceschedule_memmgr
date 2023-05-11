@@ -284,24 +284,15 @@ void PurgeableMemManager::ChangeAppState(int32_t pid, int32_t uid, int32_t state
     handler_->PostImmediateTask(func);
 }
 
-void PurgeableMemManager::NotifyMemoryLevelInner(SystemMemoryLevel level)
+void PurgeableMemManager::TrimAllSubscribers(const SystemMemoryLevel &level)
 {
+    HILOGD("enter! onTrim memory level is %{public}d \n", level);
     std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
     auto iter = appStateSubscribers_.begin();
     while (iter != appStateSubscribers_.end()) {
         (*iter)->OnTrim(level);
         iter++;
     }
-}
-
-void PurgeableMemManager::NotifyMemoryLevel(SystemMemoryLevel level)
-{
-    if (!initialized_) {
-        HILOGE("is not initialized");
-        return;
-    }
-    std::function<void()> func = std::bind(&PurgeableMemManager::NotifyMemoryLevelInner, this, level);
-    handler_->PostImmediateTask(func);
 }
 
 bool PurgeableMemManager::CheckCallingToken()
@@ -377,6 +368,42 @@ void PurgeableMemManager::Reclaim(int32_t pid)
     handler_->PostImmediateTask(func);
 }
 
+void PurgeableMemManager::TriggerByPsi(const SystemMemoryInfo &info)
+{
+    TrimAllSubscribers(info.level);
+}
+
+/*
+ * There are three ways to trigger me;
+ * 1. By command of "hidumper -s 1909", see MemMgrService::Dump
+ * 2. By trigger of kernel memory psi, see MemoryLevelManager
+ * 3. By trigger of kswapd uploading, see KswapdObserver
+ */
+void PurgeableMemManager::NotifyMemoryLevelInner(const SystemMemoryInfo &info)
+{
+    switch (info.source) {
+        case MemorySource::MANUAL_DUMP:
+            break;
+        case MemorySource::KSWAPD: // fall through
+        case MemorySource::PSI_MEMORY:
+            TriggerByPsi(info);
+            break;
+        default:
+            HILOGE("unsupported source:%{public}d", info.source);
+            break;
+    }
+}
+
+void PurgeableMemManager::NotifyMemoryLevel(const SystemMemoryInfo &info)
+{
+    if (!initialized_) {
+        HILOGE("is not initialized");
+        return;
+    }
+    std::function<void()> func = std::bind(&PurgeableMemManager::NotifyMemoryLevelInner, this, info);
+    handler_->PostImmediateTask(func);
+}
+
 bool PurgeableMemManager::isNumeric(std::string const &str)
 {
     return !str.empty() && str.find_first_not_of("0123456789") == std::string::npos;
@@ -390,14 +417,17 @@ void PurgeableMemManager::Test(int fd, std::vector<std::string> &params)
         }
         int32_t level = params[SYSTEM_MEMORY_LEVEL_INDEX][0] - '0';
         switch (level) {
+            case MEMORY_LEVEL_PURGEABLE:
+                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE);
+                break;
             case MEMORY_LEVEL_MODERATE:
-                NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
+                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
                 break;
             case MEMORY_LEVEL_LOW:
-                NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_LOW);
+                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_LOW);
                 break;
             case MEMORY_LEVEL_CRITICAL:
-                NotifyMemoryLevel(SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
+                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
                 break;
             default:
                 return;
