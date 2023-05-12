@@ -14,7 +14,6 @@
  */
 
 #include "gtest/gtest.h"
-
 #include "utils.h"
 
 #define private public
@@ -320,5 +319,60 @@ HWTEST_F(KernelInterfaceTest, ReadSwapOutKBSinceKernelBoot, TestSize.Level1)
                                                                                 "Total Swapout Size", retFun);
     EXPECT_EQ(ret, true);
 }
+
+HWTEST_F(KernelInterfaceTest, GetMemcgPidsTest, TestSize.Level1)
+{
+    std::string memcgPath = "/dev/memcg";
+    std::vector<int> memcgPids;
+    bool ret = KernelInterface::GetInstance().GetMemcgPids(memcgPath, memcgPids);
+    printf("pids get from /dev/memcg/cgroup.procs is: ");
+    for (auto &it : memcgPids) {
+        printf("%d ", it);
+    }
+    printf("\n");
+    EXPECT_EQ(ret, true);
 }
+
+HWTEST_F(KernelInterfaceTest, GetAllUserIdsTest, TestSize.Level1)
+{
+    std::string memcgPath = "/dev/memcg";
+    std::vector<int> userIds;
+    bool ret = KernelInterface::GetInstance().GetAllUserIds(userIds);
+    printf("userIds get from /dev/memcg/ is: ");
+    for (auto &it : userIds) {
+        printf("%d ", it);
+    }
+    printf("\n");
+    EXPECT_EQ(ret, true);
 }
+
+HWTEST_F(KernelInterfaceTest, SplitOneLineByDelimTest, TestSize.Level1)
+{
+    std::string input = "process_name,pid,adj,fd,ashmem_name,size,id,time,ref_count,purged";
+    std::vector<std::string> res;
+    KernelInterface::GetInstance().SplitOneLineByDelim(input, ',', res);
+    ASSERT_EQ(res.size(), 10);
+    EXPECT_EQ(res[0], std::string("process_name"));
+    EXPECT_EQ(res[9], std::string("purged"));
+}
+
+HWTEST_F(KernelInterfaceTest, SplitOneLineByBlankTest, TestSize.Level1)
+{
+    std::string input = "Active(purg):         0 kB";
+    std::vector<std::string> res;
+    KernelInterface::GetInstance().SplitOneLineByBlank(input, res);
+    ASSERT_EQ(res.size(), 3);
+    EXPECT_EQ(res[0], std::string("Active(purg):"));
+    EXPECT_EQ(res[1], std::string("0"));
+    EXPECT_EQ(res[2], std::string("kB"));
+
+    input = "PurgSum:   0 kB";
+    res.clear();
+    KernelInterface::GetInstance().SplitOneLineByBlank(input, res);
+    ASSERT_EQ(res.size(), 3);
+    EXPECT_EQ(res[0], std::string("PurgSum:"));
+    EXPECT_EQ(res[1], std::string("0"));
+    EXPECT_EQ(res[2], std::string("kB"));
+}
+} //namespace Memory
+} //namespace OHOS
