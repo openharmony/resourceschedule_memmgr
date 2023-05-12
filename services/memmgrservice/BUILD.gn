@@ -74,6 +74,7 @@ ohos_shared_library("memmgrservice") {
     "src/event/app_state_observer.cpp",
     "src/event/common_event_observer.cpp",
     "src/event/extension_connection_observer.cpp",
+    "src/event/kswapd_observer.cpp",
     "src/event/mem_mgr_event_center.cpp",
     "src/event/memory_pressure_observer.cpp",
     "src/kill_strategy_manager/low_memory_killer.cpp",

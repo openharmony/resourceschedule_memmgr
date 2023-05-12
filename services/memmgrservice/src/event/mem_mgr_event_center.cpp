@@ -75,6 +75,12 @@ bool MemMgrEventCenter::RegisterEventObserver()
         RegisterMemoryPressureObserver();
     }
 
+#ifdef USE_PURGEABLE_MEMORY
+    if (!kswapdObserver_) {
+        RegisterKswapdObserver();
+    }
+#endif
+
     if (!appStateObserver_) {
         RegisterAppStateObserver();
     }
@@ -266,9 +272,17 @@ void MemMgrEventCenter::RegisterAccountObserver()
 void MemMgrEventCenter::RegisterMemoryPressureObserver()
 {
     HILOGI("called");
-    MAKE_POINTER(memoryPressureObserver_, shared, MemoryPressureObserver, "make MemoryPressureObserver failed",
-        /* no return */, /* no param */);
+    MAKE_POINTER(memoryPressureObserver_, shared, MemoryPressureObserver, "make MemoryPressureObserver failed", return,
+                 /* no param */);
     std::function<void()> initFunc = std::bind(&MemoryPressureObserver::Init, memoryPressureObserver_);
+    regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
+}
+
+void MemMgrEventCenter::RegisterKswapdObserver()
+{
+    HILOGI("called");
+    MAKE_POINTER(kswapdObserver_, shared, KswapdObserver, "make KswapdObserver failed", return, /* no param */);
+    std::function<void()> initFunc = std::bind(&KswapdObserver::Init, kswapdObserver_);
     regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
@@ -307,6 +321,8 @@ void MemMgrEventCenter::Dump(int fd)
     dprintf(fd, "state list of all observer\n");
     dprintf(fd, "                 name               state \n");
     dprintf(fd, "%30s %8s\n", "MemoryPressureObserver", memoryPressureObserver_ == nullptr ? "N" : "Y");
+    dprintf(fd, "-----------------------------------------------------------------\n");
+    dprintf(fd, "%30s %8s\n", "KswapdObserver", kswapdObserver_ == nullptr ? "N" : "Y");
     dprintf(fd, "-----------------------------------------------------------------\n");
     dprintf(fd, "%30s %8s\n", "AppStateObserver", appStateObserver_ == nullptr ? "N" : "Y");
     dprintf(fd, "-----------------------------------------------------------------\n");
