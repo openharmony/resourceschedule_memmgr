@@ -14,20 +14,19 @@
  */
 
 #include "kernel_interface.h"
-#include "memmgr_log.h"
+
+#include <csignal>
+#include <dirent.h>
+#include <fstream>
+#include <regex>
+#include <securec.h>
+#include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "directory_ex.h"
 #include "file_ex.h"
-
-#include <securec.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h>
-
-#include <fstream>
-#include <regex>
-#include <sstream>
-#include <csignal>
+#include "memmgr_log.h"
 
 namespace OHOS {
 namespace Memory {
@@ -39,15 +38,17 @@ IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 
 const std::string KernelInterface::ROOT_PROC_PATH = "/proc";
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
+const std::string KernelInterface::FILE_MEMCG_PROCS = "cgroup.procs";
 
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
-const std::string KernelInterface::MEMINFO_PATH = "proc/meminfo";
+const std::string KernelInterface::MEMINFO_PATH = "/proc/meminfo";
+const std::string KernelInterface::FILE_PROC_STATUS = "status";
 const std::string KernelInterface::TOTAL_MEMORY = "MemTotal";
 
 bool KernelInterface::EchoToPath(const char* path, const char* content)
 {
-    int fd = open(path, O_RDWR, FILE_MODE_666);
+    int fd = open(path, O_WRONLY);
     if (fd == -1) {
         HILOGE("echo %{public}s > %{public}s failed: file is not open", content, path);
         return false;
@@ -533,6 +534,79 @@ int KernelInterface::GetTotalBuffer()
     }
     totalBuffer = ParseMeminfo(contentStr, TOTAL_MEMORY);
     return totalBuffer;
+}
+
+bool KernelInterface::GetMemcgPids(const std::string &memcgPath, std::vector<int> &memcgPids)
+{
+    std::string path = JoinPath(memcgPath, FILE_MEMCG_PROCS);
+    std::vector<std::string> strLines;
+    if (!ReadLinesFromFile(path, strLines)) {
+        HILOGE("read file and split to lines failed : %{public}s", path.c_str());
+        return false;
+    }
+
+    memcgPids.clear();
+    int pid;
+    for (auto &it : strLines) {
+        try {
+            pid = stoi(it);
+        } catch (...) {
+            continue;
+        }
+        memcgPids.emplace_back(pid);
+    }
+    HILOGD("there are %{public}zu pids in %{public}s", memcgPids.size(), path.c_str());
+    return true;
+}
+
+bool KernelInterface::GetAllUserIds(std::vector<int> &userIds)
+{
+    userIds.clear();
+    DIR *dir = opendir(MEMCG_BASE_PATH.c_str());
+    if (dir == nullptr) {
+        HILOGE("dir %{public}s is not exist", MEMCG_BASE_PATH.c_str());
+        return false;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            // current dir OR parent dir
+            continue;
+        } else if (ptr->d_type == DT_DIR) {
+            int userId = atoi(ptr->d_name);
+            if (userId > 0) {
+                userIds.push_back(userId);
+            }
+        }
+    }
+    if (dir) {
+        closedir(dir);
+    }
+    HILOGD("there are %{public}zu userIds under %{public}s", userIds.size(), MEMCG_BASE_PATH.c_str());
+    return true;
+}
+
+void KernelInterface::SplitOneLineByDelim(const std::string &input, const char delimiter,
+    std::vector<std::string> &res)
+{
+    std::stringstream ss(input);
+    std::string temp;
+    while (getline(ss, temp, delimiter)) {
+        if (!temp.empty()) {
+            res.emplace_back(temp);
+        }
+    }
+}
+
+void KernelInterface::SplitOneLineByBlank(const std::string &input, std::vector<std::string> &res)
+{
+    std::stringstream ss(input);
+    std::string temp;
+    while (ss >> temp) {
+        if (!temp.empty()) {
+            res.emplace_back(temp);
+        }
+    }
 }
 } // namespace Memory
 } // namespace OHOS
