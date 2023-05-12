@@ -30,8 +30,6 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "ReclaimPriorityManager";
-constexpr int TIMER_PEROID_MIN = 3;
-constexpr int TIMER_PEROID_MS = TIMER_PEROID_MIN * 60 * 1000;
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
@@ -119,61 +117,6 @@ void ReclaimPriorityManager::Dump(int fd)
         }
     }
     dprintf(fd, "-----------------------------------------------------------------\n");
-}
-
-void ReclaimPriorityManager::SetTimer()
-{
-    std::function<void()> timerFunc_ = std::bind(&ReclaimPriorityManager::UpdateByPeroid, this);
-    // set timer and call CheckSwapOut each TIMER_PEROID_MIN min.
-    handler_->PostTask(timerFunc_, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
-    HILOGI("set timer after %{public}d mins", TIMER_PEROID_MIN);
-}
-
-void ReclaimPriorityManager::UpdateByPeroid()
-{
-    HILOGI("called");
-    UpdateForegroundApps();
-    // set next timer
-    SetTimer();
-}
-
-void ReclaimPriorityManager::UpdateForegroundApps()
-{
-    // add lock
-    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
-
-    for (auto bundle : totalBundlePrioSet_) {
-        if (bundle == nullptr) {
-            continue;
-        }
-        if (bundle->priority_ > 0) {
-            HILOGD("finish to iter all fg apps, break!");
-            break;
-        }
-        if (bundle->GetState() == BundleState::STATE_WAITING_FOR_KILL) {
-            HILOGD("bundle<%{public}d, %{public}s}> is waiting to kill, skiped!", bundle->uid_, bundle->name_.c_str());
-            continue;
-        }
-        if (bundle->priority_ < 0) {
-            continue;
-        }
-        for (auto procEntry : bundle->procs_) {
-            int32_t pid = procEntry.first;
-            if (!IsFrontApp(bundle->name_, bundle->uid_, pid)) {
-                HILOGE("%{public}s(uid=%{public}d,pid=%{public}d) is not a fg app but with priority %{public}d, "
-                    "adjust it!", bundle->name_.c_str(), bundle->uid_, pid, bundle->priority_);
-                ReclaimHandleRequest request;
-                request.pid = pid;
-                request.uid = bundle->uid_;
-                request.bundleName = bundle->name_;
-                request.reason =  AppStateUpdateReason::BACKGROUND;
-                UpdateReclaimPriority(request);
-            } else {
-                HILOGI("%{public}s(uid=%{public}d,pid=%{public}d) is a real fg app.", bundle->name_.c_str(),
-                    bundle->uid_, pid);
-            }
-        }
-    }
 }
 
 sptr<AppExecFwk::IAppMgr> GetAppMgrProxy()
@@ -325,6 +268,7 @@ void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bu
 
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account != nullptr) {
         auto pairPtr = account->bundleIdInfoMapping_.find(uid);
@@ -348,7 +292,6 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 
 void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     auto ret = totalBundlePrioSet_.insert(bundle);
     if (ret.second) {
         HILOGD("success to insert bundle to set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
@@ -358,7 +301,6 @@ void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityIn
 
 void ReclaimPriorityManager::DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     int delCount = totalBundlePrioSet_.erase(bundle);
     HILOGD("delete %{public}d bundles from set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
            delCount, bundle->uid_, totalBundlePrioSet_.size());
@@ -412,8 +354,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(const ReclaimHandleRequest &r
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
-    std::function<bool()> updateReclaimPriorityInnerFunc =
-                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, request);
+    std::function<void()> updateReclaimPriorityInnerFunc =
+                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityWithLock, this, request);
     return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
 }
 
@@ -520,7 +462,6 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
     std::shared_ptr<BundlePriorityInfo> bundle, std::shared_ptr<AccountBundleInfo> account)
 {
     HILOGI("terminated: bundleName=%{public}s, pid=%{public}d", bundle->name_.c_str(), proc.pid_);
-    // find extension bind with this proc, and update extension status if needed
 
     // clear proc and bundle if needed, delete the object
     int removedProcessPrio = proc.priority_;
@@ -648,6 +589,12 @@ bool ReclaimPriorityManager::HandleExtensionProcess(int32_t callerPid, int32_t c
         callerBundleName, pid, bundleUid, bundleName, priorityReason);
 }
 
+void ReclaimPriorityManager::UpdateReclaimPriorityWithLock(const ReclaimHandleRequest &request)
+{
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+    UpdateReclaimPriorityInner(request);
+}
+
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleRequest &request)
 {
     HILOGI("called, pid=%{public}d, bundleUid=%{public}d, bundleName=%{public}s, reason=%{public}s",
@@ -719,7 +666,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcForExtension(const ProcessPrior
         ReclaimHandleRequest request;
         request.callerUid = callerUid;
         request.reason = AppStateUpdateReason::UPDATE_EXTENSION_PROCESS;
-        UpdateReclaimPriority(request);
+        UpdateReclaimPriorityInner(request);
     }
 }
 
@@ -929,6 +876,7 @@ bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId,
 
 void ReclaimPriorityManager::Reset()
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.clear();
     osAccountsInfoMap_.clear();
 }
