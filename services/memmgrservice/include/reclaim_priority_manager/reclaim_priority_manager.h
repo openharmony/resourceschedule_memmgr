@@ -93,11 +93,6 @@ public:
     bool UpdateReclaimPriority(const ReclaimHandleRequest &request);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
-    // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
-    void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
-    void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
-    void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
-
     inline bool Initailized()
     {
         return initialized_;
@@ -113,7 +108,6 @@ public:
     // for hidumper, usage: hdc shell hidumper -s 1909
     void Dump(int fd);
 
-    std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
     void Reset();
 private:
     bool initialized_ = false;
@@ -135,14 +129,13 @@ private:
 
     ReclaimPriorityManager();
     bool GetEventHandler();
-    void SetTimer();
-    void UpdateByPeroid();
     void UpdateForegroundApps();
     bool IsFrontApp(const std::string& pkgName, int32_t uid, int32_t pid);
     void GetAllKillableSystemApps();
     void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
     void HandlePreStartedProcs();
     bool UpdateReclaimPriorityInner(const ReclaimHandleRequest &request);
+    void UpdateReclaimPriorityWithLock(const ReclaimHandleRequest &request);
     bool HandleExtensionProcess(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
         pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
@@ -171,6 +164,12 @@ private:
     void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
     bool HandleUpdateExtensionBundle(int bundleUid);
 
+    // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
+    void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
+    void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
+    void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
+
+    std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
         return GET_OS_ACCOUNT_ID_BY_UID(bundleUid);
