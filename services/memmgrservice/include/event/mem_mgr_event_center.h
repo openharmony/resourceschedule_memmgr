@@ -16,21 +16,22 @@
 #ifndef OHOS_MEMORY_MEMMGR_EVENT_CENTER_H
 #define OHOS_MEMORY_MEMMGR_EVENT_CENTER_H
 
-#include "single_instance.h"
+#include "account_observer.h"
+#include "common_event_observer.h"
 #include "event_handler.h"
 #include "extension_connection_observer.h"
-#include "common_event_observer.h"
-#include "account_observer.h"
+#include "kswapd_observer.h"
 #include "memory_pressure_observer.h"
+#include "single_instance.h"
 #ifdef CONFIG_BGTASK_MGR
 #include "bg_task_observer.h"
 #endif
-#include "system_ability_definition.h"
-#include "app_mgr_interface.h"
-#include "iservice_registry.h"
-#include "app_process_data.h"
 #include "app_mgr_client.h"
+#include "app_mgr_interface.h"
+#include "app_process_data.h"
 #include "app_state_observer.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace Memory {
@@ -53,6 +54,7 @@ public:
     void RetryRegisterEventObserver(int32_t systemAbilityId);
     void Dump(int fd);
     void RemoveEventObserver(int32_t systemAbilityId);
+
 private:
     MemMgrEventCenter();
     bool CreateRegisterHandler();
@@ -64,6 +66,7 @@ private:
     void RegisterAppStateObserver();
     void RegisterCommonEventObserver();
     void RegisterMemoryPressureObserver();
+    void RegisterKswapdObserver();
     void HandlerRegisterEvent(int64_t registerEventId);
     int regAccountObsRetry_ = 0;
     int regAppStatusObsRetry_ = 0;
@@ -76,6 +79,7 @@ private:
     std::shared_ptr<BgTaskObserver> bgTaskObserver_;
 #endif
     std::shared_ptr<MemoryPressureObserver> memoryPressureObserver_;
+    std::shared_ptr<KswapdObserver> kswapdObserver_;
     sptr<AppStateObserver> appStateObserver_;
 };
 } // namespace Memory
