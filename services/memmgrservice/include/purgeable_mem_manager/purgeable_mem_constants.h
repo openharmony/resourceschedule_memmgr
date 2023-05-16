@@ -20,21 +20,27 @@ namespace OHOS {
 namespace Memory {
 constexpr unsigned int PURGEABLE_SUBSCRIBER_MAX_NUM = 100;
 constexpr unsigned int PURGEABLE_APPSTATE_MAX_NUM = 100;
-constexpr unsigned int PARAM_SIZE_ONTRIM = 2;
-constexpr unsigned int PARAM_SIZE_RECLAIMALL = 1;
-constexpr unsigned int PARAM_SIZE_RECLAIM_BY_PID = 3;
-constexpr unsigned int PARAM_SIZE_SHOW_APPS = 1;
-constexpr unsigned int FIRST_ARG_INDEX = 0;
-constexpr unsigned int PID_INDEX = 2;
-constexpr unsigned int SYSTEM_MEMORY_LEVEL_INDEX = 1;
-constexpr unsigned int SECOND_ARG_INDEX = 1;
+constexpr unsigned int APP_STATE_FOREGROUND = 2;
 
 constexpr unsigned int MEMORY_LEVEL_PURGEABLE = 1;
 constexpr unsigned int MEMORY_LEVEL_MODERATE = 2;
 constexpr unsigned int MEMORY_LEVEL_LOW = 3;
 constexpr unsigned int MEMORY_LEVEL_CRITICAL = 4;
 
-constexpr unsigned int APP_STATE_FOREGROUND = 2;
+constexpr unsigned int PURGEABLE_TYPE_HEAP = 1;
+constexpr unsigned int PURGEABLE_TYPE_ASHMEM = 2;
+constexpr unsigned int PURGEABLE_TYPE_SUBSCRIBER = 3;
+constexpr unsigned int PURGEABLE_TYPE_ALL = 4;
+
+constexpr unsigned int TRIGGER_INTERVAL_SECOND = 10; // 秒
+
+enum class PurgeableMemoryType {
+    UNKNOWN = 0,
+    PURGEABLE_HEAP = 1,
+    PURGEABLE_ASHMEM = 2,
+    PURGEABLE_SUBSCRIBER = 3,
+    PURGEABLE_ALL = 4,
+};
 } // namespace Memory
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_PURGEABLE_MEM_CONSTANTS_H

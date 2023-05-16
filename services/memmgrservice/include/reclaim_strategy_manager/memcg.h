@@ -97,8 +97,8 @@ public:
     bool SetReclaimRatios(const ReclaimRatios& ratios);
     bool SetScoreAndReclaimRatiosToKernel();
     bool SwapIn(); // 100% load to mem
-protected:
     virtual std::string GetMemcgPath_();
+protected:
     bool WriteToFile_(const std::string& path, const std::string& content, bool truncated = true);
     bool ReadScoreAndReclaimRatiosFromKernel_(int& score, unsigned int& mem2zramRatio, unsigned int& zram2ufsRatio,
                                               unsigned int& refaultThreshold);
@@ -119,7 +119,6 @@ public:
     bool CreateMemcgDir();
     bool RemoveMemcgDir();
     bool AddProc(unsigned int pid);
-protected:
     std::string GetMemcgPath_() final;
 }; // end class UserMemcg
 } // namespace Memory
