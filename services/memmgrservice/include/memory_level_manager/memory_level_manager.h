@@ -34,6 +34,7 @@ class MemoryLevelManager {
 
 public:
     void PsiHandler();
+    void TriggerMemoryLevelByDump(SystemMemoryInfo &info);
 
 private:
     MemoryLevelManager();
