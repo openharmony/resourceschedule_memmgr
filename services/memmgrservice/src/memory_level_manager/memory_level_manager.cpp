@@ -125,6 +125,16 @@ void MemoryLevelManager::NotifyMemoryLevel(SystemMemoryInfo &info)
 #endif
 }
 
+void MemoryLevelManager::TriggerMemoryLevelByDump(SystemMemoryInfo &info)
+{
+    HILOGD("called!");
+    if (info.source != MemorySource::MANUAL_DUMP) {
+        HILOGE("error: trigger not by dump!");
+        return;
+    }
+    NotifyMemoryLevel(info);
+}
+
 void MemoryLevelManager::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount_);

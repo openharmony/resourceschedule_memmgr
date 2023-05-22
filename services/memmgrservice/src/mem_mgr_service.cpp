@@ -14,21 +14,23 @@
  */
 
 #include "mem_mgr_service.h"
-#include "memmgr_log.h"
-#include "system_ability_definition.h"
-#include "memmgr_config_manager.h"
+
+#include <unistd.h>
+
+#include "low_memory_killer.h"
 #include "mem_mgr_event_center.h"
+#include "memmgr_config_manager.h"
+#include "memmgr_log.h"
+#include "multi_account_manager.h"
 #include "nandlife_controller.h"
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
-#include "multi_account_manager.h"
-#include "low_memory_killer.h"
+#include "system_ability_definition.h"
 #ifdef USE_PURGEABLE_MEMORY
-#include "purgeable_mem_manager.h"
 #include "kernel_interface.h"
+#include "purgeable_mem_manager.h"
 #endif
-
-#include <unistd.h>
+#include "dump_command_dispatcher.h"
 
 namespace OHOS {
 namespace Memory {
@@ -193,46 +195,47 @@ void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::st
     MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
 }
 
-void ShowHelpInfo(int fd)
+void ParseParams(const std::vector<std::string> &params,
+                 std::map<std::string, std::vector<std::string>> &keyValuesMapping)
 {
-    dprintf(fd, "Usage:\n");
-    dprintf(fd, "-h                          |help for memmgrservice dumper\n");
-    dprintf(fd, "-a                          |dump all info\n");
-    dprintf(fd, "-e                          |dump event observer\n");
-    dprintf(fd, "-r                          |dump reclaim info and adj\n");
-    dprintf(fd, "-c                          |dump config\n");
-#ifdef USE_PURGEABLE_MEMORY
-    dprintf(fd, "-t                          |triger onTrim, 0:moderate, 1:low, 2:critical\n");
-    dprintf(fd, "-f                          |triger Reclaim\n");
-    dprintf(fd, "   -p                          |the pid of process to reclaim, default to reclaim all\n");
-    dprintf(fd, "-s                          |show all the pid which can be reclaimed\n");
-#endif
+    std::string tmpKey;
+    std::vector<std::string> tmpValue;
+    for (auto i = 0; i < params.size(); i++) {
+        if (params[i].empty())
+            continue;
+        if (params[i][0] == '-') {
+            if (!tmpKey.empty()) {
+                keyValuesMapping[tmpKey] = tmpValue;
+                tmpValue.clear();
+            }
+            tmpKey = params[i];
+        } else {
+            tmpValue.emplace_back(params[i]);
+        }
+    }
+    if (!tmpKey.empty()) {
+        keyValuesMapping[tmpKey] = tmpValue;
+    }
+
+    HILOGD("keyValuesMapping.size()=%{public}zu\n", keyValuesMapping.size());
+    for (auto &it : keyValuesMapping) {
+        HILOGD("key=%{public}s", it.first.c_str());
+        for (auto i = 0; i < it.second.size(); i++) {
+            HILOGD("value[%{public}zu]=%{public}s", i, it.second[i].c_str());
+        }
+    }
 }
 
 int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
 {
     HILOGI("called");
     std::vector<std::string> params;
-    for (auto& arg : args) {
+    for (auto &arg : args) {
         params.emplace_back(Str16ToStr8(arg));
     }
-
-    if (params.empty() || (params.size() == 1 && params[0] == "-h")) {
-        ShowHelpInfo(fd);
-    } else if (params.size() == 1 && params[0] == "-a") {
-        MemMgrEventCenter::GetInstance().Dump(fd);
-        ReclaimPriorityManager::GetInstance().Dump(fd);
-    } else if (params.size() == 1 && params[0] == "-e") {
-        MemMgrEventCenter::GetInstance().Dump(fd);
-    } else if (params.size() == 1 && params[0] == "-r") {
-        ReclaimPriorityManager::GetInstance().Dump(fd);
-    } else if (params.size() == 1 && params[0] == "-c") {
-        MemmgrConfigManager::GetInstance().Dump(fd);
-#ifdef USE_PURGEABLE_MEMORY
-    } else if (params.size() >= 1 && (params[0] == "-t" || params[0] == "-f" || params[0] == "-s")) {
-        PurgeableMemManager::GetInstance().Test(fd, params);
-#endif
-    } 
+    std::map<std::string, std::vector<std::string>> keyValuesMapping;
+    ParseParams(params, keyValuesMapping);
+    DispatchDumpCommand(fd, keyValuesMapping);
     return 0;
 }
 } // namespace Memory
