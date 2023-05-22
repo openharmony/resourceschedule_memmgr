@@ -14,12 +14,19 @@
  */
 
 #include "purgeable_mem_manager.h"
-#include "memmgr_log.h"
-#include "memmgr_ptr_util.h"
+
+#include <algorithm>
+
+#include "accesstoken_kit.h"
 #include "app_mem_info.h"
 #include "app_mgr_constants.h"
 #include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
+#include "memcg_mgr.h"
+#include "memmgr_config_manager.h"
+#include "memmgr_log.h"
+#include "memmgr_ptr_util.h"
+#include "reclaim_priority_manager.h"
+#include "system_memory_level_config.h"
  
 namespace OHOS {
 namespace Memory {
@@ -306,8 +313,9 @@ bool PurgeableMemManager::CheckCallingToken()
     return false;
 }
 
-void PurgeableMemManager::ReclaimAllInner()
+void PurgeableMemManager::ReclaimSubscriberAll()
 {
+    HILOGD("enter! Force Subscribers Reclaim all");
     std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
     std::lock_guard<std::mutex> lockAppList(mutexAppList);
     auto subscriberIter = appStateSubscribers_.begin();
@@ -326,18 +334,9 @@ void PurgeableMemManager::ReclaimAllInner()
     }
 }
 
-void PurgeableMemManager::ReclaimAll()
+void PurgeableMemManager::ReclaimSubscriberProc(const int32_t pid)
 {
-    if (!initialized_) {
-        HILOGE("is not initialized");
-        return;
-    }
-    std::function<void()> func = std::bind(&PurgeableMemManager::ReclaimAllInner, this);
-    handler_->PostImmediateTask(func);
-}
-
-void PurgeableMemManager::ReclaimInner(int32_t pid)
-{
+    HILOGD("enter! Force Subscribers Reclaim: pid=%{public}d", pid);
     int32_t uid = -1;
     {
         std::lock_guard<std::mutex> lockAppList(mutexAppList);
@@ -358,19 +357,266 @@ void PurgeableMemManager::ReclaimInner(int32_t pid)
     }
 }
 
-void PurgeableMemManager::Reclaim(int32_t pid)
+bool PurgeableMemManager::GetPurgeableInfo(PurgeableMemoryInfo &info)
 {
-    if (!initialized_) {
-        HILOGE("is not initialized");
-        return;
+    switch (info.type) {
+        case PurgeableMemoryType::PURGEABLE_HEAP:
+            return PurgeableMemUtils::GetInstance().GetPurgeableHeapInfo(info.reclaimableKB);
+        case PurgeableMemoryType::PURGEABLE_ASHMEM:
+            return PurgeableMemUtils::GetInstance().GetPurgeableAshmInfo(info.reclaimableKB, info.ashmInfoToReclaim);
+        case PurgeableMemoryType::PURGEABLE_SUBSCRIBER:
+            return false;
+        default:
+            break;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::ReclaimInner, this, pid);
-    handler_->PostImmediateTask(func);
+    return false;
 }
+
+bool PurgeableMemManager::GetMemcgPathByUserId(const int userId, std::string &memcgPath)
+{
+    if (userId == 0) { // get system memcg path when userId = 0
+        memcgPath = KernelInterface::MEMCG_BASE_PATH;
+        return true;
+    }
+    UserMemcg *memcg = MemcgMgr::GetInstance().GetUserMemcg(userId);
+    if (memcg == nullptr) {
+        return false;
+    }
+    memcgPath = memcg->GetMemcgPath_();
+    return true;
+}
+
+bool PurgeableMemManager::PurgeTypeAll(const PurgeableMemoryType &type)
+{
+    switch (type) {
+        case PurgeableMemoryType::PURGEABLE_HEAP:
+            return PurgeableMemUtils::GetInstance().PurgeHeapAll();
+        case PurgeableMemoryType::PURGEABLE_ASHMEM:
+            return PurgeableMemUtils::GetInstance().PurgeAshmAll();
+        case PurgeableMemoryType::PURGEABLE_SUBSCRIBER:
+            return false;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool PurgeableMemManager::PurgeHeap(const int userId, const int size)
+{
+    std::string memcgPath;
+    if (!GetMemcgPathByUserId(userId, memcgPath)) {
+        return false;
+    }
+    return PurgeableMemUtils::GetInstance().PurgeHeapMemcg(memcgPath, size);
+}
+
+bool PurgeableMemManager::PurgeAshm(const unsigned int ashmId, const unsigned int time)
+{
+    std::string ashmIdWithTime = std::to_string(ashmId) + std::string(" ") + std::to_string(time);
+    return PurgeableMemUtils::GetInstance().PurgeAshmByIdWithTime(ashmIdWithTime);
+}
+
+bool PurgeableMemManager::PurgHeapOneMemcg(const std::vector<int> &memcgPids, const std::string &memcgPath,
+                                           const int reclaimTargetKB, int &reclaimResultKB)
+{
+    if (reclaimResultKB >= reclaimTargetKB) {
+        return true;
+    }
+
+    int unPinedSizeKB = 0;
+    for (auto &pid : memcgPids) {
+        int reclaimableKB = 0;
+        if (!PurgeableMemUtils::GetInstance().GetProcPurgeableHeapInfo(pid, reclaimableKB)) {
+            continue;
+        }
+        unPinedSizeKB += reclaimableKB;
+    }
+
+    int toReclaimSize = 0;
+    if (reclaimResultKB + unPinedSizeKB <= reclaimTargetKB) {
+        toReclaimSize = unPinedSizeKB;
+    } else {
+        toReclaimSize = reclaimTargetKB - reclaimResultKB;
+    }
+
+    if (toReclaimSize > 0 && PurgeableMemUtils::GetInstance().PurgeHeapMemcg(memcgPath, toReclaimSize)) {
+        HILOGI("reclaim purgeable [HEAP] for memcg[%{public}s], recult=%{public}d KB", memcgPath.c_str(),
+               toReclaimSize);
+        reclaimResultKB += toReclaimSize;
+        if (reclaimResultKB >= reclaimTargetKB) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void PurgeableMemManager::PurgHeapMemcgOneByOne(const int reclaimTargetKB, int &reclaimResultKB)
+{
+    reclaimResultKB = 0;
+    std::vector<int> memcgPids;
+    std::string memcgPath;
+    std::vector<int> userIds;
+    KernelInterface::GetInstance().GetAllUserIds(userIds);
+    for (auto userId : userIds) {
+        memcgPath = KernelInterface::GetInstance().JoinPath(KernelInterface::MEMCG_BASE_PATH, std::to_string(userId));
+        memcgPids.clear();
+        if (!KernelInterface::GetInstance().GetMemcgPids(memcgPath, memcgPids) || memcgPids.size() == 0) {
+            continue;
+        }
+        if (PurgHeapOneMemcg(memcgPids, memcgPath, reclaimTargetKB, reclaimResultKB)) {
+            return;
+        }
+    }
+
+    memcgPids.clear();
+    if (KernelInterface::GetInstance().GetMemcgPids(KernelInterface::MEMCG_BASE_PATH, memcgPids) &&
+        memcgPids.size() > 0) {
+        PurgHeapOneMemcg(memcgPids, KernelInterface::MEMCG_BASE_PATH, reclaimTargetKB, reclaimResultKB);
+    }
+}
+
+bool PurgeableMemManager::AshmReclaimPriorityCompare(const PurgeableAshmInfo &left, const PurgeableAshmInfo &right)
+{
+    if (left.minPriority != right.minPriority) {
+        return left.minPriority > right.minPriority;
+    } else {
+        return left.sizeKB > right.sizeKB;
+    }
+}
+
+void PurgeableMemManager::PurgAshmIdOneByOne(std::vector<PurgeableAshmInfo> &ashmInfoToReclaim,
+                                             const int reclaimTargetKB, int &reclaimResultKB)
+{
+    if (!ashmInfoToReclaim.empty()) {
+        std::sort(ashmInfoToReclaim.begin(), ashmInfoToReclaim.end(),
+                  [this](const auto &lhs, const auto &rhs) { return AshmReclaimPriorityCompare(lhs, rhs); });
+    }
+
+    reclaimResultKB = 0;
+    for (auto &it : ashmInfoToReclaim) {
+        if (PurgeableMemUtils::GetInstance().PurgeAshmByIdWithTime(it.idWithTime)) {
+            HILOGI("reclaim purgeable [ASHM] for ashmem_id[%{public}s], adj=%{public}d, result=%{public}d KB",
+                   it.idWithTime.c_str(), it.minPriority, it.sizeKB);
+            reclaimResultKB += it.sizeKB;
+            if (reclaimResultKB >= reclaimTargetKB) {
+                return;
+            }
+        }
+    }
+}
+
+int PurgeableMemManager::PurgeByTypeAndTarget(const PurgeableMemoryType &type, const int reclaimTargetKB)
+{
+    std::string typeDesc = PurgMemType2String(type);
+    PurgeableMemoryInfo info;
+    info.type = type;
+    if (!GetPurgeableInfo(info)) {
+        HILOGD("GetPurgeableInfo with type[%{public}s] failed!", typeDesc.c_str());
+        return 0;
+    }
+    if (info.reclaimableKB <= 0) {
+        HILOGD("no unpined purgeable [%{public}s] to reclaim!", typeDesc.c_str());
+        return 0;
+    }
+    HILOGI("purgeable[%{public}s]: reclaimableKB=%{public}dKB, target=%{public}dKB", typeDesc.c_str(),
+           info.reclaimableKB, reclaimTargetKB);
+
+    int reclaimResultKB = 0;
+
+    // reclaim all unpined purgeable of this type
+    if (info.reclaimableKB <= reclaimTargetKB && PurgeTypeAll(type)) {
+        reclaimResultKB = info.reclaimableKB;
+        HILOGI("reclaim all purgeable [%{public}s], result=%{public}d KB", typeDesc.c_str(), reclaimResultKB);
+        return reclaimResultKB;
+    }
+
+    // reclaim one by one
+    switch (type) {
+        case PurgeableMemoryType::PURGEABLE_HEAP:
+            PurgHeapMemcgOneByOne(reclaimTargetKB, reclaimResultKB);
+            break;
+        case PurgeableMemoryType::PURGEABLE_ASHMEM:
+            PurgAshmIdOneByOne(info.ashmInfoToReclaim, reclaimTargetKB, reclaimResultKB);
+            break;
+        case PurgeableMemoryType::PURGEABLE_SUBSCRIBER:
+            break;
+        default:
+            break;
+    }
+    return reclaimResultKB;
+}
+
+std::string PurgeableMemManager::PurgMemType2String(const PurgeableMemoryType &type)
+{
+    switch (type) {
+        case PurgeableMemoryType::PURGEABLE_HEAP:
+            return "HEAP";
+        case PurgeableMemoryType::PURGEABLE_ASHMEM:
+            return "ASHM";
+        case PurgeableMemoryType::PURGEABLE_SUBSCRIBER:
+            return "SUBSCRIBER";
+        default:
+            return "";
+    }
+}
+
+#define CHECK_RECLAIM_CONDITION(reclaimTargetKB, action) \
+    do {                                                 \
+        if ((reclaimTargetKB) <= 0) {                    \
+            action;                                      \
+        }                                                \
+    } while (0)
 
 void PurgeableMemManager::TriggerByPsi(const SystemMemoryInfo &info)
 {
-    TrimAllSubscribers(info.level);
+    HILOGD("called");
+    time_t now = time(0);
+    if (lastTriggerTime != 0 && (now - lastTriggerTime) < TRIGGER_INTERVAL_SECOND) {
+        HILOGD("Less than %{public}u s from last trigger, no action is required.", TRIGGER_INTERVAL_SECOND);
+        return;
+    } else {
+        lastTriggerTime = now;
+    }
+
+    unsigned int currentBuffer = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
+    DECLARE_SHARED_POINTER(SystemMemoryLevelConfig, config);
+    MAKE_POINTER(config, shared, SystemMemoryLevelConfig, "The SystemMemoryLevelConfig is NULL.", return,
+                 MemmgrConfigManager::GetInstance().GetSystemMemoryLevelConfig());
+
+    // cal target reclaim count
+    unsigned int targetBuffer = config->GetPurgeable();
+    int reclaimTargetKB = targetBuffer - currentBuffer;
+    CHECK_RECLAIM_CONDITION(reclaimTargetKB, return);
+    HILOGI("reclaim purgeable memory start: currentBuffer=%{public}uKB, purgeableLevel=%{public}uKB, "
+           "reclaimTarget=%{public}dKB", currentBuffer, targetBuffer, reclaimTargetKB);
+
+    std::vector<PurgeableMemoryType> sequence = {PurgeableMemoryType::PURGEABLE_HEAP,
+                                                 PurgeableMemoryType::PURGEABLE_ASHMEM,
+                                                 PurgeableMemoryType::PURGEABLE_SUBSCRIBER};
+
+    int totalReclaimedKB = 0;
+    for (auto typePtr = sequence.begin(); typePtr < sequence.end(); typePtr++) {
+        int reclaimed = PurgeByTypeAndTarget(*typePtr, reclaimTargetKB);
+        HILOGI("reclaimed %{public}dKB purgeable [%{public}s]", reclaimed, PurgMemType2String(*typePtr).c_str());
+        reclaimTargetKB -= reclaimed;
+        totalReclaimedKB += reclaimed;
+        if (reclaimTargetKB <= 0) {
+            HILOGI("total reclaimed %{public}dKB purgeable memory, reached target size!", totalReclaimedKB);
+            return;
+        }
+    }
+    HILOGI("purgeable_heap and purgeable_ashmem total reclaimed %{public}dKB, not reach target size!",
+           totalReclaimedKB);
+
+    TrimAllSubscribers(info.level); // heap和ashmem类型的purgeable内存全部回收完依然不够target时，触发onTrim
+}
+
+void PurgeableMemManager::TriggerByManualDump(const SystemMemoryInfo &info)
+{
+    HILOGD("enter!\n");
+    if (info.level > SystemMemoryLevel::UNKNOWN && info.level <= SystemMemoryLevel::MEMORY_LEVEL_CRITICAL) {
+        TrimAllSubscribers(info.level);
+    }
 }
 
 /*
@@ -383,6 +629,7 @@ void PurgeableMemManager::NotifyMemoryLevelInner(const SystemMemoryInfo &info)
 {
     switch (info.source) {
         case MemorySource::MANUAL_DUMP:
+            TriggerByManualDump(info);
             break;
         case MemorySource::KSWAPD: // fall through
         case MemorySource::PSI_MEMORY:
@@ -404,49 +651,46 @@ void PurgeableMemManager::NotifyMemoryLevel(const SystemMemoryInfo &info)
     handler_->PostImmediateTask(func);
 }
 
-bool PurgeableMemManager::isNumeric(std::string const &str)
+bool PurgeableMemManager::ForceReclaimByDump(const DumpReclaimInfo &dumpInfo)
 {
-    return !str.empty() && str.find_first_not_of("0123456789") == std::string::npos;
-}
+    if (dumpInfo.reclaimType == PurgeableMemoryType::UNKNOWN) {
+        return false;
+    }
 
-void PurgeableMemManager::Test(int fd, std::vector<std::string> &params)
-{
-    if (params.size() == PARAM_SIZE_ONTRIM && params[FIRST_ARG_INDEX] == "-t") {
-        if (params[SYSTEM_MEMORY_LEVEL_INDEX].length() != 1) {
-            return;
-        }
-        int32_t level = params[SYSTEM_MEMORY_LEVEL_INDEX][0] - '0';
-        switch (level) {
-            case MEMORY_LEVEL_PURGEABLE:
-                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE);
-                break;
-            case MEMORY_LEVEL_MODERATE:
-                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
-                break;
-            case MEMORY_LEVEL_LOW:
-                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_LOW);
-                break;
-            case MEMORY_LEVEL_CRITICAL:
-                TrimAllSubscribers(SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
-                break;
-            default:
-                return;
-        }
-    } else if (params.size() > 0 && params[FIRST_ARG_INDEX] == "-f") {
-        if (params.size() == PARAM_SIZE_RECLAIMALL) {
-            ReclaimAll();
-        }
-        if (params.size() == PARAM_SIZE_RECLAIM_BY_PID && params[SECOND_ARG_INDEX] == "-p" &&
-            isNumeric(params[PID_INDEX])) {
-            Reclaim(std::stoi(params[PID_INDEX]));
-        }
-    } else if (params.size() == PARAM_SIZE_SHOW_APPS && params[FIRST_ARG_INDEX] == "-s") {
-        ShowRegistedApps(fd);
+    bool ret;
+    switch (dumpInfo.reclaimType) {
+        case PurgeableMemoryType::PURGEABLE_HEAP:
+            if (dumpInfo.ifReclaimTypeAll) {
+                return PurgeableMemUtils::GetInstance().PurgeHeapAll();
+            } else {
+                return PurgeHeap(dumpInfo.memcgUserId, dumpInfo.reclaimHeapSizeKB);
+            }
+        case PurgeableMemoryType::PURGEABLE_ASHMEM:
+            if (dumpInfo.ifReclaimTypeAll) {
+                return PurgeableMemUtils::GetInstance().PurgeAshmAll();
+            } else {
+                return PurgeAshm(dumpInfo.ashmId, dumpInfo.ashmTime);
+            }
+        case PurgeableMemoryType::PURGEABLE_SUBSCRIBER:
+            if (dumpInfo.ifReclaimTypeAll) {
+                ReclaimSubscriberAll();
+            } else {
+                ReclaimSubscriberProc(dumpInfo.subscriberPid);
+            }
+            return true;
+        case PurgeableMemoryType::PURGEABLE_ALL:
+            ret = PurgeableMemUtils::GetInstance().PurgeHeapAll();
+            ret = ret && PurgeableMemUtils::GetInstance().PurgeAshmAll();
+            ReclaimSubscriberAll();
+            return ret;
+        default:
+            return false;
     }
 }
 
-void PurgeableMemManager::ShowRegistedApps(int fd)
+void PurgeableMemManager::DumpSubscribers(const int fd)
 {
+    HILOGD("enter!\n");
     std::lock_guard<std::mutex> lockAppList(mutexAppList);
     int32_t pid, uid, state;
     auto appListIter = appList_.begin();
