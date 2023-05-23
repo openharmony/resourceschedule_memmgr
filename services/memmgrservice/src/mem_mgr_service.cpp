@@ -221,7 +221,7 @@ void ParseParams(const std::vector<std::string> &params,
     for (auto &it : keyValuesMapping) {
         HILOGD("key=%{public}s", it.first.c_str());
         for (auto i = 0; i < it.second.size(); i++) {
-            HILOGD("value[%{public}zu]=%{public}s", i, it.second[i].c_str());
+            HILOGD("value[%{public}d]=%{public}s", i, it.second[i].c_str());
         }
     }
 }
