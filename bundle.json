@@ -18,20 +18,21 @@
       "ram": "4316KB",
       "deps": {
         "components": [
-	  "ipc",
+          "ipc",
           "ability_base",
           "bundle_framework",
           "safwk",
           "background_task_mgr",
           "ability_runtime",
-          "hisysevent_native",
           "os_account",
-          "startup_l2",
           "common_event_service",
           "eventhandler",
           "hiviewdfx_hilog_native",
           "c_utils",
-          "samgr"
+          "samgr",
+          "resource_management",
+          "access_token",
+          "init"
         ],
         "third_party": []
       },
