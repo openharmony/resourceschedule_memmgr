@@ -15,6 +15,6 @@ import("//build/ohos/sa_profile/sa_profile.gni")
 import("../memmgr.gni")
 
 ohos_sa_profile("memmgr_sa_profile") {
-  sources = [ "1909.xml" ]
+  sources = [ "1909.json" ]
   part_name = "${memmgr_part_name}"
 }
