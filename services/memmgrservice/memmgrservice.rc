@@ -14,7 +14,7 @@
 on post-fs-data
     start memmgrservice
 
-service memmgrservice /system/bin/sa_main /system/profile/memmgrservice.xml
+service memmgrservice /system/bin/sa_main /system/profile/memmgrservice.json
     class z_core
     user root
     group root shell
