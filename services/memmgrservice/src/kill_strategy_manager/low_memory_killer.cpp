@@ -172,16 +172,16 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandlerInner()
 {
-    HILOGD("[%{public}ld] called", ++calledCount);
+    HILOGD("[%{public}ld] called", ++calledCount_);
     int triBuf, availBuf, freedBuf;
     unsigned int minBuf = 0, targetBuf = 0, targetKillKb = 0, currKillKb = 0;
     int minPrio;
     int killCnt = 0;
 
     triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-    HILOGE("[%{public}ld] current buffer = %{public}d KB", calledCount, triBuf);
+    HILOGE("[%{public}ld] current buffer = %{public}d KB", calledCount_, triBuf);
     if (triBuf == MAX_BUFFER_KB) {
-        HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount);
+        HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount_);
         return;
     }
 
@@ -192,10 +192,10 @@ void LowMemoryKiller::PsiHandlerInner()
         targetKillKb = (unsigned int)(targetBuf - triBuf);
     }
 
-    HILOGE("[%{public}ld] minPrio = %{public}d", calledCount, minPrio);
+    HILOGE("[%{public}ld] minPrio = %{public}d", calledCount_, minPrio);
 
     if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
-        HILOGD("[%{public}ld] no minPrio, skiped!", calledCount);
+        HILOGD("[%{public}ld] no minPrio, skiped!", calledCount_);
         return;
     }
 
@@ -203,16 +203,16 @@ void LowMemoryKiller::PsiHandlerInner()
         /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val   */
         KernelInterface::GetInstance().EchoToPath(LMKD_DBG_TRIGGER_FILE_PATH.c_str(), "1");
         if ((freedBuf = KillOneBundleByPrio(minPrio)) <= 0) {
-            HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount, minPrio);
+            HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount_, minPrio);
             goto out;
         }
         currKillKb += (unsigned int)freedBuf;
         killCnt++;
-        HILOGD("[%{public}ld] killCnt = %{public}d", calledCount, killCnt);
+        HILOGD("[%{public}ld] killCnt = %{public}d", calledCount_, killCnt);
 
         availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
         if (availBuf < 0 || availBuf >= MAX_BUFFER_KB) {
-            HILOGE("[%{public}ld] get buffer failed, go out!", calledCount);
+            HILOGE("[%{public}ld] get buffer failed, go out!", calledCount_);
             goto out;
         }
         if ((unsigned int)availBuf >= targetBuf) {
@@ -224,7 +224,7 @@ void LowMemoryKiller::PsiHandlerInner()
 out:
     if (currKillKb > 0) {
         HILOGI("[%{public}ld] Reclaimed %{public}uK when currBuff %{public}dK below %{public}uK target %{public}uK",
-            calledCount, currKillKb, triBuf, minBuf, targetBuf);
+            calledCount_, currKillKb, triBuf, minBuf, targetBuf);
     }
 }
 

@@ -154,7 +154,7 @@ private:
         std::mutex mutex_alive {};
 
     private:
-        bool isListenerAlive = true;
+        bool isListenerAlive_ = true;
     };
 private:
     const sptr<AppStateSubscriberImpl> GetImpl() const;
