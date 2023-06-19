@@ -148,34 +148,34 @@ bool NandLifeController::LoadNandLifeParam()
 {
     minsToday_ = ReadUnsignedLongLongParam(MINS_TODAY_PARAM);
     if (errno == ERANGE || minsToday_ == ULLONG_MAX) {
-        HILOGI("[%{public}llu] invalid value of minsToday_", iter);
+        HILOGI("[%{public}llu] invalid value of minsToday_", iter_);
         return false;
     } else {
-        HILOGI("[%{public}llu] minsToday_=%{public}llu", iter, minsToday_);
+        HILOGI("[%{public}llu] minsToday_=%{public}llu", iter_, minsToday_);
     }
 
     swapOutKBToday_ = ReadUnsignedLongLongParam(SWAP_OUT_KB_TODAY_PARAM);
     if (errno == ERANGE || swapOutKBToday_ == ULLONG_MAX) {
-        HILOGI("[%{public}llu] invalid value of swapOutKBToday_", iter);
+        HILOGI("[%{public}llu] invalid value of swapOutKBToday_", iter_);
         return false;
     } else {
-        HILOGI("[%{public}llu] swapOutKBToday_=%{public}llu", iter, swapOutKBToday_);
+        HILOGI("[%{public}llu] swapOutKBToday_=%{public}llu", iter_, swapOutKBToday_);
     }
 
     minsSinceBirth_ = ReadUnsignedLongLongParam(MINS_FROM_BIRTH_PARAM);
     if (errno == ERANGE || minsSinceBirth_ == ULLONG_MAX) {
-        HILOGI("[%{public}llu] invalid value of minsSinceBirth_", iter);
+        HILOGI("[%{public}llu] invalid value of minsSinceBirth_", iter_);
         return false;
     } else {
-        HILOGI("[%{public}llu] minsSinceBirth_=%{public}llu", iter, minsSinceBirth_);
+        HILOGI("[%{public}llu] minsSinceBirth_=%{public}llu", iter_, minsSinceBirth_);
     }
 
     swapOutKBSinceBirth_ = ReadUnsignedLongLongParam(SWAP_OUT_KB_FROM_BIRTH_PARAM);
     if (errno == ERANGE || swapOutKBSinceBirth_ == ULLONG_MAX) {
-        HILOGI("[%{public}llu] invalid value of swapOutKBSinceBirth_", iter);
+        HILOGI("[%{public}llu] invalid value of swapOutKBSinceBirth_", iter_);
         return false;
     } else {
-        HILOGI("[%{public}llu] swapOutKBSinceBirth_=%{public}llu", iter, swapOutKBSinceBirth_);
+        HILOGI("[%{public}llu] swapOutKBSinceBirth_=%{public}llu", iter_, swapOutKBSinceBirth_);
     }
 
     return true;
@@ -183,12 +183,12 @@ bool NandLifeController::LoadNandLifeParam()
 
 void NandLifeController::PrintNandLifeParam()
 {
-    HILOGI("[%{public}llu] begin print nandlife param-------------", iter);
+    HILOGI("[%{public}llu] begin print nandlife param-------------", iter_);
     for (auto param : params) {
-        HILOGI("[%{public}llu] %{public}s=%{public}s", iter, param.c_str(),
+        HILOGI("[%{public}llu] %{public}s=%{public}s", iter_, param.c_str(),
             system::GetParameter(param, PARAM_VALUE_UNKOWN).c_str());
     }
-    HILOGI("[%{public}llu] end print nandlife param --------------", iter);
+    HILOGI("[%{public}llu] end print nandlife param --------------", iter_);
 }
 
 bool NandLifeController::IsSwapOutClosedPermently()
@@ -225,18 +225,18 @@ void NandLifeController::SetTimer()
 {
     // set timer and call CheckSwapOut each TIMER_PEROID_MIN min.
     handler_->PostTask(timerFunc_, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
-    HILOGI("[%{public}llu] set timer after %{public}d mins", iter, TIMER_PEROID_MIN);
+    HILOGI("[%{public}llu] set timer after %{public}d mins", iter_, TIMER_PEROID_MIN);
 }
 
 bool NandLifeController::CheckReachedDailyLimit()
 {
     bool reachedDailyLimit = swapOutKBToday_ >= DAILY_SWAP_OUT_QUOTA_KB;
     HILOGI("[%{public}llu] swapOutKBToday_(%{public}llu) %{public}s DAILY_SWAP_OUT_QUOTA_KB(%{public}llu)",
-        iter, swapOutKBToday_, (reachedDailyLimit ? ">=" : "<"), DAILY_SWAP_OUT_QUOTA_KB);
+        iter_, swapOutKBToday_, (reachedDailyLimit ? ">=" : "<"), DAILY_SWAP_OUT_QUOTA_KB);
     if (reachedDailyLimit) {
         CloseSwapOutTemporarily("reach daily limit, close swap-out temporarily!");
     } else {
-        HILOGI("[%{public}llu] unreach daily limit, swap-out is still opened!", iter);
+        HILOGI("[%{public}llu] unreach daily limit, swap-out is still opened!", iter_);
     }
     return reachedDailyLimit;
 }
@@ -245,21 +245,21 @@ bool NandLifeController::CheckReachedTotalLimit()
 {
     bool reachedTotalLimit = swapOutKBSinceBirth_ >= TOTAL_SWAP_OUT_QUOTA_KB;
     HILOGI("[%{public}llu] swapOutKBSinceBirth_(%{public}llu) %{public}s TOTAL_SWAP_OUT_QUOTA_KB(%{public}llu)",
-        iter, swapOutKBSinceBirth_, (reachedTotalLimit ? ">=" : "<"), TOTAL_SWAP_OUT_QUOTA_KB);
+        iter_, swapOutKBSinceBirth_, (reachedTotalLimit ? ">=" : "<"), TOTAL_SWAP_OUT_QUOTA_KB);
     if (reachedTotalLimit) {
-        HILOGE("[%{public}llu] reached total limit, close swap-out forever!", iter);
+        HILOGE("[%{public}llu] reached total limit, close swap-out forever!", iter_);
         CloseSwapOutPermanently();
     } else {
-        HILOGI("[%{public}llu] unreach total limit!", iter);
+        HILOGI("[%{public}llu] unreach total limit!", iter_);
     }
     return reachedTotalLimit;
 }
 
 void NandLifeController::CheckSwapOut()
 {
-    ++iter;
+    ++iter_;
 
-    HILOGE("[%{public}llu] called", iter);
+    HILOGE("[%{public}llu] called", iter_);
 
     if (IsSwapOutClosedPermently()) {
         CloseSwapOutTemporarily("swap-out has benn closed permently!");
@@ -273,7 +273,7 @@ void NandLifeController::CheckSwapOut()
     minsSinceBirth_ += TIMER_PEROID_MIN;
 
     if (GetSwapOutKBSinceKernelBoot(nowSwapOutKB_)) {
-        HILOGI("[%{public}llu] swapOutKBSinceKernelBoot=%{public}llu KB", iter, nowSwapOutKB_);
+        HILOGI("[%{public}llu] swapOutKBSinceKernelBoot=%{public}llu KB", iter_, nowSwapOutKB_);
     } else {
         CloseSwapOutTemporarily("invalid swapOutKBSinceKernelBoot");
         SetTimer();
@@ -286,7 +286,7 @@ void NandLifeController::CheckSwapOut()
     }
     unsigned long long increasedSwapOutKB = nowSwapOutKB_ - lastSwapOutKB_;
     HILOGE("[%{public}llu] lastSwapOutKB_=%{public}llu, nowSwapOutKB_=%{public}llu, increasedSwapOutKB=%{public}llu",
-        iter, lastSwapOutKB_, nowSwapOutKB_, increasedSwapOutKB);
+        iter_, lastSwapOutKB_, nowSwapOutKB_, increasedSwapOutKB);
     lastSwapOutKB_ = nowSwapOutKB_;
     swapOutKBToday_ += increasedSwapOutKB;
     swapOutKBSinceBirth_ += increasedSwapOutKB;
@@ -294,11 +294,11 @@ void NandLifeController::CheckSwapOut()
     CheckReachedDailyLimit();
 
     if (minsToday_ >= 24 * 60) { // 24: a day has 24 hours, 60: one hour has 60 min
-        HILOGI("[%{public}llu] enter a new day", iter);
+        HILOGI("[%{public}llu] enter a new day", iter_);
         minsToday_ = 0;
         swapOutKBToday_ = 0;
         if (swapOutKBSinceBirth_ < TOTAL_SWAP_OUT_QUOTA_KB) { // swap-out is allowed
-            HILOGI("[%{public}llu] open swap-out since a new day", iter);
+            HILOGI("[%{public}llu] open swap-out since a new day", iter_);
             OpenSwapOutTemporarily("enter a new day");
         }
     }
@@ -322,7 +322,7 @@ bool NandLifeController::SetParameterRetry(const std::string &paramName, const s
             return true;
         }
     }
-    HILOGW("[%{public}llu] set [%{public}s] to [%{public}s] failed!", iter, paramName.c_str(), paramValue.c_str());
+    HILOGW("[%{public}llu] set [%{public}s] to [%{public}s] failed!", iter_, paramName.c_str(), paramValue.c_str());
     return false;
 }
 
@@ -340,45 +340,45 @@ bool NandLifeController::UpdateNandLifeParam()
     if (!SetParameterRetry(SWAP_OUT_KB_FROM_BIRTH_PARAM, std::to_string(swapOutKBSinceBirth_), RETRY_TIMES)) {
         return false;
     }
-    HILOGW("[%{public}llu] all success!", iter);
+    HILOGW("[%{public}llu] all success!", iter_);
     return true;
 }
 
 void NandLifeController::OpenSwapOutTemporarily(const std::string &reason)
 {
-    HILOGW("[%{public}llu] %{public}s", iter, reason.c_str());
+    HILOGW("[%{public}llu] %{public}s", iter_, reason.c_str());
     for (auto  i = 0; i < RETRY_TIMES; i++) {
         if (KernelInterface::GetInstance().EchoToPath(ESWAP_ENABLE_PATH.c_str(), ENABLE_ESWAP.c_str())) {
-            HILOGI("[%{public}llu] open eswap temporarily success!", iter);
+            HILOGI("[%{public}llu] open eswap temporarily success!", iter_);
             return;
         }
     }
-    HILOGW("[%{public}llu] open eswap temporarily failed!", iter);
+    HILOGW("[%{public}llu] open eswap temporarily failed!", iter_);
 }
 
 void NandLifeController::CloseSwapOutTemporarily(const std::string &reason)
 {
-    HILOGW("[%{public}llu] %{public}s", iter, reason.c_str());
+    HILOGW("[%{public}llu] %{public}s", iter_, reason.c_str());
     for (auto  i = 0; i < RETRY_TIMES; i++) {
         if (KernelInterface::GetInstance().EchoToPath(ESWAP_ENABLE_PATH.c_str(), DISABLE_ESWAP.c_str())) {
-            HILOGW("[%{public}llu] clsoe eswap temporarily success!", iter);
+            HILOGW("[%{public}llu] clsoe eswap temporarily success!", iter_);
             return;
         }
     }
-    HILOGW("[%{public}llu] close eswap temporarily failed!", iter);
+    HILOGW("[%{public}llu] close eswap temporarily failed!", iter_);
 }
 
 void NandLifeController::OpenSwapOutPermanently()
 {
     bool ret = SetParameterRetry(PERMANENTLY_CLOSED_STATUS_PARAM, NOT_PERMANENTLY_CLOSED, RETRY_TIMES);
-    HILOGW("[%{public}llu] open eswap permanently %{public}s!", iter, ret ? "success" : "failed");
+    HILOGW("[%{public}llu] open eswap permanently %{public}s!", iter_, ret ? "success" : "failed");
 }
 
 void NandLifeController::CloseSwapOutPermanently()
 {
     CloseSwapOutTemporarily("CloseSwapOutPermanently close eswap temporarily first!");
     bool ret = SetParameterRetry(PERMANENTLY_CLOSED_STATUS_PARAM, PERMANENTLY_CLOSED, RETRY_TIMES);
-    HILOGW("[%{public}llu] close eswap permanently %{public}s!", iter, ret ? "success" : "failed");
+    HILOGW("[%{public}llu] close eswap permanently %{public}s!", iter_, ret ? "success" : "failed");
 }
 } // namespace Memory
 } // namespace OHOS

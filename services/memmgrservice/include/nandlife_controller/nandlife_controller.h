@@ -44,7 +44,7 @@ private:
     unsigned long long minsSinceBirth_ = 0;
     unsigned long long swapOutKBSinceBirth_ = 0;
 
-    unsigned long long iter = 0;
+    unsigned long long iter_ = 0;
 
     NandLifeController();
     bool GetEventHandler();

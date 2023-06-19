@@ -60,7 +60,7 @@ void PurgeableMemManager::AddSubscriberInner(const sptr<IAppStateSubscriber> &su
 {
     auto remoteObj = subscriber->AsObject();
     auto findSubscriber = [&remoteObj](const auto &target) { return remoteObj == target->AsObject(); };
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto subscriberIter = std::find_if(appStateSubscribers_.begin(), appStateSubscribers_.end(), findSubscriber);
     if (subscriberIter != appStateSubscribers_.end()) {
         HILOGE("target subscriber already exist");
@@ -124,7 +124,7 @@ void PurgeableMemManager::RemoveSubscriberInner(const sptr<IAppStateSubscriber> 
     }
     auto findSubscriber = [&remote] (const auto &targetSubscriber) { return remote == targetSubscriber->AsObject(); };
 
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto subscriberIter = find_if(appStateSubscribers_.begin(), appStateSubscribers_.end(), findSubscriber);
     if (subscriberIter == appStateSubscribers_.end()) {
         HILOGE("subscriber to remove is not exists");
@@ -166,7 +166,7 @@ void PurgeableMemManager::OnRemoteSubscriberDiedInner(const wptr<IRemoteObject> 
         HILOGE("get remote object failed");
         return;
     }
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto iter = appStateSubscribers_.begin();
     while (iter != appStateSubscribers_.end()) {
         if ((*iter)->AsObject() == objectProxy) {
@@ -193,7 +193,7 @@ void PurgeableMemManager::OnRemoteSubscriberDied(const wptr<IRemoteObject> &obje
 
 void PurgeableMemManager::RegisterActiveAppsInner(int32_t pid, int32_t uid)
 {
-    std::lock_guard<std::mutex> lockAppList(mutexAppList);
+    std::lock_guard<std::mutex> lockAppList(mutexAppList_);
     if (appList_.size() >= PURGEABLE_APPSTATE_MAX_NUM) {
         HILOGE("the number of registered apps has reached the upper limit");
         return;
@@ -225,7 +225,7 @@ void PurgeableMemManager::RegisterActiveApps(int32_t pid, int32_t uid)
 
 void PurgeableMemManager::DeregisterActiveAppsInner(int32_t pid, int32_t uid)
 {
-    std::lock_guard<std::mutex> lockAppList(mutexAppList);
+    std::lock_guard<std::mutex> lockAppList(mutexAppList_);
     if (appList_.find(pid) == appList_.end()) {
         HILOGE("the app is not registered");
         return;
@@ -256,7 +256,7 @@ void PurgeableMemManager::DeregisterActiveApps(int32_t pid, int32_t uid)
 void PurgeableMemManager::ChangeAppStateInner(int32_t pid, int32_t uid, int32_t state)
 {
     {
-        std::lock_guard<std::mutex> lockAppList(mutexAppList);
+        std::lock_guard<std::mutex> lockAppList(mutexAppList_);
         if (appList_.find(pid) == appList_.end()) {
             HILOGE("the app is not registered");
             return;
@@ -272,7 +272,7 @@ void PurgeableMemManager::ChangeAppStateInner(int32_t pid, int32_t uid, int32_t 
             oldState, appList_[pid].second, pid, uid);
     }
 
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto iter = appStateSubscribers_.begin();
     while (iter != appStateSubscribers_.end()) {
         HILOGI("do OnAppStateChanged");
@@ -294,7 +294,7 @@ void PurgeableMemManager::ChangeAppState(int32_t pid, int32_t uid, int32_t state
 void PurgeableMemManager::TrimAllSubscribers(const SystemMemoryLevel &level)
 {
     HILOGD("enter! onTrim memory level is %{public}d \n", level);
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto iter = appStateSubscribers_.begin();
     while (iter != appStateSubscribers_.end()) {
         (*iter)->OnTrim(level);
@@ -316,8 +316,8 @@ bool PurgeableMemManager::CheckCallingToken()
 void PurgeableMemManager::ReclaimSubscriberAll()
 {
     HILOGD("enter! Force Subscribers Reclaim all");
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
-    std::lock_guard<std::mutex> lockAppList(mutexAppList);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
+    std::lock_guard<std::mutex> lockAppList(mutexAppList_);
     auto subscriberIter = appStateSubscribers_.begin();
     int pid = -1, uid = -1;
     while (subscriberIter != appStateSubscribers_.end()) {
@@ -339,7 +339,7 @@ void PurgeableMemManager::ReclaimSubscriberProc(const int32_t pid)
     HILOGD("enter! Force Subscribers Reclaim: pid=%{public}d", pid);
     int32_t uid = -1;
     {
-        std::lock_guard<std::mutex> lockAppList(mutexAppList);
+        std::lock_guard<std::mutex> lockAppList(mutexAppList_);
         if (appList_.find(pid) == appList_.end()) {
             HILOGE("the app is not registered");
             return;
@@ -348,7 +348,7 @@ void PurgeableMemManager::ReclaimSubscriberProc(const int32_t pid)
         std::pair<int32_t, int32_t> appinfo = appList_[pid];
         uid = appinfo.first;
     }
-    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers);
+    std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto iter = appStateSubscribers_.begin();
     while (iter != appStateSubscribers_.end()) {
         HILOGI("do ForceReclaim");
@@ -571,11 +571,11 @@ void PurgeableMemManager::TriggerByPsi(const SystemMemoryInfo &info)
 {
     HILOGD("called");
     time_t now = time(0);
-    if (lastTriggerTime != 0 && (now - lastTriggerTime) < TRIGGER_INTERVAL_SECOND) {
+    if (lastTriggerTime_ != 0 && (now - lastTriggerTime_) < TRIGGER_INTERVAL_SECOND) {
         HILOGD("Less than %{public}u s from last trigger, no action is required.", TRIGGER_INTERVAL_SECOND);
         return;
     } else {
-        lastTriggerTime = now;
+        lastTriggerTime_ = now;
     }
 
     unsigned int currentBuffer = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
@@ -691,7 +691,7 @@ bool PurgeableMemManager::ForceReclaimByDump(const DumpReclaimInfo &dumpInfo)
 void PurgeableMemManager::DumpSubscribers(const int fd)
 {
     HILOGD("enter!\n");
-    std::lock_guard<std::mutex> lockAppList(mutexAppList);
+    std::lock_guard<std::mutex> lockAppList(mutexAppList_);
     int32_t pid, uid, state;
     auto appListIter = appList_.begin();
     while (appListIter != appList_.end()) {
