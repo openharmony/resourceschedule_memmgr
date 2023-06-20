@@ -28,7 +28,7 @@ memmgr_deps = [
 memmgr_external_deps = [
   "c_utils:utils",
   "eventhandler:libeventhandler",
-  "hiviewdfx_hilog_native:libhilog",
+  "hilog:libhilog",
   "ipc:ipc_core",
   "memmgr:memmgrclient",
   "os_account:os_account_innerkits",
