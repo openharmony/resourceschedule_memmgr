@@ -123,7 +123,7 @@ private:
 
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     std::map<int32_t, std::string> updateReasonStrMapping_;
-    std::string unkown_reason = "UNKOWN_REASON";
+    std::string UNKOWN_REASON = "UNKOWN_REASON";
     ReclaimPriorityConfig config_;
     std::set<std::string> allKillableSystemApps_;
 

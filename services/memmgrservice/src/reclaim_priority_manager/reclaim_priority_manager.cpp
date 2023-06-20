@@ -64,7 +64,7 @@ std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateR
     if (ptr != updateReasonStrMapping_.end()) {
         return ptr->second;
     } else {
-        return unkown_reason;
+        return UNKOWN_REASON;
     }
 }
 
