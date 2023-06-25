@@ -100,7 +100,7 @@ public:
 private:
     int ParseMeminfo(const std::string &contentStr, const std::string &itemName);
 
-    int totalBuffer = -1;
+    int totalBuffer_ = -1;
 };
 } // namespace Memory
 } // namespace OHOS

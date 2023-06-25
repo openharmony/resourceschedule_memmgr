@@ -75,7 +75,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnConnected()
     }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    if (!isListenerAlive) {
+    if (!isListenerAlive_) {
         HILOGE("Listener already died");
         return;
     }
@@ -89,7 +89,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnDisconnected()
     }
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    if (!isListenerAlive) {
+    if (!isListenerAlive_) {
         HILOGE("Listener already died");
         return;
     }
@@ -100,7 +100,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnAppStateChanged(int32_t pid, 
 {
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    if (!isListenerAlive) {
+    if (!isListenerAlive_) {
         HILOGE("Listener already died");
         return;
     }
@@ -111,7 +111,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::ForceReclaim(int32_t pid, int32
 {
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    if (!isListenerAlive) {
+    if (!isListenerAlive_) {
         HILOGE("Listener already died");
         return;
     }
@@ -122,7 +122,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnTrim(SystemMemoryLevel level)
 {
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    if (!isListenerAlive) {
+    if (!isListenerAlive_) {
         HILOGE("Listener already died");
         return;
     }
@@ -133,7 +133,7 @@ void AppStateSubscriber::AppStateSubscriberImpl::OnListenerDied()
 {
     HILOGI("CALLED");
     std::lock_guard<std::mutex> lock(mutex_alive);
-    isListenerAlive = false;
+    isListenerAlive_ = false;
 }
 
 bool AppStateSubscriber::AppStateSubscriberImpl::GetMemMgrProxy()
