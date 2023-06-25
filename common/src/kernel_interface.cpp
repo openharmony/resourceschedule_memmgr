@@ -523,8 +523,8 @@ int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::stri
 
 int KernelInterface::GetTotalBuffer()
 {
-    if (totalBuffer >= 0) {
-        return totalBuffer;
+    if (totalBuffer_ >= 0) {
+        return totalBuffer_;
     }
 
     std::string contentStr;
@@ -532,8 +532,8 @@ int KernelInterface::GetTotalBuffer()
         HILOGE("read %{public}s faild, content=[%{public}s]", MEMINFO_PATH.c_str(), contentStr.c_str());
         return -1;
     }
-    totalBuffer = ParseMeminfo(contentStr, TOTAL_MEMORY);
-    return totalBuffer;
+    totalBuffer_ = ParseMeminfo(contentStr, TOTAL_MEMORY);
+    return totalBuffer_;
 }
 
 bool KernelInterface::GetMemcgPids(const std::string &memcgPath, std::vector<int> &memcgPids)

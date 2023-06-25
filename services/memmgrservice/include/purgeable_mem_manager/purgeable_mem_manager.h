@@ -95,9 +95,9 @@ private:
     std::map<int32_t, std::pair<int32_t, int32_t>> appList_;
     std::list<sptr<IAppStateSubscriber>> appStateSubscribers_ {};
     std::map<sptr<IRemoteObject>, sptr<RemoteDeathRecipient>> subscriberRecipients_ {};
-    std::mutex mutexAppList;
-    std::mutex mutexSubscribers;
-    time_t lastTriggerTime = 0; // last trigger time by psi or kswapd.
+    std::mutex mutexAppList_;
+    std::mutex mutexSubscribers_;
+    time_t lastTriggerTime_ = 0; // last trigger time by psi or kswapd.
 };
 } // namespace Memory
 } // namespace OHOS

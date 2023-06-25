@@ -38,7 +38,7 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
 
     bool initialized_ = false;
-    long calledCount = 0;
+    long calledCount_ = 0;
     int32_t killLevel_ = 0;
 };
 } // namespace Memory
