@@ -37,7 +37,8 @@ int32_t MemMgrProxy::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_BUNDLE_PRIORITY_LIST, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_BUNDLE_PRIORITY_LIST), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -67,7 +68,8 @@ int32_t MemMgrProxy::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::st
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_NOTIFY_DIST_DEV_STATUS, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_DIST_DEV_STATUS), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -95,7 +97,8 @@ int32_t MemMgrProxy::GetKillLevelOfLmkd(int32_t &killLevel)
 
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_KILL_LEVEL_OF_LMKD, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_KILL_LEVEL_OF_LMKD), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -126,7 +129,8 @@ int32_t MemMgrProxy::RegisterActiveApps(int32_t pid, int32_t uid)
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_REGISTER_ACTIVE_APPS, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_REGISTER_ACTIVE_APPS), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -154,7 +158,8 @@ int32_t MemMgrProxy::DeregisterActiveApps(int32_t pid, int32_t uid)
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_DEREGISTER_ACTIVE_APPS, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_DEREGISTER_ACTIVE_APPS), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -186,7 +191,8 @@ int32_t MemMgrProxy::SubscribeAppState(const sptr<IAppStateSubscriber> &subscrib
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_SUBSCRIBE_APP_STATE, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SUBSCRIBE_APP_STATE), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -218,7 +224,8 @@ int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscr
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_UNSUBSCRIBE_APP_STATE, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_UNSUBSCRIBE_APP_STATE), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -242,7 +249,8 @@ int32_t MemMgrProxy::GetAvailableMemory()
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_AVAILABLE_MEMORY, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_AVAILABLE_MEMORY), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;
@@ -266,7 +274,8 @@ int32_t MemMgrProxy::GetTotalMemory()
     }
     MessageParcel reply;
     MessageOption option;
-    int32_t error = remote->SendRequest(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY, data, reply, option);
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_TOTAL_MEMORY), data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("transact failed, error: %{public}d", error);
         return error;

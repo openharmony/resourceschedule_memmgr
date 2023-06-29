@@ -17,9 +17,11 @@
 #define OHOS_MEMORY_MEMMGR_INTERFACES_INNERKITS_INCLUDE_MEM_MGR_INTERFACE_H
 
 #include <vector>
+
+#include "bundle_priority_list.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
-#include "bundle_priority_list.h"
+#include "memmgrservice_ipc_interface_code.h"
 #ifdef USE_PURGEABLE_MEMORY
 #include "iapp_state_subscriber.h"
 #endif
@@ -49,20 +51,6 @@ public:
 
     virtual int32_t GetTotalMemory() = 0;
 #endif
-
-    enum {
-        MEM_MGR_GET_BUNDLE_PRIORITY_LIST = 1,
-        MEM_MGR_NOTIFY_DIST_DEV_STATUS = 2,
-        MEM_MGR_GET_KILL_LEVEL_OF_LMKD = 3,
-#ifdef USE_PURGEABLE_MEMORY
-        MEM_MGR_REGISTER_ACTIVE_APPS = 4,
-        MEM_MGR_DEREGISTER_ACTIVE_APPS = 5,
-        MEM_MGR_SUBSCRIBE_APP_STATE = 6,
-        MEM_MGR_UNSUBSCRIBE_APP_STATE = 7,
-        MEM_MGR_GET_AVAILABLE_MEMORY = 8,
-        MEM_MGR_GET_TOTAL_MEMORY = 9,
-#endif
-    };
 };
 } // namespace Memory
 } // namespace OHOS

@@ -27,24 +27,24 @@ namespace {
 
 MemMgrStub::MemMgrStub()
 {
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_BUNDLE_PRIORITY_LIST)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_BUNDLE_PRIORITY_LIST)] =
         &MemMgrStub::HandleGetBunldePriorityList;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_NOTIFY_DIST_DEV_STATUS)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_DIST_DEV_STATUS)] =
         &MemMgrStub::HandleNotifyDistDevStatus;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_KILL_LEVEL_OF_LMKD)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_KILL_LEVEL_OF_LMKD)] =
         &MemMgrStub::HandleGetKillLevelOfLmkd;
 #ifdef USE_PURGEABLE_MEMORY
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_REGISTER_ACTIVE_APPS)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_REGISTER_ACTIVE_APPS)] =
         &MemMgrStub::HandleRegisterActiveApps;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_DEREGISTER_ACTIVE_APPS)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_DEREGISTER_ACTIVE_APPS)] =
         &MemMgrStub::HandleDeregisterActiveApps;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_SUBSCRIBE_APP_STATE)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SUBSCRIBE_APP_STATE)] =
         &MemMgrStub::HandleSubscribeAppState;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_UNSUBSCRIBE_APP_STATE)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_UNSUBSCRIBE_APP_STATE)] =
         &MemMgrStub::HandleUnsubscribeAppState;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_AVAILABLE_MEMORY)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_AVAILABLE_MEMORY)] =
         &MemMgrStub::HandleGetAvailableMemory;
-    memberFuncMap_[static_cast<uint32_t>(IMemMgr::MEM_MGR_GET_TOTAL_MEMORY)] =
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_TOTAL_MEMORY)] =
         &MemMgrStub::HandleGetTotalMemory;
 #endif
 }
