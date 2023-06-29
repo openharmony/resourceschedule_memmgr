@@ -21,9 +21,10 @@
 #include <nocopyable.h>
 
 #include "errors.h"
+#include "memmgrservice_ipc_interface_code.h"
+#include "memory_level_constants.h"
 #include "refbase.h"
 
-#include "memory_level_constants.h"
 
 namespace OHOS {
 namespace Memory {
@@ -69,15 +70,6 @@ public:
 
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.resourceschedule.IAppStateSubscriber");
-
-protected:
-    enum InterfaceId : uint32_t {
-        ON_CONNECTED = FIRST_CALL_TRANSACTION,
-        ON_DISCONNECTED,
-        ON_APP_STATE_CHANGED,
-        FORCE_RECLAIM,
-        ON_TRIM,
-    };
 };
 } // namespace Memory
 } // namespace OHOS

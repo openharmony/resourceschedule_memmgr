@@ -42,19 +42,19 @@ int32_t AppStateSubscriberStub::OnRemoteRequestInner(uint32_t code, MessageParce
                                                      MessageOption &option)
 {
     switch (code) {
-        case ON_CONNECTED: {
+        case static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_CONNECTED): {
             return HandleOnConnected();
         }
-        case ON_DISCONNECTED: {
+        case static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_DISCONNECTED): {
             return HandleOnDisconnected();
         }
-        case ON_APP_STATE_CHANGED: {
+        case static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_APP_STATE_CHANGED): {
             return HandleOnAppStateChanged(data);
         }
-        case ON_TRIM: {
+        case static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_TRIM): {
             return HandleOnTrim(data);
         }
-        case FORCE_RECLAIM: {
+        case static_cast<uint32_t>(AppStateSubscriberInterfaceCode::FORCE_RECLAIM): {
             return HandleForceReclaim(data);
         }
         default: {
