@@ -43,7 +43,8 @@ void AppStateSubscriberProxy::OnConnected()
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(ON_CONNECTED, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_CONNECTED), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
@@ -64,7 +65,8 @@ void AppStateSubscriberProxy::OnDisconnected()
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_SYNC };
-    int32_t ret = remote->SendRequest(ON_DISCONNECTED, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_DISCONNECTED), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
@@ -90,7 +92,8 @@ void AppStateSubscriberProxy::OnAppStateChanged(int32_t pid, int32_t uid, int32_
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(ON_APP_STATE_CHANGED, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_APP_STATE_CHANGED), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
@@ -116,7 +119,8 @@ void AppStateSubscriberProxy::OnTrim(SystemMemoryLevel level)
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(ON_TRIM, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AppStateSubscriberInterfaceCode::ON_TRIM), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
@@ -142,7 +146,8 @@ void AppStateSubscriberProxy::ForceReclaim(int32_t pid, int32_t uid)
 
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
-    int32_t ret = remote->SendRequest(FORCE_RECLAIM, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(AppStateSubscriberInterfaceCode::FORCE_RECLAIM), data, reply, option);
     if (ret != ERR_NONE) {
         HILOGE("send request failed, error code: %d", ret);
     }
