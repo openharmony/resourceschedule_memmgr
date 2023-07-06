@@ -86,11 +86,6 @@ public:
         pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
-    // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
-    void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
-    void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
-    void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
-
     inline bool Initailized()
     {
         return initialized_;
@@ -106,7 +101,6 @@ public:
     // for hidumper, usage: hdc shell hidumper -s 1909
     void Dump(int fd);
 
-    std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
     void Reset();
 private:
     bool initialized_ = false;
@@ -156,6 +150,10 @@ private:
     void AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account);
     bool IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
     void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
+    void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
+    void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
+    void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
+    std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
