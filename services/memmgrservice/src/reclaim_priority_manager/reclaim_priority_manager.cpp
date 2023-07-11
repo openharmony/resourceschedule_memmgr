@@ -277,11 +277,10 @@ void ReclaimPriorityManager::GetBundlePrioSet(BunldeCopySet &bundleSet)
 
 void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bundleSet)
 {
-    HILOGD("called, minPrio=%{public}d", minPrio);
     // add lock
     std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
 
-    HILOGD("iter %{public}zu bundles begin", totalBundlePrioSet_.size());
+    HILOGD("called, minPrio=%{public}d, iter %{public}zu bundles begin", minPrio, totalBundlePrioSet_.size());
     int count = 0;
     for (auto itrBundle = totalBundlePrioSet_.rbegin(); itrBundle != totalBundlePrioSet_.rend(); ++itrBundle) {
         std::shared_ptr<BundlePriorityInfo> bundle = *itrBundle;
@@ -320,6 +319,7 @@ void ReclaimPriorityManager::GetOneKillableBundle(int minPrio, BunldeCopySet &bu
 
 void ReclaimPriorityManager::SetBundleState(int accountId, int uid, BundleState state)
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account != nullptr) {
         auto pairPtr = account->bundleIdInfoMapping_.find(uid);
@@ -343,7 +343,6 @@ bool ReclaimPriorityManager::IsOsAccountExist(int accountId)
 
 void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     auto ret = totalBundlePrioSet_.insert(bundle);
     if (ret.second) {
         HILOGD("success to insert bundle to set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
@@ -353,7 +352,6 @@ void ReclaimPriorityManager::AddBundleInfoToSet(std::shared_ptr<BundlePriorityIn
 
 void ReclaimPriorityManager::DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle)
 {
-    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
     int delCount = totalBundlePrioSet_.erase(bundle);
     HILOGD("delete %{public}d bundles from set, uid=%{public}d, totalBundlePrioSet_.size=%{public}zu",
            delCount, bundle->uid_, totalBundlePrioSet_.size());
@@ -566,6 +564,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
     const std::string &callerBundleName, pid_t pid, int bundleUid, const std::string &bundleName,
     AppStateUpdateReason priorityReason)
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
     if (!IsProcExist(pid, bundleUid, accountId)) {
         HILOGE("process not exist and not to create it!!");
@@ -600,6 +599,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityWithCallerInner(int32_t caller
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(pid_t pid, int bundleUid, const std::string &bundleName,
     AppStateUpdateReason reason)
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     HILOGI("called, pid=%{public}d, bundleUid=%{public}d, bundleName=%{public}s, reason=%{public}s",
         pid, bundleUid, bundleName.c_str(), AppStateUpdateResonToString(reason).c_str());
     int accountId = GetOsAccountLocalIdFromUid(bundleUid);
@@ -813,6 +813,7 @@ bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId,
 
 void ReclaimPriorityManager::Reset()
 {
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     totalBundlePrioSet_.clear();
     osAccountsInfoMap_.clear();
 }
