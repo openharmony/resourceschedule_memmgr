@@ -13,18 +13,20 @@
  * limitations under the License.
  */
 
+#include "reclaim_priority_manager.h"
+
+#include "app_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
+#include "iservice_registry.h"
+#include "kernel_interface.h"
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "multi_account_manager.h"
-#include "kernel_interface.h"
 #include "oom_score_adj_utils.h"
 #include "reclaim_strategy_manager.h"
+#include "render_process_info.h"
 #include "singleton.h"
-#include "iservice_registry.h"
 #include "system_ability_definition.h"
-#include "bundle_mgr_proxy.h"
-#include "app_mgr_interface.h"
-#include "reclaim_priority_manager.h"
 
 namespace OHOS {
 namespace Memory {
@@ -103,17 +105,19 @@ void ReclaimPriorityManager::Dump(int fd)
     }
     dprintf(fd, "-----------------------------------------------------------------\n\n");
 
-    dprintf(fd, "priority list of all managed processes, status:(fg,visible,bgtask,trantask,evt,dist,extb,ext)\n");
+    dprintf(fd,
+        "priority list of all managed processes, status:(fg,visible,bgtask,trantask,evt,dist,extb,ext,render)\n");
     dprintf(fd, "    pid       uid                                   bundle priority status\
                       connnectorpids               connnectoruids               processuids\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
         dprintf(fd, "|-----------------------------------------\n");
         for (auto procEntry : bundlePtr->procs_) {
             ProcessPriorityInfo &proc = procEntry.second;
-            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d %30s %30s %30s\n",
-                proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(), proc.priority_, proc.isFreground, proc.isVisible_,
-                proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
-                proc.extensionBindStatus, proc.isExtension, proc.ConnectorsToString().c_str(),
+            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d%d %30s %30s %30s\n",
+                proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
+                proc.priority_, proc.isFreground, proc.isVisible_, proc.isBackgroundRunning,
+                proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
+                proc.extensionBindStatus, proc.isExtension, proc.isRender_, proc.ConnectorsToString().c_str(),
                 proc.ExtensionConnectorsUidToString().c_str(), proc.ExtensionProcessUidToString().c_str());
         }
     }
@@ -420,10 +424,16 @@ void ReclaimPriorityManager::UpdateBundlePriority(std::shared_ptr<BundlePriority
     HILOGD("end----------------------------");
 }
 
-bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const std::string &bundleName, int accountId)
+bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const std::string &bundleName, int accountId,
+    bool isRender)
 {
     HILOGD("called, bundleName=%{public}s, pid=%{public}d", bundleName.c_str(), pid);
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    if (isRender) {
+        HILOGI("render create, bundleName=%{public}s, pid=%{public}d", bundleName.c_str(), pid);
+        OomScoreAdjUtils::WriteOomScoreAdjToKernel(pid, RECLAIM_PRIORITY_FOREGROUND);
+        return true;
+    }
     if (account == nullptr) {
         DECLARE_SHARED_POINTER(AccountBundleInfo, tmpAccount);
         MAKE_POINTER(tmpAccount, shared, AccountBundleInfo, "cannot new account!!", return false, accountId);
@@ -620,6 +630,11 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
         return ret;
     }
 
+    if (request.reason == AppStateUpdateReason::RENDER_CREATE_PROCESS) {
+        HILOGD("call HandleCreateProcess");
+        return HandleCreateProcess(request.pid, request.uid, request.bundleName, accountId, true);
+    }
+
     if (!IsProcExist(request.pid, request.uid, accountId)) {
         HILOGE("process not exist and not to create it!!");
         return false;
@@ -703,6 +718,10 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
 
     if (bundle->priority_ < RECLAIM_PRIORITY_FOREGROUND) { // is a system process
         HILOGD("%{public}d is a system process, skiped!", proc.pid_);
+        return;
+    }
+    if (proc.isRender_) { // priority of render follow its host and it is updated by action of its host
+        HILOGD("%{public}d is a render process, skiped!", proc.pid_);
         return;
     }
     if (proc.isFreground) { // is a freground process

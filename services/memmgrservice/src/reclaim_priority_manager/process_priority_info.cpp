@@ -31,6 +31,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->pid_ = pid;
     this->priority_ = priority;
     this->isVisible_ = false;
+    this->isRender_ = false;
     this->isFreground = (priority == RECLAIM_PRIORITY_FOREGROUND) ? true : false;
     this->isBackgroundRunning = false;
     this->isSuspendDelay = false;
@@ -46,6 +47,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->pid_ = copyProcess.pid_;
     this->priority_ = copyProcess.priority_;
     this->isVisible_ = copyProcess.isVisible_;
+    this->isRender_ = copyProcess.isRender_;
     this->isFreground = copyProcess.isFreground;
     this->isExtension = copyProcess.isExtension;
     this->isBackgroundRunning = copyProcess.isBackgroundRunning;
