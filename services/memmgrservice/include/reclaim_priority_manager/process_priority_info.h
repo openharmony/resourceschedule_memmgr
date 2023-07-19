@@ -35,6 +35,7 @@ public:
     pid_t pid_;
     int priority_;
     bool isVisible_;
+    bool isRender_;
     bool isFreground; // true means freground, false means background
     bool isBackgroundRunning;
     bool isSuspendDelay;
