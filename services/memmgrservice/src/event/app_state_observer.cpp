@@ -14,8 +14,10 @@
  */
 
 #include "app_state_observer.h"
+#include "mem_mgr_event_center.h"
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
+
 #ifdef USE_PURGEABLE_MEMORY
 #include "purgeable_mem_manager.h"
 #endif
@@ -85,6 +87,7 @@ void AppStateObserver::OnProcessDied(const AppExecFwk::ProcessData &processData)
     request.bundleName = processData.bundleName;
     request.reason = AppStateUpdateReason::PROCESS_TERMINATED;
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    MemMgrEventCenter::GetInstance().OnProcessDied(processData.pid);
 }
 } // namespace Memory
 } // namespace OHOS

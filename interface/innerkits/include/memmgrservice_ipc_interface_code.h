@@ -31,6 +31,7 @@ enum class MemMgrInterfaceCode {
         MEM_MGR_GET_AVAILABLE_MEMORY = 8,       
         MEM_MGR_GET_TOTAL_MEMORY = 9,
 #endif
+        MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED = 10,
 };
 
 enum class AppStateSubscriberInterfaceCode {
