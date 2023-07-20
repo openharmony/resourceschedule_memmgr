@@ -103,16 +103,17 @@ void ReclaimPriorityManager::Dump(int fd)
     }
     dprintf(fd, "-----------------------------------------------------------------\n\n");
 
-    dprintf(fd, "priority list of all managed processes, status:(fg,bgtask,trantask,evt,dist,extb,ext)\n");
+    dprintf(fd, "priority list of all managed processes, status:(fg,visible,bgtask,trantask,evt,dist,extb,ext)\n");
     dprintf(fd, "    pid       uid                                   bundle priority status\
                       connnectorpids               connnectoruids               processuids\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
         dprintf(fd, "|-----------------------------------------\n");
         for (auto procEntry : bundlePtr->procs_) {
             ProcessPriorityInfo &proc = procEntry.second;
-            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d %30s %30s %30s\n", proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
-                proc.priority_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
-                proc.isDistDeviceConnected, proc.extensionBindStatus, proc.isExtension, proc.ConnectorsToString().c_str(),
+            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d %30s %30s %30s\n",
+                proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(), proc.priority_, proc.isFreground, proc.isVisible_,
+                proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
+                proc.extensionBindStatus, proc.isExtension, proc.ConnectorsToString().c_str(),
                 proc.ExtensionConnectorsUidToString().c_str(), proc.ExtensionProcessUidToString().c_str());
         }
     }
@@ -722,6 +723,12 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         proc.SetPriority(bgPriority);
         UpdatePriorityByProcForExtension(proc);
     }
+    if (proc.isVisible_) {
+        HILOGD("%{public}d is a process with visible window", proc.pid_);
+        if (proc.priority_ > RECLAIM_PRIORITY_VISIBLE) {
+            proc.SetPriority(RECLAIM_PRIORITY_VISIBLE);
+        }
+    }
     if (proc.isSuspendDelay) { // is a background process with transient task
         HILOGD("%{public}d is a background process with transient task", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
@@ -821,6 +828,12 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
             if (proc.ExtensionConnectorsCount() == 0) {
                 proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
             }
+            break;
+        case AppStateUpdateReason::VISIBLE:
+            proc.isVisible_ = true;
+            break;
+        case AppStateUpdateReason::UN_VISIBLE:
+            proc.isVisible_ = false;
             break;
         default:
             break;

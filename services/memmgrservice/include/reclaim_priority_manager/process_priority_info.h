@@ -34,6 +34,7 @@ public:
     int uid_;
     pid_t pid_;
     int priority_;
+    bool isVisible_;
     bool isFreground; // true means freground, false means background
     bool isBackgroundRunning;
     bool isSuspendDelay;

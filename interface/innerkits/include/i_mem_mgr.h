@@ -22,6 +22,7 @@
 #include "iremote_broker.h"
 #include "iremote_object.h"
 #include "memmgrservice_ipc_interface_code.h"
+#include "mem_mgr_window_info.h"
 #ifdef USE_PURGEABLE_MEMORY
 #include "iapp_state_subscriber.h"
 #endif
@@ -51,6 +52,8 @@ public:
 
     virtual int32_t GetTotalMemory() = 0;
 #endif
+
+    virtual int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) = 0;
 };
 } // namespace Memory
 } // namespace OHOS

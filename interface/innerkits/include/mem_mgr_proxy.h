@@ -35,6 +35,7 @@ public:
     int32_t GetAvailableMemory() override;
     int32_t GetTotalMemory() override;
 #endif
+    int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) override;
 
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;

@@ -171,13 +171,21 @@ int32_t MemMgrClient::GetTotalMemory()
 }
 #endif // USE_PURGEABLE_MEMORY
 
+int32_t MemMgrClient::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo)
+{
+    HILOGD("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->OnWindowVisibilityChanged(MemMgrWindowInfo);
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");
     std::lock_guard<std::mutex> lock(mutex_);
-    if (dpProxy_ != nullptr) {
-        return dpProxy_;
-    }
 
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
