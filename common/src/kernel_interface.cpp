@@ -209,11 +209,17 @@ bool KernelInterface::RemoveDirRecursively(const std::string& path)
 
 std::string KernelInterface::RmDelimiter(const std::string& path)
 {
+    if (path.empty()) {
+        return path;
+    }
     return OHOS::ExcludeTrailingPathDelimiter(path);
 }
 
 std::string KernelInterface::AddDelimiter(const std::string& path)
 {
+    if (path.empty()) {
+        return path;
+    }
     return OHOS::IncludeTrailingPathDelimiter(path);
 }
 
