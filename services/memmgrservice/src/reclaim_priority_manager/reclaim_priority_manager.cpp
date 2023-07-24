@@ -329,9 +329,6 @@ void ReclaimPriorityManager::AddOsAccountInfo(std::shared_ptr<AccountBundleInfo>
 
 bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId)
 {
-    if (pid == IGNORE_PID) {
-        return true;
-    }
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
     if (account == nullptr || !account->HasBundle(bundleUid)) {
         HILOGE("account or bundle name not exist");
@@ -340,6 +337,9 @@ bool ReclaimPriorityManager::IsProcExist(pid_t pid, int bundleUid, int accountId
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
     if (bundle == nullptr) {
         return false;
+    }
+    if (pid == IGNORE_PID) {
+        return true;
     }
     if (!bundle->HasProc(pid)) {
         HILOGE("pid not exist");
