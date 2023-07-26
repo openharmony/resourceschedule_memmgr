@@ -33,6 +33,8 @@ public:
     int32_t DeregisterActiveApps(int32_t pid, int32_t uid);
     int32_t SubscribeAppState(const AppStateSubscriber &subscriber);
     int32_t UnsubscribeAppState(const AppStateSubscriber &subscriber);
+    int32_t GetAvailableMemory(int32_t &memSize);
+    int32_t GetTotalMemory(int32_t &memSize);
     int32_t GetAvailableMemory();
     int32_t GetTotalMemory();
     int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo);
