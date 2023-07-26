@@ -36,6 +36,7 @@ ohos_shared_library("memmgrclient") {
     "src/bundle_priority_list.cpp",
     "src/mem_mgr_client.cpp",
     "src/mem_mgr_proxy.cpp",
+    "src/mem_mgr_window_info.cpp",
   ]
 
   public_configs = [ ":memmgr_client_config" ]

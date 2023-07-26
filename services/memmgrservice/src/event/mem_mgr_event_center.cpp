@@ -19,6 +19,7 @@
 #include "memmgr_ptr_util.h"
 #include "common_event_observer.h"
 #include "reclaim_priority_manager.h"
+#include "window_visibility_observer.h"
 #ifdef CONFIG_BGTASK_MGR
 #include "background_task_mgr_helper.h"
 #endif
@@ -66,6 +67,12 @@ void MemMgrEventCenter::RemoveEventObserver(int32_t systemAbilityId)
     if (systemAbilityId == ABILITY_MGR_SERVICE_ID || systemAbilityId == APP_MGR_SERVICE_ID) {
         ReclaimPriorityManager::GetInstance().Reset();
     }
+}
+
+void MemMgrEventCenter::OnProcessDied(int pid)
+{
+    HILOGD("called");
+    WindowVisibilityObserver::GetInstance().OnProcessDied(pid);
 }
 
 bool MemMgrEventCenter::RegisterEventObserver()

@@ -17,6 +17,7 @@
 
 #include <unistd.h>
 
+#include "ipc_skeleton.h"
 #include "low_memory_killer.h"
 #include "mem_mgr_event_center.h"
 #include "memmgr_config_manager.h"
@@ -26,6 +27,7 @@
 #include "reclaim_priority_manager.h"
 #include "reclaim_strategy_manager.h"
 #include "system_ability_definition.h"
+#include "window_visibility_observer.h"
 #ifdef USE_PURGEABLE_MEMORY
 #include "kernel_interface.h"
 #include "purgeable_mem_manager.h"
@@ -187,6 +189,19 @@ void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::strin
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
     MemMgrEventCenter::GetInstance().RetryRegisterEventObserver(systemAbilityId);
+}
+
+int32_t MemMgrService::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo)
+{
+    HILOGI("called");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != windowManagerUid_) {
+        HILOGE("OnWindowVisibilityChanged refused for%{public}d", callingUid);
+        return -1;
+    }
+    HILOGI("OnWindowVisibilityChanged called %{public}d", callingUid);
+    WindowVisibilityObserver::GetInstance().UpdateWindowVisibilityPriority(MemMgrWindowInfo);
+    return 0;
 }
 
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)

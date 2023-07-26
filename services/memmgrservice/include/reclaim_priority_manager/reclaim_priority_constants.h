@@ -76,6 +76,8 @@ enum class AppStateUpdateReason {
     BIND_EXTENSION,
     UNBIND_EXTENSION,
     UPDATE_EXTENSION_PROCESS,
+    VISIBLE,
+    UN_VISIBLE,
 };
 
 enum class BundleState {
