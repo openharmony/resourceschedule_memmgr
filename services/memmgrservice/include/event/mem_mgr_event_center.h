@@ -54,6 +54,7 @@ public:
     void RetryRegisterEventObserver(int32_t systemAbilityId);
     void Dump(int fd);
     void RemoveEventObserver(int32_t systemAbilityId);
+    void OnProcessDied(int pid);
 
 private:
     MemMgrEventCenter();

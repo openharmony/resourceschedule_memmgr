@@ -35,6 +35,7 @@ public:
     int32_t UnsubscribeAppState(const AppStateSubscriber &subscriber);
     int32_t GetAvailableMemory();
     int32_t GetTotalMemory();
+    int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo);
 
 private:
     sptr<IMemMgr> GetMemMgrService();

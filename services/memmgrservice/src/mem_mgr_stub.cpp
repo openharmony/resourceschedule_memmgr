@@ -18,11 +18,13 @@
 #include "memmgr_config_manager.h"
 #include "kernel_interface.h"
 #include "low_memory_killer.h"
+#include "parcel.h"
 
 namespace OHOS {
 namespace Memory {
 namespace {
     const std::string TAG = "MemMgrStub";
+    constexpr int MAX_PARCEL_SIZE = 100000;
 }
 
 MemMgrStub::MemMgrStub()
@@ -47,6 +49,8 @@ MemMgrStub::MemMgrStub()
     memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_TOTAL_MEMORY)] =
         &MemMgrStub::HandleGetTotalMemory;
 #endif
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED)] =
+        &MemMgrStub::HandleOnWindowVisibilityChanged;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -208,5 +212,39 @@ int32_t MemMgrStub::HandleGetTotalMemory(MessageParcel &data, MessageParcel &rep
     return ret;
 }
 #endif // USE_PURGEABLE_MEMORY
+
+int32_t MemMgrStub::HandleOnWindowVisibilityChanged(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+    std::vector<sptr<MemMgrWindowInfo>> infos;
+    uint32_t len = data.ReadUint32();
+    if (len < 0 || len > MAX_PARCEL_SIZE) {
+        return IPC_STUB_ERR;
+    }
+
+    size_t readAbleSize = data.GetReadableBytes();
+    size_t size = static_cast<size_t>(len);
+    if ((size > readAbleSize) || (size > infos.max_size())) {
+        return IPC_STUB_ERR;
+    }
+    infos.resize(size);
+    if (infos.size() < size) {
+        return IPC_STUB_ERR;
+    }
+    size_t minDesireCapacity = sizeof(int32_t);
+    for (size_t i = 0; i < size; i++) {
+        readAbleSize = data.GetReadableBytes();
+        if (minDesireCapacity > readAbleSize) {
+            return IPC_STUB_ERR;
+        }
+        infos[i] = data.ReadParcelable<MemMgrWindowInfo>();
+    }
+
+    int32_t ret = OnWindowVisibilityChanged(infos);
+    if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
 } // namespace Memory
 } // namespace OHOS
