@@ -191,8 +191,9 @@ int32_t MemMgrStub::HandleUnsubscribeAppState(MessageParcel &data, MessageParcel
 int32_t MemMgrStub::HandleGetAvailableMemory(MessageParcel &data, MessageParcel &reply)
 {
     HILOGI("called");
-    int32_t ret = GetAvailableMemory();
-    if (!reply.WriteInt32(ret)) {
+    int32_t memSize = 0;
+    int32_t ret = GetAvailableMemory(memSize);
+    if (!reply.WriteInt32(memSize)) {
         return IPC_STUB_ERR;
     }
     return ret;
@@ -201,8 +202,9 @@ int32_t MemMgrStub::HandleGetAvailableMemory(MessageParcel &data, MessageParcel 
 int32_t MemMgrStub::HandleGetTotalMemory(MessageParcel &data, MessageParcel &reply)
 {
     HILOGI("called");
-    int32_t ret = GetTotalMemory();
-    if (!reply.WriteInt32(ret)) {
+    int32_t memSize = 0;
+    int32_t ret = GetTotalMemory(memSize);
+    if (!reply.WriteInt32(memSize)) {
         return IPC_STUB_ERR;
     }
     return ret;

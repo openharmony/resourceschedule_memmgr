@@ -117,7 +117,7 @@ int32_t MemMgrClient::UnsubscribeAppState(const AppStateSubscriber &subscriber)
     return dps->UnsubscribeAppState(subscriberSptr);
 }
 
-int32_t MemMgrClient::GetAvailableMemory()
+int32_t MemMgrClient::GetAvailableMemory(int32_t &memSize)
 {
     HILOGI("called");
     auto dps = GetMemMgrService();
@@ -125,18 +125,36 @@ int32_t MemMgrClient::GetAvailableMemory()
         HILOGE("MemMgrService is null");
         return -1;
     }
-    return dps->GetAvailableMemory();
+    return dps->GetAvailableMemory(memSize);
+}
+
+int32_t MemMgrClient::GetTotalMemory(int32_t &memSize)
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->GetTotalMemory(memSize);
+}
+
+int32_t MemMgrClient::GetAvailableMemory()
+{
+    int32_t memSize = 0;
+    if (GetAvailableMemory(memSize) != 0) {
+        return -1;
+    }
+    return memSize;
 }
 
 int32_t MemMgrClient::GetTotalMemory()
 {
-    HILOGI("called");
-    auto dps = GetMemMgrService();
-    if (dps == nullptr) {
-        HILOGE("MemMgrService is null");
+    int32_t memSize = 0;
+    if (GetTotalMemory(memSize) != 0) {
         return -1;
     }
-    return dps->GetTotalMemory();
+    return memSize;
 }
 
 #else
@@ -156,6 +174,16 @@ int32_t MemMgrClient::SubscribeAppState(const AppStateSubscriber &subscriber)
 }
 
 int32_t MemMgrClient::UnsubscribeAppState(const AppStateSubscriber &subscriber)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::GetAvailableMemory(int32_t &memSize)
+{
+    return -1;
+}
+
+int32_t MemMgrClient::GetTotalMemory(int32_t &memSize)
 {
     return -1;
 }

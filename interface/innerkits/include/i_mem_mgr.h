@@ -47,9 +47,9 @@ public:
 
     virtual int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) = 0;
 
-    virtual int32_t GetAvailableMemory() = 0;
+    virtual int32_t GetAvailableMemory(int32_t &memSize) = 0;
 
-    virtual int32_t GetTotalMemory() = 0;
+    virtual int32_t GetTotalMemory(int32_t &memSize) = 0;
 #endif
 };
 } // namespace Memory
