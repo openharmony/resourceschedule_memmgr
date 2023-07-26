@@ -238,7 +238,7 @@ int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscr
     return ret;
 }
 
-int32_t MemMgrProxy::GetAvailableMemory()
+int32_t MemMgrProxy::GetAvailableMemory(int32_t &memSize)
 {
     HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
@@ -255,15 +255,14 @@ int32_t MemMgrProxy::GetAvailableMemory()
         HILOGE("transact failed, error: %{public}d", error);
         return error;
     }
-    int32_t ret;
-    if (!reply.ReadInt32(ret)) {
+    if (!reply.ReadInt32(memSize)) {
         HILOGE("read result failed");
         return IPC_PROXY_ERR;
     }
-    return ret;
+    return ERR_OK;
 }
 
-int32_t MemMgrProxy::GetTotalMemory()
+int32_t MemMgrProxy::GetTotalMemory(int32_t &memSize)
 {
     HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
@@ -280,12 +279,11 @@ int32_t MemMgrProxy::GetTotalMemory()
         HILOGE("transact failed, error: %{public}d", error);
         return error;
     }
-    int32_t ret;
-    if (!reply.ReadInt32(ret)) {
+    if (!reply.ReadInt32(memSize)) {
         HILOGE("read result failed");
         return IPC_PROXY_ERR;
     }
-    return ret;
+    return ERR_OK;
 }
 #endif // USE_PURGEABLE_MEMORY
 } // namespace Memory

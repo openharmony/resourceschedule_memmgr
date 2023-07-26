@@ -28,6 +28,8 @@ constexpr unsigned int RECLAIM_ASHM_ID_PARAM_SIZE = 2;
 constexpr unsigned int RECLAIM_SUBSCRIBER_ID_PARAM_SIZE = 1;
 constexpr unsigned int FIRST_INDEX = 0;
 constexpr unsigned int SECOND_INDEX = 1;
+constexpr unsigned int THIRD_INDEX = 2;
+constexpr unsigned int APP_STATE_PARAM_SIZE = 3;
 
 #define CHECK_SIZE(container, len, fd, actionIfFailed) \
     do {                                               \
@@ -53,7 +55,8 @@ void ShowHelpInfo(const int fd)
     dprintf(fd, "-c                          |dump config\n");
     dprintf(fd, "-m                          |show malloc state\n");
 #ifdef USE_PURGEABLE_MEMORY
-    dprintf(fd, "-s                          |show subscriber all the pid which can be reclaimed\n\n");
+    dprintf(fd, "-s                          |show subscriber all the pid which can be reclaimed\n");
+    dprintf(fd, "-d {pid} {uid} {state}      |trigger appstate changed\n\n");
     dprintf(fd, "-t                          trigger memory onTrim:\n"
                 "-t 1 ---------------------- level_purgeable\n"
                 "-t 2 ---------------------- level_moderate\n"
@@ -200,6 +203,44 @@ bool ParseForceReclaimId(const int fd, std::map<std::string, std::vector<std::st
     }
     return true;
 }
+
+bool PurgeableMemoryDump(int fd, std::map<std::string, std::vector<std::string>> &keyValuesMapping)
+{
+    if (HasCommand(keyValuesMapping, "-s")) {
+        PurgeableMemManager::GetInstance().DumpSubscribers(fd);
+        return true;
+    }
+    if (HasCommand(keyValuesMapping, "-t")) {
+        DispatchTriggerMemLevel(fd, keyValuesMapping);
+        return true;
+    }
+    if (HasCommand(keyValuesMapping, "-f")) {
+        DumpReclaimInfo dumpInfo;
+        ParseForceReclaimType(fd, keyValuesMapping, dumpInfo);
+        if (HasCommand(keyValuesMapping, "-id") && !ParseForceReclaimId(fd, keyValuesMapping, dumpInfo)) {
+            dumpInfo.reclaimType = PurgeableMemoryType::UNKNOWN;
+        }
+        if (PurgeableMemManager::GetInstance().ForceReclaimByDump(dumpInfo)) {
+            dprintf(fd, "trigger force reclaim success!\n");
+        } else {
+            PrintReclaimError(fd);
+        }
+        return true;
+    }
+    if (HasCommand(keyValuesMapping, "-d")) {
+        std::vector<std::string> appState = keyValuesMapping["-d"];
+        if (appState.size() < APP_STATE_PARAM_SIZE) {
+            dprintf(fd, "params number is less than %{publid}d!\n", APP_STATE_PARAM_SIZE);
+            return true;
+        }
+        int32_t pid = std::stoi(appState[FIRST_INDEX]);
+        int32_t uid = std::stoi(appState[SECOND_INDEX]);
+        int32_t state = std::stoi(appState[THIRD_INDEX]);
+        PurgeableMemManager::GetInstance().ChangeAppState(pid, uid, state);
+        return true;
+    }
+    return false;
+}
 #endif // USE_PURGEABLE_MEMORY
 
 void DispatchDumpCommand(const int fd, std::map<std::string, std::vector<std::string>> &keyValuesMapping)
@@ -226,25 +267,7 @@ void DispatchDumpCommand(const int fd, std::map<std::string, std::vector<std::st
         return;
     }
 #ifdef USE_PURGEABLE_MEMORY
-    if (HasCommand(keyValuesMapping, "-s")) {
-        PurgeableMemManager::GetInstance().DumpSubscribers(fd);
-        return;
-    }
-    if (HasCommand(keyValuesMapping, "-t")) {
-        DispatchTriggerMemLevel(fd, keyValuesMapping);
-        return;
-    }
-    if (HasCommand(keyValuesMapping, "-f")) {
-        DumpReclaimInfo dumpInfo;
-        ParseForceReclaimType(fd, keyValuesMapping, dumpInfo);
-        if (HasCommand(keyValuesMapping, "-id") && !ParseForceReclaimId(fd, keyValuesMapping, dumpInfo)) {
-            dumpInfo.reclaimType = PurgeableMemoryType::UNKNOWN;
-        }
-        if (PurgeableMemManager::GetInstance().ForceReclaimByDump(dumpInfo)) {
-            dprintf(fd, "trigger force reclaim success!\n");
-        } else {
-            PrintReclaimError(fd);
-        }
+    if (PurgeableMemoryDump(fd, keyValuesMapping)) {
         return;
     }
 #endif
