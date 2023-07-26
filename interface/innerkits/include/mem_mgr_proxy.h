@@ -32,8 +32,8 @@ public:
     int32_t DeregisterActiveApps(int32_t pid, int32_t uid) override;
     int32_t SubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
     int32_t UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscriber) override;
-    int32_t GetAvailableMemory() override;
-    int32_t GetTotalMemory() override;
+    int32_t GetAvailableMemory(int32_t &memSize) override;
+    int32_t GetTotalMemory(int32_t &memSize) override;
 #endif
     int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) override;
 

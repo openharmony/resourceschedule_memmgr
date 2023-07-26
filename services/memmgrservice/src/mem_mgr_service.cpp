@@ -171,17 +171,24 @@ int32_t MemMgrService::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subs
     return 0;
 }
 
-int32_t MemMgrService::GetAvailableMemory()
+int32_t MemMgrService::GetAvailableMemory(int32_t &memSize)
 {
     HILOGI("called");
-    int currentBuffer = KernelInterface::GetInstance().GetCurrentBuffer();
-    return currentBuffer;
+    memSize = KernelInterface::GetInstance().GetCurrentBuffer();
+    if (memSize < 0 || memSize >= MAX_BUFFER_KB) {
+        return -1;
+    }
+    return 0;
 }
 
-int32_t MemMgrService::GetTotalMemory()
+int32_t MemMgrService::GetTotalMemory(int32_t &memSize)
 {
     HILOGI("called");
-    return KernelInterface::GetInstance().GetTotalBuffer();
+    memSize = KernelInterface::GetInstance().GetTotalBuffer();
+    if (memSize < 0 || memSize >= MAX_BUFFER_KB) {
+        return -1;
+    }
+    return 0;
 }
 #endif // USE_PURGEABLE_MEMORY
 
