@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Memory {
 namespace {
-const std::string TAG = "OomScoreAdjUtils";
+const std::string TAG = "ReclaimPriorityManager";
 }
 
 bool OomScoreAdjUtils::WriteOomScoreAdjToKernel(std::shared_ptr<BundlePriorityInfo> bundle)

@@ -89,6 +89,9 @@ int BundlePriorityInfo::GetMinProcPriority()
 {
     int min_priority = RECLAIM_PRIORITY_UNKNOWN;
     for (auto i = procs_.begin(); i != procs_.end(); ++i) {
+        if (i->second.isRender_) {
+            continue;
+        }
         if (i->second.priority_ < min_priority) {
             min_priority = i->second.priority_;
         }

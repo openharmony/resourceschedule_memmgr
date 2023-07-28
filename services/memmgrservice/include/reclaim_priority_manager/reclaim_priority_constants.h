@@ -78,6 +78,7 @@ enum class AppStateUpdateReason {
     UPDATE_EXTENSION_PROCESS,
     VISIBLE,
     UN_VISIBLE,
+    RENDER_CREATE_PROCESS,
 };
 
 enum class BundleState {

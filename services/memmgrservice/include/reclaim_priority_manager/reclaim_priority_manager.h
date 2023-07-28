@@ -43,6 +43,16 @@ struct ReclaimHandleRequest {
     AppStateUpdateReason reason;
 };
 
+inline ReclaimHandleRequest SingleRequest(int pid, int uid, const std::string &bundleName, AppStateUpdateReason reason)
+{
+    ReclaimHandleRequest request;
+    request.pid = pid;
+    request.uid = uid;
+    request.bundleName = bundleName;
+    request.reason = reason;
+    return request;
+}
+
 class ReclaimPriorityManager {
     DECLARE_SINGLE_INSTANCE_BASE(ReclaimPriorityManager);
 
@@ -143,7 +153,8 @@ private:
     bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
-    bool HandleCreateProcess(int pid, int bundleUid, const std::string &bundleName, int accountId);
+    bool HandleCreateProcess(int pid, int bundleUid, const std::string &bundleName, int accountId,
+                             bool isRender = false);
     bool HandleTerminateProcess(ProcessPriorityInfo proc, std::shared_ptr<BundlePriorityInfo> bundle,
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
