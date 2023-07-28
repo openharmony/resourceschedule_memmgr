@@ -60,7 +60,8 @@
           }
         ],
         "test": [
-            "//foundation/resourceschedule/memmgr/test:memmgr_unittest"
+            "//foundation/resourceschedule/memmgr/test:memmgr_unittest",
+            "//foundation/resourceschedule/memmgr/test/fuzztest:memmgr_fuzztest"
         ]
       },
       "features": [
