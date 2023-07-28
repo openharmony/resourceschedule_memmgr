@@ -65,28 +65,32 @@ void AppStateObserver::OnExtensionStateChanged(const AppExecFwk::AbilityStateDat
 
 void AppStateObserver::OnProcessCreated(const AppExecFwk::ProcessData &processData)
 {
-    HILOGI("uid=%{public}d, pid=%{public}d, bundleName=%{public}s",
-        processData.uid, processData.pid, processData.bundleName.c_str());
+    int32_t renderUid = processData.renderUid;
+    int uid = -1;
 
-    ReclaimHandleRequest request;
-    request.pid = processData.pid;
-    request.uid = processData.uid;
-    request.bundleName = processData.bundleName;
-    request.reason = AppStateUpdateReason::CREATE_PROCESS;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    if (renderUid != -1) {
+        uid = renderUid;
+    } else {
+        uid = processData.uid;
+    }
+    HILOGD("uid=%{public}d, pid=%{public}d, bundle=%{public}s", uid, processData.pid, processData.bundleName.c_str());
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest(processData.pid, uid, processData.bundleName, AppStateUpdateReason::CREATE_PROCESS));
 }
 
 void AppStateObserver::OnProcessDied(const AppExecFwk::ProcessData &processData)
 {
-    HILOGI("uid=%{public}d, pid=%{public}d, bundleName=%{public}s",
-        processData.uid, processData.pid, processData.bundleName.c_str());
+    int32_t renderUid = processData.renderUid;
+    int uid = -1;
 
-    ReclaimHandleRequest request;
-    request.pid = processData.pid;
-    request.uid = processData.uid;
-    request.bundleName = processData.bundleName;
-    request.reason = AppStateUpdateReason::PROCESS_TERMINATED;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    if (renderUid != -1) {
+        uid = renderUid;
+    } else {
+        uid = processData.uid;
+    }
+    HILOGD("uid=%{public}d, pid=%{public}d, bundle=%{public}s", uid, processData.pid, processData.bundleName.c_str());
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest(processData.pid, uid, processData.bundleName, AppStateUpdateReason::PROCESS_TERMINATED));
     MemMgrEventCenter::GetInstance().OnProcessDied(processData.pid);
 }
 } // namespace Memory
