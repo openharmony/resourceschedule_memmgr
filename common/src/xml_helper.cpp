@@ -115,7 +115,12 @@ bool XmlHelper::ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsi
         if (contentPtr != nullptr) {
             valueStr = std::string(reinterpret_cast<char *>(contentPtr));
             xmlFree(contentPtr);
-            value = std::strtoull(valueStr.c_str(), nullptr, 10); // 10:Decimal
+            size_t validPos = valueStr.find_first_not_of(" ");
+            if (validPos != std::string::npos && valueStr[validPos] == '-') {
+                value = 0;
+            } else {
+                value = std::strtoull(valueStr.c_str(), nullptr, 10); // 10:Decimal
+            }
             return true;
         }
     } catch (...) {
