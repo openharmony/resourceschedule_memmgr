@@ -61,4 +61,9 @@
   <switchConfig>
     <bigMemKillSwitch>0</bigMemKillSwitch>
   </switchConfig>
+  <purgeablememConfig>
+    <purgeWhiteAppList>
+      <procName>default</procName>
+    </purgeWhiteAppList>
+  </purgeablememConfig>
 </Memmgr>

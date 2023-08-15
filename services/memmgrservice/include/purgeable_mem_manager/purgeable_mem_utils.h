@@ -27,7 +27,10 @@ struct PurgeableAshmInfo {
     int sizeKB;
     int minPriority;
     std::string idWithTime;
+    std::string curAppName;
 };
+
+using PurgeableAshmInfoMap = std::unordered_map<std::string, PurgeableAshmInfo>;
 
 class PurgeableMemUtils {
     DECLARE_SINGLE_INSTANCE(PurgeableMemUtils);
@@ -40,6 +43,7 @@ public:
     bool GetPurgeableAshmInfo(int &reclaimableKB, std::vector<PurgeableAshmInfo> &ashmInfoToReclaim);
     bool PurgeAshmAll();
     bool PurgeAshmByIdWithTime(const std::string &idWithTime);
+    PurgeableAshmInfoMap GetashmIdToInfoMap(const std::vector<std::string> &strLines) const;
 
     static const std::string PATH_PURGE_HEAP;
     static const std::string PATH_PURGEABLE_ASHMEM;
@@ -57,6 +61,7 @@ public:
     static const unsigned int ASHM_SIZE_INDEX;
     static const unsigned int ASHM_TIME_INDEX;
     static const unsigned int HEAPINFO_SIZE_ONE_LINE;
+    static const unsigned int ASHM_PROCESS_NAME_INDEX;
 };
 } // namespace Memory
 } // namespace OHOS

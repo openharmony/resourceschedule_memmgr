@@ -122,6 +122,10 @@ bool MemmgrConfigManager::ParseXmlRootNode(const xmlNodePtr &rootNodePtr)
             switchConfig_.ParseConfig(currNode);
             continue;
         }
+        if (name.compare("purgeablememConfig") == 0) {
+            purgeablememConfig_.ParseConfig(currNode);
+            continue;
+        }
         HILOGW("unknown node :<%{public}s>", name.c_str());
         return false;
     }
@@ -192,6 +196,11 @@ SystemMemoryLevelConfig MemmgrConfigManager::GetSystemMemoryLevelConfig()
     return systemMemoryLevelConfig_;
 }
 
+const PurgeablememConfig& MemmgrConfigManager::GetPurgeablememConfig()
+{
+    return purgeablememConfig_;
+}
+
 void MemmgrConfigManager::Dump(int fd)
 {
     availBufferConfig_.Dump(fd);
@@ -201,6 +210,7 @@ void MemmgrConfigManager::Dump(int fd)
     systemMemoryLevelConfig_.Dump(fd);
     switchConfig_.Dump(fd);
     reclaimPriorityConfig_.Dump(fd);
+    purgeablememConfig_.Dump(fd);
 }
 } // namespace Memory
 } // namespace OHOS

@@ -63,6 +63,7 @@ ohos_shared_library("memmgrservice") {
     "${memmgr_common_path}/src/config/avail_buffer_config.cpp",
     "${memmgr_common_path}/src/config/kill_config.cpp",
     "${memmgr_common_path}/src/config/nand_life_config.cpp",
+    "${memmgr_common_path}/src/config/purgeablemem_config.cpp",
     "${memmgr_common_path}/src/config/reclaim_config.cpp",
     "${memmgr_common_path}/src/config/reclaim_priority_config.cpp",
     "${memmgr_common_path}/src/config/switch_config.cpp",
