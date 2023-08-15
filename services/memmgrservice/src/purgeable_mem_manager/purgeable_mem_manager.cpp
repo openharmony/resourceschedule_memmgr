@@ -27,6 +27,7 @@
 #include "memmgr_ptr_util.h"
 #include "reclaim_priority_manager.h"
 #include "system_memory_level_config.h"
+#include "purgeablemem_config.h"
  
 namespace OHOS {
 namespace Memory {
@@ -494,6 +495,10 @@ void PurgeableMemManager::PurgAshmIdOneByOne(std::vector<PurgeableAshmInfo> &ash
 
     reclaimResultKB = 0;
     for (auto &it : ashmInfoToReclaim) {
+        if (!IsPurgeWhiteApp(it.curAppName)) {
+            HILOGD("[%{public}s] is not in purgeable app white list!", it.curAppName.c_str());
+            continue;
+        }
         if (PurgeableMemUtils::GetInstance().PurgeAshmByIdWithTime(it.idWithTime)) {
             HILOGI("reclaim purgeable [ASHM] for ashmem_id[%{public}s], adj=%{public}d, result=%{public}d KB",
                    it.idWithTime.c_str(), it.minPriority, it.sizeKB);
@@ -524,7 +529,8 @@ int PurgeableMemManager::PurgeByTypeAndTarget(const PurgeableMemoryType &type, c
     int reclaimResultKB = 0;
 
     // reclaim all unpined purgeable of this type
-    if (info.reclaimableKB <= reclaimTargetKB && PurgeTypeAll(type)) {
+    if (type != PurgeableMemoryType::PURGEABLE_ASHMEM &&
+        info.reclaimableKB <= reclaimTargetKB && PurgeTypeAll(type)) {
         reclaimResultKB = info.reclaimableKB;
         HILOGI("reclaim all purgeable [%{public}s], result=%{public}d KB", typeDesc.c_str(), reclaimResultKB);
         return reclaimResultKB;
@@ -705,5 +711,16 @@ void PurgeableMemManager::DumpSubscribers(const int fd)
     }
 }
 
+bool PurgeableMemManager::IsPurgeWhiteApp(const std::string &curAppName)
+{
+    PurgeablememConfig pmc = MemmgrConfigManager::GetInstance().GetPurgeablememConfig();
+    std::set<std::string> purgeWhiteAppSet = pmc.GetPurgeWhiteAppSet();
+    for (auto it = purgeWhiteAppSet.begin(); it != purgeWhiteAppSet.end(); it++) {
+        if (curAppName == *it) {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace Memory
 } // namespace OHOS
