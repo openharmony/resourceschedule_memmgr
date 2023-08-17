@@ -55,7 +55,7 @@ void MemmgrConfigManagerTest::TearDown()
 
 HWTEST_F(MemmgrConfigManagerTest, initTest, TestSize.Level1)
 {
-    MemmgrConfigManager::GetInstance().Init();
+    EXPECT_EQ(MemmgrConfigManager::GetInstance().Init(), true);
 }
 }
 }

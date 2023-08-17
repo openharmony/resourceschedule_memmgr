@@ -59,6 +59,7 @@ public:
     void OnRemoteSubscriberDied(const wptr<IRemoteObject> &object);
     void DumpSubscribers(const int fd);
     bool ForceReclaimByDump(const DumpReclaimInfo &dumpInfo);
+    bool IsPurgeWhiteApp(const std::string &curAppName);
 
 private:
     PurgeableMemManager();
