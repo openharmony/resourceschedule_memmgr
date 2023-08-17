@@ -35,6 +35,7 @@
 #include "reclaim_priority_config.h"
 #include "system_memory_level_config.h"
 #include "switch_config.h"
+#include "purgeablemem_config.h"
 
 namespace OHOS {
 namespace Memory {
@@ -54,6 +55,7 @@ public:
     const KillConfig& GetKillConfig();
     const NandLifeConfig& GetNandLifeConfig();
     const SwitchConfig& GetSwitchConfig();
+    const PurgeablememConfig &GetPurgeablememConfig();
 
 private:
     void InitDefaultConfig();
@@ -68,6 +70,7 @@ private:
     SwitchConfig switchConfig_;
     ReclaimPriorityConfig reclaimPriorityConfig_;
     ReclaimConfig reclaimConfig_;
+    PurgeablememConfig purgeablememConfig_;
     void ClearReclaimConfigSet();
     MemmgrConfigManager();
     ~MemmgrConfigManager();

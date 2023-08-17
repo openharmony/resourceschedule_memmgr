@@ -16,6 +16,7 @@
 #include "purgeable_mem_utils.h"
 
 #include <unordered_map>
+#include <string>
 
 #include "kernel_interface.h"
 #include "memmgr_log.h"
@@ -44,6 +45,7 @@ const unsigned int PurgeableMemUtils::ASHM_PURGED_INDEX = 9;
 const unsigned int PurgeableMemUtils::ASHM_SIZE_INDEX = 5;
 const unsigned int PurgeableMemUtils::ASHM_TIME_INDEX = 7;
 const unsigned int PurgeableMemUtils::HEAPINFO_SIZE_ONE_LINE = 3;
+const unsigned int PurgeableMemUtils::ASHM_PROCESS_NAME_INDEX = 0;
 
 bool PurgeableMemUtils::GetPurgeableHeapInfo(int &reclaimableKB)
 {
@@ -142,36 +144,7 @@ bool PurgeableMemUtils::GetPurgeableAshmInfo(int &reclaimableKB, std::vector<Pur
     }
 
     std::unordered_map<std::string, PurgeableAshmInfo> ashmIdToInfoMap;
-    for (auto &it : strLines) {
-        HILOGD("[ASHM]: %{public}s", it.c_str());
-        std::vector<std::string> words;
-        KernelInterface::GetInstance().SplitOneLineByDelim(it, ',', words);
-        if (words.size() != ASHM_PARAM_SIZE_ONE_LINE || words[ASHM_REF_COUNT_INDEX] != "0" ||
-            words[ASHM_PURGED_INDEX] != "0") {
-            continue;
-        }
-        int minPriority;
-        int sizeKB;
-        try {
-            minPriority = stoi(words[ASHM_ADJ_INDEX]);
-            sizeKB = stoi(words[ASHM_SIZE_INDEX]);
-        } catch (...) {
-            HILOGE("stoi(%{public}s) or stoi(%{public}s) failed", words[ASHM_ADJ_INDEX].c_str(),
-                words[ASHM_SIZE_INDEX].c_str());
-            continue;
-        }
-        std::string key = words[ASHM_ID_INDEX] + std::string(" ") + words[ASHM_TIME_INDEX];
-        auto iter = ashmIdToInfoMap.find(key);
-        if (iter == ashmIdToInfoMap.end()) {
-            PurgeableAshmInfo info;
-            info.minPriority = minPriority;
-            info.sizeKB = sizeKB;
-            info.idWithTime = key;
-            ashmIdToInfoMap[key] = info;
-        } else if (iter->second.minPriority > minPriority) {
-            iter->second.minPriority = minPriority;
-        }
-    }
+    ashmIdToInfoMap = PurgeableMemUtils::GetashmIdToInfoMap(strLines);
 
     reclaimableKB = 0;
     ashmInfoToReclaim.clear();
@@ -196,6 +169,45 @@ bool PurgeableMemUtils::PurgeAshmByIdWithTime(const std::string &idWithTime)
 {
     HILOGD("enter! Purg ashmem memory: IdWithTime=%{public}s", idWithTime.c_str());
     return KernelInterface::GetInstance().EchoToPath(PATH_PURGEABLE_ASHMEM.c_str(), idWithTime.c_str());
+}
+
+PurgeableAshmInfoMap PurgeableMemUtils::GetashmIdToInfoMap(const std::vector<std::string> &strLines) const
+{
+    std::unordered_map<std::string, PurgeableAshmInfo> ashmIdToInfoMap;
+    for (auto &it : strLines) {
+        HILOGD("[ASHM]: %{public}s", it.c_str());
+        std::vector<std::string> words;
+        KernelInterface::GetInstance().SplitOneLineByDelim(it, ',', words);
+        if (words.size() != ASHM_PARAM_SIZE_ONE_LINE || words[ASHM_REF_COUNT_INDEX] != "0" ||
+            words[ASHM_PURGED_INDEX] != "0") {
+            continue;
+        }
+        std::string curAppName;
+        int minPriority;
+        int sizeKB;
+        try {
+            curAppName = words[ASHM_PROCESS_NAME_INDEX];
+            minPriority = stoi(words[ASHM_ADJ_INDEX]);
+            sizeKB = stoi(words[ASHM_SIZE_INDEX]);
+        } catch (...) {
+            HILOGE("stoi(%{public}s) or stoi(%{public}s) or stoi(%{public}s) failed",
+                words[ASHM_PROCESS_NAME_INDEX].c_str(), words[ASHM_ADJ_INDEX].c_str(), words[ASHM_SIZE_INDEX].c_str());
+            continue;
+        }
+        std::string key = words[ASHM_ID_INDEX] + std::string(" ") + words[ASHM_TIME_INDEX];
+        auto iter = ashmIdToInfoMap.find(key);
+        if (iter == ashmIdToInfoMap.end()) {
+            PurgeableAshmInfo info;
+            info.curAppName = curAppName;
+            info.minPriority = minPriority;
+            info.sizeKB = sizeKB;
+            info.idWithTime = key;
+            ashmIdToInfoMap[key] = info;
+        } else if (iter->second.minPriority > minPriority) {
+            iter->second.minPriority = minPriority;
+        }
+    }
+    return ashmIdToInfoMap;
 }
 } // namespace Memory
 } // namespace OHOS
