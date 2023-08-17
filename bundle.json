@@ -32,7 +32,10 @@
           "samgr",
           "resource_management",
           "access_token",
-          "init"
+          "init",
+          "hitrace",
+          "image_framework",
+          "memory_utils"
         ],
         "third_party": []
       },
@@ -43,7 +46,8 @@
             "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
             "//foundation/resourceschedule/memmgr/profile:memmgr_config",
             "//foundation/resourceschedule/memmgr/profile:memmgr.para",
-            "//foundation/resourceschedule/memmgr/profile:memmgr.para.dac"
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para.dac",
+            "//foundation/resourceschedule/memmgr/purgeable_builder:purgeable_pixelmap_builder"
         ],
         "inner_kits": [
           {
@@ -56,6 +60,15 @@
                 "mem_mgr_constant.h"
               ],
               "header_base": "//foundation/resourceschedule/memmgr/interface/innerkits/include/"
+            }
+          },
+          {
+            "name": "//foundation/resourceschedule/memmgr/purgeable_builder:purgeable_pixelmap_builder",
+            "header": {
+              "header_files": [
+                "purgeable_pixelmap_builder.h"
+              ],
+              "header_base": "//foundation/resourceschedule/memmgr/purgeable_builder/include"
             }
           }
         ],
