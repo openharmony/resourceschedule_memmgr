@@ -136,8 +136,12 @@ private:
     std::string UNKOWN_REASON = "UNKOWN_REASON";
     ReclaimPriorityConfig config_;
     std::set<std::string> allKillableSystemApps_;
+    using ChangeProcFunc = void (ReclaimPriorityManager::*)(ProcessPriorityInfo &proc, AppAction &action);
+    std::map<AppStateUpdateReason, ChangeProcFunc> changeProcMapping_;
 
     ReclaimPriorityManager();
+    void InitUpdateReasonStrMapping();
+    void InitChangeProcMapping();
     bool GetEventHandler();
     void UpdateForegroundApps();
     bool IsFrontApp(const std::string& pkgName, int32_t uid, int32_t pid);
@@ -181,6 +185,22 @@ private:
     void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
 
     std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
+
+    void HandleForeground(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleBackground(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleEventStart(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleVisible(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action);
+
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
         return GET_OS_ACCOUNT_ID_BY_UID(bundleUid);
