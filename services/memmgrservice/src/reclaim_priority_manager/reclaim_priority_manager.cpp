@@ -468,6 +468,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(pid_t pid, int bundleUid, const
         HILOGI("[bundleName=%{public}s, pid=%{public}d] is not a killable system app", bundleName.c_str(), pid);
     }
     bundle->AddProc(proc);
+    CheckAndSetImportantApp(pid, bundle);
     UpdateBundlePriority(bundle);
     account->AddBundleToOsAccount(bundle);
     bool ret = ApplyReclaimPriority(bundle, pid, action);
@@ -591,6 +592,12 @@ bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
     }
     for (auto i = bundlePtr->procs_.begin(); i != bundlePtr->procs_.end(); ++i) {
         UpdatePriorityByProcConnector(i->second);
+        int importPriority = RECLAIM_PRIORITY_BACKGROUND;
+        if (IsImportantProc(i->second, importPriority) && importPriority < i->second.priority_) {
+            HILOGD("%{public}d is an important background process, set process priority to %{public}d first",
+                i->second.pid_, importPriority);
+            i->second.SetPriority(importPriority);
+        }
     }
     UpdateBundlePriority(bundlePtr);
     return true;
@@ -663,16 +670,41 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     return ApplyReclaimPriority(bundle, request.pid, action);
 }
 
-bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> bundle, int &dstPriority)
+bool ReclaimPriorityManager::IsImportantProc(ProcessPriorityInfo proc, int &dstPriority)
 {
-    std::map<std::string, int> importantApps = config_.GetImportantBgApps();
-    std::string targetAppName = bundle->name_;
+    std::map<std::string, int> importantProcs = config_.GetImportantBgApps();
+    std::string procName;
 
-    if (importantApps.count(targetAppName)) {
-        dstPriority = importantApps.at(targetAppName);
+    if (!KernelInterface::GetInstance().GetProcNameByPid(proc.pid_, procName)) {
+        HILOGD("is not an important proc, procName=%{public}s, pid_=%{public}d", procName.c_str(), proc.pid_);
+        return false;
+    }
+
+    HILOGD("pid_=%{public}d, procName=%{public}s", proc.pid_, procName.c_str());
+    if (importantProcs.count(procName)) {
+        dstPriority = importantProcs.at(procName);
+        HILOGD("is an important proc, procName=%{public}s, importPriority=%{public}d", procName.c_str(), dstPriority);
         return true;
     }
     return false;
+}
+
+void ReclaimPriorityManager::CheckAndSetImportantApp(pid_t pid, std::shared_ptr<BundlePriorityInfo> bundle)
+{
+    if (bundle == nullptr) {
+        HILOGD("bundle is nullptr");
+        return;
+    }
+
+    if (bundle->procs_.find(pid) != bundle->procs_.end()) {
+        int importPriority = RECLAIM_PRIORITY_BACKGROUND;
+        auto procPtr = bundle->procs_.find(pid);
+        if (IsImportantProc(procPtr->second, importPriority) && importPriority < procPtr->second.priority_) {
+            HILOGD("%{public}d is an important background process, set process priority to %{public}d first",
+                procPtr->second.pid_, importPriority);
+            procPtr->second.SetPriority(importPriority);
+        }
+    }
 }
 
 void ReclaimPriorityManager::UpdatePriorityByProcForExtension(const ProcessPriorityInfo &proc)
@@ -713,68 +745,48 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
                                                         ProcessPriorityInfo &proc)
 {
-    int priorityBefore = proc.priority_;
-
     if (bundle->priority_ < RECLAIM_PRIORITY_FOREGROUND) { // is a system process
-        HILOGD("%{public}d is a system process, skiped!", proc.pid_);
         return;
     }
     if (proc.isRender_) { // priority of render follow its host and it is updated by action of its host
-        HILOGD("%{public}d is a render process, skiped!", proc.pid_);
         return;
     }
     if (proc.isFreground) { // is a freground process
-        HILOGD("%{public}d is a freground process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_FOREGROUND) {
             proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
         }
         UpdatePriorityByProcForExtension(proc);
     } else { // is a background process
-        int bgPriority = RECLAIM_PRIORITY_BACKGROUND;
-        if(IsImportantApp(bundle, bgPriority)) {
-            HILOGD("%{public}d is a important background process, set process priority to %{public}d first",
-                proc.pid_, bgPriority); 
-        } else {
-            HILOGD("%{public}d is a background process, set process priority to %{public}d first",
-                    proc.pid_, bgPriority);        
-        }
-        proc.SetPriority(bgPriority);
+        proc.SetPriority(RECLAIM_PRIORITY_BACKGROUND);
         UpdatePriorityByProcForExtension(proc);
     }
     if (proc.isVisible_) {
-        HILOGD("%{public}d is a process with visible window", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_VISIBLE) {
             proc.SetPriority(RECLAIM_PRIORITY_VISIBLE);
         }
     }
     if (proc.isSuspendDelay) { // is a background process with transient task
-        HILOGD("%{public}d is a background process with transient task", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
         }
     } else if (proc.extensionBindStatus == EXTENSION_STATUS_FG_BIND) { // is a extension and bind to a fg process
-        HILOGD("%{public}d is a extension process bind to a fg process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_FG_BIND_EXTENSION) {
             proc.SetPriority(RECLAIM_PRIORITY_FG_BIND_EXTENSION);
         }
     } else if (proc.isBackgroundRunning || proc.isEventStart) {
         // is a background perceived process
-        HILOGD("%{public}d is a background perceived process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_PERCEIVED) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_PERCEIVED);
         }
     } else if (proc.extensionBindStatus == EXTENSION_STATUS_BG_BIND) { // is a extension and bind to a bg process
-        HILOGD("%{public}d is a extension process bind to a bg process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_BIND_EXTENSION) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_BIND_EXTENSION);
         }
     } else if (proc.isDistDeviceConnected) { // is a background process connected by distribute device
-        HILOGD("%{public}d is a process connect to a dist device", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_BG_DIST_DEVICE) {
             proc.SetPriority(RECLAIM_PRIORITY_BG_DIST_DEVICE);
         }
     } else if (proc.extensionBindStatus == EXTENSION_STATUS_NO_BIND) { // is a extension and no bind to any process
-        HILOGD("%{public}d is a extension process no bind to any process", proc.pid_);
         if (proc.priority_ > RECLAIM_PRIORITY_NO_BIND_EXTENSION) {
             proc.SetPriority(RECLAIM_PRIORITY_NO_BIND_EXTENSION);
         }
@@ -784,12 +796,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
     if (proc.isExtension) {
         UpdatePriorityByProcConnector(proc);
     }
-    HILOGI(": bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d, "
-        "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d, "
-        "isDistDeviceConnected=%{public}d, extensionBindStatus=%{public}d], priority:%{public}d-->%{public}d",
-        bundle->uid_, bundle->name_.c_str(), bundle->priority_,
-        proc.pid_, proc.uid_, proc.isFreground, proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart,
-        proc.isDistDeviceConnected, proc.extensionBindStatus, priorityBefore, proc.priority_);
+    CheckAndSetImportantApp(proc.pid_, bundle);
     UpdateBundlePriority(bundle);
 }
 
@@ -914,6 +921,7 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriority
 {
     HILOGD("called");
     if (bundle == nullptr) {
+        HILOGD("bundle is nullptr");
         return false;
     }
     DECLARE_SHARED_POINTER(ReclaimParam, para);
