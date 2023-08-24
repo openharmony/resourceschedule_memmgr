@@ -37,6 +37,12 @@ IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
 ReclaimPriorityManager::ReclaimPriorityManager()
 {
+    InitUpdateReasonStrMapping();
+    InitChangeProcMapping();
+}
+
+void ReclaimPriorityManager::InitUpdateReasonStrMapping()
+{
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::CREATE_PROCESS)] = "CREATE_PROCESS";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::PROCESS_READY)] = "PROCESS_READY";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::FOREGROUND)] = "FOREGROUND";
@@ -614,20 +620,17 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     HILOGD("accountId=%{public}d", accountId);
 
     if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
-                            request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
-        bool ret = HandleExtensionProcess(request.callerPid, request.callerUid,
+        request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
+        return HandleExtensionProcess(request.callerPid, request.callerUid,
                         request.callerBundleName, request.pid, request.uid, request.bundleName, request.reason);
-        return ret;
     }
 
     if (request.reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
-        bool ret = HandleUpdateExtensionBundle(request.callerUid);
-        return ret;
+        return HandleUpdateExtensionBundle(request.callerUid);
     }
 
     if (request.reason == AppStateUpdateReason::CREATE_PROCESS) {
-        bool ret = HandleCreateProcess(request.pid, request.uid, request.bundleName, accountId);
-        return ret;
+        return HandleCreateProcess(request.pid, request.uid, request.bundleName, accountId);
     }
 
     if (request.reason == AppStateUpdateReason::RENDER_CREATE_PROCESS) {
@@ -647,21 +650,17 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     }
 
     if (request.reason == AppStateUpdateReason::APPLICATION_SUSPEND) {
-        bool ret = HandleApplicationSuspend(bundle);
-        return ret;
+        return HandleApplicationSuspend(bundle);
     }
 
     ProcessPriorityInfo &proc = bundle->FindProcByPid(request.pid);
-    bool ret = true;
     AppAction action = AppAction::OTHERS;
     if (request.reason == AppStateUpdateReason::PROCESS_TERMINATED) {
-        ret = HandleTerminateProcess(proc, bundle, account);
-        return ret;
+        return HandleTerminateProcess(proc, bundle, account);
     } else {
         HandleUpdateProcess(request.reason, bundle, proc, action);
     }
-    ret = ApplyReclaimPriority(bundle, request.pid, action);
-    return ret;
+    return ApplyReclaimPriority(bundle, request.pid, action);
 }
 
 bool ReclaimPriorityManager::IsImportantApp(std::shared_ptr<BundlePriorityInfo> bundle, int &dstPriority)
@@ -794,6 +793,105 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
     UpdateBundlePriority(bundle);
 }
 
+void ReclaimPriorityManager::HandleForeground(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isFreground = true;
+    action = AppAction::APP_FOREGROUND;
+}
+
+void ReclaimPriorityManager::HandleBackground(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isFreground = false;
+    action = AppAction::APP_BACKGROUND;
+}
+
+void ReclaimPriorityManager::HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isSuspendDelay = true;
+}
+
+void ReclaimPriorityManager::HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isSuspendDelay = false;
+}
+
+void ReclaimPriorityManager::HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isBackgroundRunning = true;
+}
+
+void ReclaimPriorityManager::HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isBackgroundRunning = false;
+}
+
+void ReclaimPriorityManager::HandleEventStart(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isEventStart = true;
+}
+
+void ReclaimPriorityManager::HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isEventStart = false;
+}
+
+void ReclaimPriorityManager::HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isDistDeviceConnected = true;
+}
+
+void ReclaimPriorityManager::HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isDistDeviceConnected = false;
+}
+
+void ReclaimPriorityManager::HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action)
+{
+    if (proc.ExtensionConnectorsCount() > 0) {
+        proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
+    }
+}
+
+void ReclaimPriorityManager::HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action)
+{
+    if (proc.ExtensionConnectorsCount() == 0) {
+        proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
+    }
+}
+
+void ReclaimPriorityManager::HandleVisible(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isVisible_ = true;
+}
+
+void ReclaimPriorityManager::HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action)
+{
+    proc.isVisible_ = false;
+}
+
+void ReclaimPriorityManager::InitChangeProcMapping()
+{
+    changeProcMapping_[AppStateUpdateReason::FOREGROUND] = &ReclaimPriorityManager::HandleForeground;
+    changeProcMapping_[AppStateUpdateReason::BACKGROUND] = &ReclaimPriorityManager::HandleBackground;
+    changeProcMapping_[AppStateUpdateReason::SUSPEND_DELAY_START] = &ReclaimPriorityManager::HandleSuspendDelayStart;
+    changeProcMapping_[AppStateUpdateReason::SUSPEND_DELAY_END] = &ReclaimPriorityManager::HandleSuspendDelayEnd;
+    changeProcMapping_[AppStateUpdateReason::BACKGROUND_RUNNING_START] =
+        &ReclaimPriorityManager::HandleBackgroundRunningStart;
+    changeProcMapping_[AppStateUpdateReason::BACKGROUND_RUNNING_END] =
+        &ReclaimPriorityManager::HandleBackgroundRunningEnd;
+    changeProcMapping_[AppStateUpdateReason::EVENT_START] = &ReclaimPriorityManager::HandleEventStart;
+    changeProcMapping_[AppStateUpdateReason::EVENT_END] = &ReclaimPriorityManager::HandleEventEnd;
+    changeProcMapping_[AppStateUpdateReason::DIST_DEVICE_CONNECTED] =
+        &ReclaimPriorityManager::HandleDistDeviceConnected;
+    changeProcMapping_[AppStateUpdateReason::DIST_DEVICE_DISCONNECTED] =
+        &ReclaimPriorityManager::HandleDistDeviceDisconnected;
+    changeProcMapping_[AppStateUpdateReason::BIND_EXTENSION] = &ReclaimPriorityManager::HandleBindExtension;
+    changeProcMapping_[AppStateUpdateReason::UNBIND_EXTENSION] = &ReclaimPriorityManager::HandleUnbindExtension;
+    changeProcMapping_[AppStateUpdateReason::VISIBLE] = &ReclaimPriorityManager::HandleVisible;
+    changeProcMapping_[AppStateUpdateReason::UN_VISIBLE] = &ReclaimPriorityManager::HandleUnvisible;
+}
+
+
 void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
     std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
 {
@@ -803,59 +901,10 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
         bundle->uid_, bundle->name_.c_str(), bundle->priority_, proc.pid_, proc.uid_, proc.isFreground,
         proc.isBackgroundRunning, proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
         proc.extensionBindStatus, proc.priority_, AppStateUpdateResonToString(reason).c_str());
-    switch (reason) {
-        case AppStateUpdateReason::FOREGROUND: {
-            proc.isFreground = true;
-            action = AppAction::APP_FOREGROUND;
-            break;
-        }
-        case AppStateUpdateReason::BACKGROUND: {
-            proc.isFreground = false;
-            action = AppAction::APP_BACKGROUND;
-            break;
-        }
-        case AppStateUpdateReason::SUSPEND_DELAY_START:
-            proc.isSuspendDelay = true;
-            break;
-        case AppStateUpdateReason::SUSPEND_DELAY_END:
-            proc.isSuspendDelay = false;
-            break;
-        case AppStateUpdateReason::BACKGROUND_RUNNING_START:
-            proc.isBackgroundRunning = true;
-            break;
-        case AppStateUpdateReason::BACKGROUND_RUNNING_END:
-            proc.isBackgroundRunning = false;
-            break;
-        case AppStateUpdateReason::EVENT_START:
-            proc.isEventStart = true;
-            break;
-        case AppStateUpdateReason::EVENT_END:
-            proc.isEventStart = false;
-            break;
-        case AppStateUpdateReason::DIST_DEVICE_CONNECTED:
-            proc.isDistDeviceConnected = true;
-            break;
-        case AppStateUpdateReason::DIST_DEVICE_DISCONNECTED:
-            proc.isDistDeviceConnected = false;
-            break;
-        case AppStateUpdateReason::BIND_EXTENSION:
-            if (proc.ExtensionConnectorsCount() > 0) {
-                proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
-            }
-            break;
-        case AppStateUpdateReason::UNBIND_EXTENSION:
-            if (proc.ExtensionConnectorsCount() == 0) {
-                proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
-            }
-            break;
-        case AppStateUpdateReason::VISIBLE:
-            proc.isVisible_ = true;
-            break;
-        case AppStateUpdateReason::UN_VISIBLE:
-            proc.isVisible_ = false;
-            break;
-        default:
-            break;
+    auto it = changeProcMapping_.find(reason);
+    if (it != changeProcMapping_.end()) {
+        auto changeProcPtr = it->second;
+        (this->*changeProcPtr)(proc, action);
     }
     UpdatePriorityByProcStatus(bundle, proc);
 }
