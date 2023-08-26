@@ -23,16 +23,6 @@ namespace {
 const std::string TAG = "BgTaskObserver";
 }
 
-void BgTaskObserver::OnConnected()
-{
-    HILOGI("called");
-}
-
-void BgTaskObserver::OnDisconnected()
-{
-    HILOGE("called");
-}
-
 void BgTaskObserver::OnTransientTaskStart(
     const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo)
 {
