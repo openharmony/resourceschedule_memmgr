@@ -739,6 +739,7 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         procExtensionUpdate.SetPriority(minExtensionPriority + deltaPriority);
         CheckAndSetImportantApp(procExtensionUpdate.pid_, extensionBundle);
         UpdateBundlePriority(extensionBundle);
+        OomScoreAdjUtils::WriteOomScoreAdjToKernel(procExtensionUpdate.pid_, procExtensionUpdate.priority_);
     }
 }
 
