@@ -22,8 +22,6 @@ namespace OHOS {
 namespace Memory {
 class BgTaskObserver : public BackgroundTaskMgr::BackgroundTaskSubscriber {
 public:
-    virtual void OnConnected() override;
-    virtual void OnDisconnected() override;
     virtual void OnTransientTaskStart(
         const std::shared_ptr<BackgroundTaskMgr::TransientTaskAppInfo>& ttInfo) override;
     virtual void OnTransientTaskEnd(
