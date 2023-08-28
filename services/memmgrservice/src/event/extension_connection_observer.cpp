@@ -14,6 +14,8 @@
  */
 
 #include "extension_connection_observer.h"
+
+#include "mem_mgr_event_center.h"
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
 
@@ -92,6 +94,7 @@ void ExtensionConnectionObserver::OnDlpAbilityClosed(const AbilityRuntime::DlpSt
 void ExtensionConnectionObserver::OnServiceDied()
 {
     HILOGE("called");
+    MemMgrEventCenter::GetInstance().OnExtensionServiceDied();
 }
 } // namespace Memory
 } // namespace OHOS
