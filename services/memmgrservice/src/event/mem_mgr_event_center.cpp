@@ -217,11 +217,10 @@ void MemMgrEventCenter::RegisterBgTaskObserver()
 {
     HILOGI("called");
 #ifdef CONFIG_BGTASK_MGR
-    if (bgTaskObserver_) {
-        return;
-    }
-    MAKE_POINTER(bgTaskObserver_, shared, BgTaskObserver, "make BgTaskObserver failed",
+    if (!bgTaskObserver_) {
+        MAKE_POINTER(bgTaskObserver_, shared, BgTaskObserver, "make BgTaskObserver failed",
             return, /* no param */);
+    }
     ErrCode ret = BackgroundTaskMgr::BackgroundTaskMgrHelper::SubscribeBackgroundTask(*bgTaskObserver_);
     if (ret == ERR_OK) {
         HILOGI("register success");
@@ -305,7 +304,6 @@ void MemMgrEventCenter::UnregisterEventObserver()
     if (bgTaskObserver_) {
         BackgroundTaskMgr::BackgroundTaskMgrHelper::UnsubscribeBackgroundTask(*bgTaskObserver_);
     }
-    bgTaskObserver_ = nullptr;
 #endif
     if (accountObserver_) {
         AccountSA::OsAccountManager::UnsubscribeOsAccount(accountObserver_);
