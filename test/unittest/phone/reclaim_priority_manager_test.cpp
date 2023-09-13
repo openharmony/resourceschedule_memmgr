@@ -76,30 +76,17 @@ static void PrintReclaimPriorityList()
     printf("-------------------------------------------------------------------------------\n");
 }
 
-static ReclaimHandleRequest CreateReclaimHandleRequestForExtension(int callerPid, int callerUid,
+static inline UpdateRequest CreateUpdateRequestForExtension(int callerPid, int callerUid,
                             std::string callerBundleName, int pid, int uid,
                             std::string bundleName, AppStateUpdateReason reason)
 {
-    ReclaimHandleRequest request;
-    request.callerPid = callerPid;
-    request.callerUid = callerUid;
-    request.callerBundleName = callerBundleName;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = bundleName;
-    request.reason = reason;
-    return request;
+    return CallerRequest({callerPid, callerUid, callerBundleName}, {pid, uid, bundleName}, reason);
 }
 
-static ReclaimHandleRequest CreateReclaimHandleRequest(int pid, int uid,
+static inline UpdateRequest CreateUpdateRequest(int pid, int uid,
                             std::string bundleName, AppStateUpdateReason reason)
 {
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = bundleName;
-    request.reason = reason;
-    return request;
+    return SingleRequest({pid, uid, bundleName}, reason);
 }
 
 HWTEST_F(ReclaimPriorityManagerTest, AddOsAccountInfo, TestSize.Level1)
@@ -133,7 +120,7 @@ HWTEST_F(ReclaimPriorityManagerTest, IsProcExist, TestSize.Level1)
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
     EXPECT_EQ(account_id, 100);
 
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
 
@@ -142,7 +129,7 @@ HWTEST_F(ReclaimPriorityManagerTest, IsProcExist, TestSize.Level1)
     isProcExist = ReclaimPriorityManager::GetInstance().IsProcExist(pid+1, uid, account_id);
     EXPECT_EQ(isProcExist, false);
 
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
 }
@@ -154,7 +141,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSiz
     int account_id = ReclaimPriorityManager::GetInstance().GetOsAccountLocalIdFromUid(uid);
     EXPECT_EQ(account_id, 100);
 
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
 
@@ -165,7 +152,7 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessCreate, TestSiz
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
     EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
 }
@@ -175,13 +162,13 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityProcessTerminate, Test
     int pid_1 = 10003;
     int pid_2 = 10004;
     int uid = 20010003;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid_1, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid_1, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid_2, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid_2, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid_2, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid_2, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid_1, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid_1, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -202,11 +189,11 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBackground, TestSize.L
 {
     int pid = 10006;
     int uid = 20010006;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -225,13 +212,13 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayStart, Tes
     int pid = 10007;
     int uid = 20010007;
     printf("process created!");
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_suspend_delay_start", AppStateUpdateReason::SUSPEND_DELAY_START);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_suspend_delay_start", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_suspend_delay_start", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     PrintReclaimPriorityList();
@@ -260,15 +247,15 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPrioritySuspendDelayEnd, TestS
     int uid = 20010008;
     const std::string bundleName = "com.ohos.reclaim_suspend_delay_end";
 
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 bundleName, AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 bundleName, AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 bundleName, AppStateUpdateReason::SUSPEND_DELAY_START);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 bundleName, AppStateUpdateReason::SUSPEND_DELAY_END);
-    ReclaimHandleRequest request5 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request5 = CreateUpdateRequest(pid, uid,
                                 bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
 
     printf("process created!\n");
@@ -300,13 +287,13 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningStart, TestSi
 {
     int pid = 10009;
     int uid = 20010009;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND_RUNNING_START);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -329,15 +316,15 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityBgRunningEnd, TestSize
 {
     int pid = 10010;
     int uid = 20010010;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND_RUNNING_START);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND_RUNNING_END);
-    ReclaimHandleRequest request5 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request5 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -362,13 +349,13 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventStart, TestSize.L
 {
     int pid = 10011;
     int uid = 20010011;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::EVENT_START);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -389,15 +376,15 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityEventEnd, TestSize.Lev
 {
     int pid = 10012;
     int uid = 20010012;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::EVENT_START);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::BACKGROUND);
-    ReclaimHandleRequest request4 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request4 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
-    ReclaimHandleRequest request5 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request5 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::EVENT_END);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request3);
@@ -421,9 +408,9 @@ HWTEST_F(ReclaimPriorityManagerTest, GetBundlePrioSet, TestSize.Level1)
 {
     int pid = 10015;
     int uid = 20010015;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::BunldeCopySet bundleSet;
@@ -437,11 +424,11 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityApplicationSuspend, Te
 {
     int pid = 10016;
     int uid = 20010016;
-    ReclaimHandleRequest request1 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::CREATE_PROCESS);
-    ReclaimHandleRequest request2 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::APPLICATION_SUSPEND);
-    ReclaimHandleRequest request3 = CreateReclaimHandleRequest(pid, uid,
+    UpdateRequest request3 = CreateUpdateRequest(pid, uid,
                                 "com.ohos.reclaim_test", AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
@@ -475,9 +462,9 @@ HWTEST_F(ReclaimPriorityManagerTest, DistDeviceCase, TestSize.Level1)
     int bundleUid = 20010017;
     const std::string bundleName1 = "com.ohos.reclaim_dist_device_test.process1";
     const std::string bundleName2 = "com.ohos.reclaim_dist_device_test.process2";
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::CREATE_PROCESS));
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::CREATE_PROCESS));
 
     std::shared_ptr<BundlePriorityInfo> bundle = GetBundle(pid1, pid2, bundleUid, bundleName1, bundleName2);
@@ -489,28 +476,28 @@ HWTEST_F(ReclaimPriorityManagerTest, DistDeviceCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // process#1 keep freground, process#2 go to background
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::BACKGROUND));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // process#2 is connected to a distribute device
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::DIST_DEVICE_CONNECTED));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
 
     // process#1 go to background
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::BACKGROUND));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_DIST_DEVICE);
 
     // process#2 is disconnected to a distribute device
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::DIST_DEVICE_DISCONNECTED));
     sleep(5);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
@@ -518,9 +505,9 @@ HWTEST_F(ReclaimPriorityManagerTest, DistDeviceCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // clean up the mess
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::PROCESS_TERMINATED));
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::PROCESS_TERMINATED));
 }
 
@@ -536,9 +523,9 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     const std::string bundleName1 = "com.ohos.exten_bind_test.main";
     const std::string bundleName2 = "com.ohos.exten_bind_test.extension";
 
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::CREATE_PROCESS));
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::CREATE_PROCESS));
 
     std::shared_ptr<BundlePriorityInfo> bundle = GetBundle(pid1, pid2, bundleUid, bundleName1, bundleName2);
@@ -550,38 +537,38 @@ HWTEST_F(ReclaimPriorityManagerTest, ExtensionBindCase, TestSize.Level1)
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // process#1 keep freground, process#2 go to background
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::BACKGROUND));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // process#2 is bind to a process
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequestForExtension(
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequestForExtension(
         callerPid, callerUid, caller, pid2, bundleUid, bundleName2, AppStateUpdateReason::BIND_EXTENSION));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
 
     // process#1 go to background
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::BACKGROUND));
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
     ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
 
     // process#2 is unbind to a process
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequestForExtension(
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequestForExtension(
         callerPid, callerUid, caller, pid2, bundleUid, bundleName2, AppStateUpdateReason::UNBIND_EXTENSION));
     sleep(5);
     ASSERT_EQ(proc1.priority_, RECLAIM_PRIORITY_BACKGROUND);
     ASSERT_EQ(proc2.priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
-    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
+    ASSERT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
 
     // clean up the mess
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid1, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid1, bundleUid,
         bundleName1, AppStateUpdateReason::PROCESS_TERMINATED));
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateReclaimHandleRequest(pid2, bundleUid,
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(CreateUpdateRequest(pid2, bundleUid,
         bundleName2, AppStateUpdateReason::PROCESS_TERMINATED));
 }
 
