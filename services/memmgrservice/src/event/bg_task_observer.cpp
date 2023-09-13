@@ -45,12 +45,8 @@ void BgTaskObserver::OnTransientTaskStart(
     int pid = ttInfo->GetPid();
     HILOGD("called, pkg=%{public}s, uid=%{public}d, pid=%{public}d", pkgName.c_str(), uid, pid);
 
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = pkgName;
-    request.reason = AppStateUpdateReason::SUSPEND_DELAY_START;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest({pid, uid, pkgName}, AppStateUpdateReason::SUSPEND_DELAY_START));
 }
 
 void BgTaskObserver::OnTransientTaskEnd(
@@ -65,12 +61,8 @@ void BgTaskObserver::OnTransientTaskEnd(
     int pid = ttInfo->GetPid();
     HILOGD("called, pkg=%{public}s, uid=%{public}d, pid=%{public}d", pkgName.c_str(), uid, pid);
 
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = pkgName;
-    request.reason = AppStateUpdateReason::SUSPEND_DELAY_END;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest({pid, uid, pkgName}, AppStateUpdateReason::SUSPEND_DELAY_END));
 }
 
 void BgTaskObserver::OnContinuousTaskStart(
@@ -87,12 +79,8 @@ void BgTaskObserver::OnContinuousTaskStart(
     HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d",
         abilityName.c_str(), type, uid, pid);
 
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = abilityName;
-    request.reason = AppStateUpdateReason::BACKGROUND_RUNNING_START;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest({pid, uid, abilityName}, AppStateUpdateReason::BACKGROUND_RUNNING_START));
 }
 
 void BgTaskObserver::OnContinuousTaskStop(
@@ -109,12 +97,8 @@ void BgTaskObserver::OnContinuousTaskStop(
     HILOGD("called, abilityName=%{public}s, type=%{public}d uid=%{public}d, pid=%{public}d",
         abilityName.c_str(), type, uid, pid);
 
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = abilityName;
-    request.reason = AppStateUpdateReason::BACKGROUND_RUNNING_END;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest({pid, uid, abilityName}, AppStateUpdateReason::BACKGROUND_RUNNING_END));
 }
 
 void BgTaskObserver::OnRemoteDied(const wptr<IRemoteObject> &object)

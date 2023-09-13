@@ -17,6 +17,7 @@
 #define OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 
 #include <set>
+#include <map>
 
 namespace OHOS {
 namespace Memory {
@@ -41,24 +42,22 @@ public:
     bool isSuspendDelay;
     bool isEventStart;
     bool isDistDeviceConnected;
-    bool isExtension;
+    bool isExtension_;
     int extensionBindStatus; // 0: unkown, 1:fg bind, 2:bg bind, 3:no bind
-    std::set<int32_t> extensionConnectors_; // contains all pid of connectors
-    std::set<int32_t> extensionProcessUids_;
-    std::set<int32_t> extensionConnectorUids_;
+    std::map<int32_t, int32_t> procsBindToMe_;
+    std::map<int32_t, int32_t> procsBindFromMe_;
 
     void SetPriority(int targetPriority);
     int32_t ExtensionConnectorsCount();
-    void AddExtensionConnector(int32_t pid);
-    void RemoveExtensionConnector(int32_t pid);
-    void AddExtensionProcessUid(int32_t uid);
-    void RemoveExtensionProcessUid(int32_t uid);
-    void AddExtensionConnectorUid(int32_t uid);
-    void RemoveExtensionConnectorUid(int32_t uid);
-    bool ContainsConnector(int32_t pid);
-    std::string ConnectorsToString();
-    std::string ExtensionProcessUidToString();
-    std::string ExtensionConnectorsUidToString();
+
+    void ProcBindToMe(int32_t pid, int32_t uid);
+    void ProcUnBindToMe(int32_t pid);
+    
+    void ProcBindFromMe(int32_t pid, int32_t uid);
+    void ProcUnBindFromMe(int32_t pid);
+
+    std::string ProcsBindToMe();
+    std::string ProcsBindFromMe();
 };
 } // namespace Memory
 } // namespace OHOS
