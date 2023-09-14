@@ -15,6 +15,7 @@
 
 #include "purgeable_mem_utils.h"
 
+#include <climits>
 #include <unordered_map>
 #include <string>
 
@@ -78,8 +79,14 @@ bool PurgeableMemUtils::GetPurgeableHeapInfo(int &reclaimableKB)
         }
     }
 
+    if (activeKB < 0 || inactiveKB < 0 || pinedKB < 0) {
+        return false;
+    }
+    if (activeKB > (INT_MAX - inactiveKB) || (activeKB + inactiveKB) < (INT_MIN + pinedKB)) {
+        return false;
+    }
     reclaimableKB = activeKB + inactiveKB - pinedKB;
-    if (activeKB >= 0 && inactiveKB >= 0 && pinedKB >= 0 && reclaimableKB >= 0) {
+    if (reclaimableKB >= 0) {
         return true;
     }
     return false;
@@ -115,8 +122,11 @@ bool PurgeableMemUtils::GetProcPurgeableHeapInfo(const int pid, int &reclaimable
         }
     }
 
+    if (purgSumKB < 0 || purgPinKB < 0) {
+        return false;
+    }
     reclaimableKB = purgSumKB - purgPinKB;
-    if (purgSumKB >= 0 && purgPinKB >= 0 && reclaimableKB >= 0) {
+    if (reclaimableKB >= 0) {
         return true;
     }
     return false;
