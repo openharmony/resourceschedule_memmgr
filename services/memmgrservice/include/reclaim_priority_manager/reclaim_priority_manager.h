@@ -28,6 +28,7 @@
 
 #include <map>
 #include <mutex>
+#include <queue>
 #include <string>
 #include <set>
 
@@ -43,12 +44,31 @@ struct ReclaimHandleRequest {
     AppStateUpdateReason reason;
 };
 
-inline ReclaimHandleRequest SingleRequest(int pid, int uid, const std::string &bundleName, AppStateUpdateReason reason)
+struct ReqProc {
+    int pid;
+    int uid;
+    std::string bundleName;
+};
+
+struct UpdateRequest {
+    ReqProc caller;
+    ReqProc target;
+    AppStateUpdateReason reason;
+};
+
+inline UpdateRequest SingleRequest(const ReqProc &target, AppStateUpdateReason reason)
 {
-    ReclaimHandleRequest request;
-    request.pid = pid;
-    request.uid = uid;
-    request.bundleName = bundleName;
+    UpdateRequest request;
+    request.target = target;
+    request.reason = reason;
+    return request;
+}
+
+inline UpdateRequest CallerRequest(const ReqProc &caller, const ReqProc &target, AppStateUpdateReason reason)
+{
+    UpdateRequest request;
+    request.caller = caller;
+    request.target = target;
     request.reason = reason;
     return request;
 }
@@ -75,6 +95,7 @@ public:
             }
         }
     };
+
     struct BundleInfoCmp {
         bool operator() (const BundlePriorityInfo &p1, const BundlePriorityInfo &p2)
         {
@@ -94,13 +115,30 @@ public:
         }
     };
 
+    struct ProcInfoCmpByPriority {
+        bool operator() (const ProcessPriorityInfo &p1, const ProcessPriorityInfo &p2)
+        {
+            if (p1.pid_ == p2.pid_) {
+                return false;
+            } else {
+                if (p1.priority_ != p2.priority_) {
+                    return p1.priority_ < p2.priority_;
+                }
+
+                return p1.pid_ < p2.pid_;
+            }
+        }
+    };
+
     using BundlePrioSet = std::set<std::shared_ptr<BundlePriorityInfo>, BundleInfoPtrCmp>;
     using BunldeCopySet = std::set<BundlePriorityInfo, BundleInfoCmp>;
     // map <bundleUid, std::shared_ptr<BundlePriorityInfo>>
     using BundlePrioMap = std::map<int, std::shared_ptr<BundlePriorityInfo>>;
     using OsAccountsMap = std::map<int, std::shared_ptr<AccountBundleInfo>>;
+    using ProcInfoVec = std::vector<ProcessPriorityInfo>;
+    using ProcInfoSet = std::set<ProcessPriorityInfo, ProcInfoCmpByPriority>;
     bool Init();
-    bool UpdateReclaimPriority(const ReclaimHandleRequest &request);
+    bool UpdateReclaimPriority(UpdateRequest request);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     inline bool Initailized()
@@ -148,17 +186,14 @@ private:
     void GetAllKillableSystemApps();
     void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
     void HandlePreStartedProcs();
-    bool UpdateReclaimPriorityInner(const ReclaimHandleRequest &request);
-    void UpdateReclaimPriorityWithLock(const ReclaimHandleRequest &request);
-    bool HandleExtensionProcess(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
-        pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
+    bool UpdateReclaimPriorityInner(UpdateRequest request);
+    bool HandleExtensionProcess(UpdateRequest &request);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
     bool IsProcExist(pid_t pid, int bundleUid, int accountId);
     bool IsOsAccountExist(int accountId);
-    bool HandleCreateProcess(int pid, int bundleUid, const std::string &bundleName, int accountId,
-                             bool isRender = false);
+    bool HandleCreateProcess(ReqProc &request, int accountId, bool isRender = false);
     bool HandleTerminateProcess(ProcessPriorityInfo proc, std::shared_ptr<BundlePriorityInfo> bundle,
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
@@ -172,13 +207,21 @@ private:
     void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
     void CheckAndSetImportantApp(pid_t pid, std::shared_ptr<BundlePriorityInfo> bundle);
     bool IsImportantProc(ProcessPriorityInfo proc, int &dstPriority);
-    bool UpdateProcessForExtension(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
-            pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
-    bool UpdateConnectorsForExtension(int32_t callerPid, int32_t callerUid, const std::string &callerBundleName,
-            pid_t pid, int bundleUid, const std::string &bundleName, AppStateUpdateReason priorityReason);
-    void UpdatePriorityByProcForExtension(const ProcessPriorityInfo &proc);
+    bool UpdateExtensionStatusForCaller(UpdateRequest &request);
+    bool UpdateExtensionStatusForTarget(UpdateRequest &request);
+    void UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc);
     void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
     bool HandleUpdateExtensionBundle(int bundleUid);
+    void SetTimerForDiedProcessCheck(int64_t delayTime);
+    void FilterDiedProcess();
+    void HandleDiedProcessCheck();
+    void HandleDiedExtensionBindToMe(std::map<pid_t, ProcessPriorityInfo>::iterator processPriorityInfoMap,
+        const std::vector<unsigned int> &alivePids);
+    void HandleDiedExtensionBindFromMe(std::map<pid_t, ProcessPriorityInfo>::iterator processPriorityInfoMap,
+        const std::vector<unsigned int> &alivePids);
+    void GetConnectedExtensionProc(const ProcessPriorityInfo &proc, ProcInfoVec &procVec);
+    void CalculateExtensionProcPrio(ProcInfoVec &proc, ProcInfoSet &procSet);
+    void SetConnectExtensionProcPrio(const ProcInfoSet &procSet);
 
     // two methods below used to manage totalBundlePrioSet_ by BundlePriorityInfo
     void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
