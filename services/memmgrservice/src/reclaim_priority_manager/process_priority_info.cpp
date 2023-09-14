@@ -37,7 +37,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
     this->isSuspendDelay = false;
     this->isEventStart = false;
     this->isDistDeviceConnected = false;
-    this->isExtension = false;
+    this->isExtension_ = false;
     this->extensionBindStatus = EXTENSION_STATUS_BIND_UNKOWN;
 }
 
@@ -49,28 +49,24 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isVisible_ = copyProcess.isVisible_;
     this->isRender_ = copyProcess.isRender_;
     this->isFreground = copyProcess.isFreground;
-    this->isExtension = copyProcess.isExtension;
+    this->isExtension_ = copyProcess.isExtension_;
     this->isBackgroundRunning = copyProcess.isBackgroundRunning;
     this->isSuspendDelay = copyProcess.isSuspendDelay;
     this->isEventStart = copyProcess.isEventStart;
     this->isDistDeviceConnected = copyProcess.isDistDeviceConnected;
     this->extensionBindStatus = copyProcess.extensionBindStatus;
-    for (auto connectors : copyProcess.extensionConnectors_) {
-        this->AddExtensionConnector(connectors);
+    for (auto &pair : copyProcess.procsBindToMe_) {
+        this->procsBindToMe_.insert(std::make_pair(pair.first, pair.second));
     }
-    for (auto callerUid : copyProcess.extensionProcessUids_) {
-        this->AddExtensionProcessUid(callerUid);
-    }
-    for (auto connectorUid : copyProcess.extensionConnectorUids_) {
-        this->AddExtensionConnectorUid(connectorUid);
+    for (auto &pair : copyProcess.procsBindFromMe_) {
+        this->procsBindFromMe_.insert(std::make_pair(pair.first, pair.second));
     }
 }
 
 ProcessPriorityInfo::~ProcessPriorityInfo()
 {
-    extensionConnectors_.clear();
-    extensionProcessUids_.clear();
-    extensionConnectorUids_.clear();
+    procsBindToMe_.clear();
+    procsBindFromMe_.clear();
 }
 
 void ProcessPriorityInfo::SetPriority(int targetPriority)
@@ -81,72 +77,54 @@ void ProcessPriorityInfo::SetPriority(int targetPriority)
 
 int32_t ProcessPriorityInfo::ExtensionConnectorsCount()
 {
-    return extensionConnectors_.size();
+    return procsBindToMe_.size();
 }
 
-void ProcessPriorityInfo::AddExtensionConnector(int32_t pid)
+void ProcessPriorityInfo::ProcBindToMe(int32_t pid, int32_t uid)
 {
-    extensionConnectors_.insert(pid);
+    procsBindToMe_[pid] = uid;
+    HILOGE("insert process[pid=%{public}d, uid=%{public}d] to procsBindToMe_, map size = %{public}zu",
+        pid, uid, procsBindToMe_.size());
 }
 
-void ProcessPriorityInfo::RemoveExtensionConnector(int32_t pid)
+void ProcessPriorityInfo::ProcUnBindToMe(int32_t pid)
 {
-    extensionConnectors_.erase(pid);
+    procsBindToMe_.erase(pid);
+    HILOGE("remove process[pid=%{public}d] to procsBindToMe_, map size = %{public}zu",
+        pid, procsBindToMe_.size());
 }
 
-void ProcessPriorityInfo::AddExtensionProcessUid(int32_t uid)
+void ProcessPriorityInfo::ProcBindFromMe(int32_t pid, int32_t uid)
 {
-    extensionProcessUids_.insert(uid);
+    procsBindFromMe_[pid] = uid;
+    HILOGE("insert process[pid=%{public}d, uid=%{public}d] to procsBindFromMe_, map size = %{public}zu",
+        pid, uid, procsBindFromMe_.size());
 }
 
-void ProcessPriorityInfo::RemoveExtensionProcessUid(int32_t uid)
+void ProcessPriorityInfo::ProcUnBindFromMe(int32_t pid)
 {
-    extensionProcessUids_.erase(uid);
+    procsBindFromMe_.erase(pid);
+    HILOGE("remove process[pid=%{public}d] to procsBindFromMe_, map size = %{public}zu",
+        pid, procsBindFromMe_.size());
 }
 
-void ProcessPriorityInfo::AddExtensionConnectorUid(int32_t uid)
-{
-    extensionConnectorUids_.insert(uid);
-}
-
-void ProcessPriorityInfo::RemoveExtensionConnectorUid(int32_t uid)
-{
-    extensionConnectorUids_.erase(uid);
-}
-
-bool ProcessPriorityInfo::ContainsConnector(int32_t pid)
-{
-    return extensionConnectors_.count(pid) != 0;
-}
-
-std::string ProcessPriorityInfo::ConnectorsToString()
+std::string ProcessPriorityInfo::ProcsBindToMe()
 {
     std::stringstream ss;
     ss << "[";
-    for (auto connector : extensionConnectors_) {
-        ss << connector << " ";
+    for (auto &pair : procsBindToMe_) {
+        ss << "(pid=" << pair.first << ", uid=" << pair.second << ") ";
     }
     ss << "]";
     return ss.str();
 }
 
-std::string ProcessPriorityInfo::ExtensionProcessUidToString()
+std::string ProcessPriorityInfo::ProcsBindFromMe()
 {
     std::stringstream ss;
     ss << "[";
-    for (auto callerUid : extensionProcessUids_) {
-        ss << callerUid << " ";
-    }
-    ss << "]";
-    return ss.str();
-}
-
-std::string ProcessPriorityInfo::ExtensionConnectorsUidToString()
-{
-    std::stringstream ss;
-    ss << "[";
-    for (auto connectorUid : extensionConnectorUids_) {
-        ss << connectorUid << " ";
+    for (auto &pair : procsBindFromMe_) {
+        ss << "(pid=" << pair.first << ", uid=" << pair.second << ") ";
     }
     ss << "]";
     return ss.str();

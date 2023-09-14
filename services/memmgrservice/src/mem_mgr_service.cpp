@@ -131,7 +131,9 @@ int32_t MemMgrService::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::
     request.bundleName = name;
     request.reason =
         connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED;
-    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
+        SingleRequest({pid, uid, name},
+            connected ? AppStateUpdateReason::DIST_DEVICE_CONNECTED : AppStateUpdateReason::DIST_DEVICE_DISCONNECTED));
     return 0;
 }
 
