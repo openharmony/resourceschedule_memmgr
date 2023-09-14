@@ -60,6 +60,11 @@ bool PurgeableMemManager::GetEventHandler()
 void PurgeableMemManager::AddSubscriberInner(const sptr<IAppStateSubscriber> &subscriber)
 {
     auto remoteObj = subscriber->AsObject();
+    if (remoteObj == nullptr) {
+        HILOGE("subscriber object is null");
+        return;
+    }
+
     auto findSubscriber = [&remoteObj](const auto &target) { return remoteObj == target->AsObject(); };
     std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     auto subscriberIter = std::find_if(appStateSubscribers_.begin(), appStateSubscribers_.end(), findSubscriber);
@@ -74,12 +79,6 @@ void PurgeableMemManager::AddSubscriberInner(const sptr<IAppStateSubscriber> &su
     }
 
     appStateSubscribers_.emplace_back(subscriber);
-
-    if (subscriber->AsObject() == nullptr) {
-        HILOGE("subscriber is null");
-        return;
-    }
-
     if (subscriberRecipients_.find(subscriber->AsObject()) != subscriberRecipients_.end()) {
         HILOGE("subscriberRecipients_ don't find subscriber");
         return;

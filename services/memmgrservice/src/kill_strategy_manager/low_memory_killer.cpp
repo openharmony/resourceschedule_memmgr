@@ -173,28 +173,33 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
 void LowMemoryKiller::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount_);
-    int triBuf, availBuf, freedBuf;
-    unsigned int minBuf = 0, targetBuf = 0, targetKillKb = 0, currKillKb = 0;
-    int minPrio;
+    unsigned int curBuf = 0;
+    int availBuf = 0;
+    int freedBuf = 0;
+    unsigned int minBuf = 0;
+    unsigned int targetBuf = 0;
+    unsigned int targetKillKb = 0;
+    unsigned int currKillKb = 0;
+    int minPrio = RECLAIM_PRIORITY_MAX + 1;
     int killCnt = 0;
 
-    triBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-    HILOGE("[%{public}ld] current buffer = %{public}d KB", calledCount_, triBuf);
-    if (triBuf == MAX_BUFFER_KB) {
+    curBuf = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
+    HILOGE("[%{public}ld] current buffer = %{public}u KB", calledCount_, curBuf);
+    if (curBuf == MAX_BUFFER_KB) {
         HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount_);
         return;
     }
 
-    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(triBuf, targetBuf, killLevel_);
+    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(curBuf, targetBuf, killLevel_);
     minBuf = memPrioPair.first;
     minPrio = memPrioPair.second;
-    if (triBuf > 0 && targetBuf > (unsigned int)triBuf) {
-        targetKillKb = (unsigned int)(targetBuf - triBuf);
+    if (curBuf > 0 && targetBuf > curBuf) {
+        targetKillKb = targetBuf - curBuf;
     }
 
     HILOGE("[%{public}ld] minPrio = %{public}d", calledCount_, minPrio);
 
-    if (minPrio == RECLAIM_PRIORITY_UNKNOWN + 1) {
+    if (minPrio < RECLAIM_PRIORITY_MIN || minPrio > RECLAIM_PRIORITY_MAX) {
         HILOGD("[%{public}ld] no minPrio, skiped!", calledCount_);
         return;
     }
@@ -223,8 +228,8 @@ void LowMemoryKiller::PsiHandlerInner()
 
 out:
     if (currKillKb > 0) {
-        HILOGI("[%{public}ld] Reclaimed %{public}uK when currBuff %{public}dK below %{public}uK target %{public}uK",
-            calledCount_, currKillKb, triBuf, minBuf, targetBuf);
+        HILOGI("[%{public}ld] Reclaimed %{public}uK when currBuff %{public}uK below %{public}uK target %{public}uK",
+            calledCount_, currKillKb, curBuf, minBuf, targetBuf);
     }
 }
 

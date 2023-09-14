@@ -15,6 +15,7 @@
 
 #include "kernel_interface.h"
 
+#include <climits>
 #include <csignal>
 #include <dirent.h>
 #include <fstream>
@@ -264,8 +265,19 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     }
     std::istringstream isStatm(statm);
     isStatm >> vss >> rss; // pages
+    int rssValue = 0;
+    try {
+        rssValue = std::stoi(rss);
+    } catch (...) {
+        HILOGE("stoi(%{public}s) failed!", rss.c_str());
+        return false;
+    }
 
-    procInfo.size = atoi(rss.c_str()) * PAGE_TO_KB;
+    if (rssValue < 0 || rssValue > INT_MAX / PAGE_TO_KB) {
+        HILOGE("rssValue=%{public}d, rss is less than 0 or overflow!", rssValue);
+        return false;
+    }
+    procInfo.size = rssValue * PAGE_TO_KB;
     HILOGI("GetProcInfo success: name is %{public}s, status is %{public}s, size = %{public}d KB",
            procInfo.name.c_str(), procInfo.status.c_str(), procInfo.size);
     return true;
