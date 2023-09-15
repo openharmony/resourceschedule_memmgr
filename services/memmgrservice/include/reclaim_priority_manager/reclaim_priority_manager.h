@@ -47,6 +47,7 @@ struct ReclaimHandleRequest {
 struct ReqProc {
     int pid;
     int uid;
+    std::string processName;
     std::string bundleName;
 };
 

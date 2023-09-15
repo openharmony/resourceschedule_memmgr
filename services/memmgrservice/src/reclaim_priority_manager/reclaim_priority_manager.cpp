@@ -466,7 +466,7 @@ bool ReclaimPriorityManager::HandleCreateProcess(ReqProc &target, int accountId,
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
     
-    ProcessPriorityInfo proc(target.pid, target.uid, RECLAIM_PRIORITY_BACKGROUND);
+    ProcessPriorityInfo proc(target.pid, target.uid, RECLAIM_PRIORITY_BACKGROUND, target.processName);
     if (IsKillableSystemApp(bundle)) {
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
     }
@@ -825,12 +825,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
 bool ReclaimPriorityManager::IsImportantProc(ProcessPriorityInfo proc, int &dstPriority)
 {
     std::map<std::string, int> importantProcs = config_.GetImportantBgApps();
-    std::string procName;
-
-    if (!KernelInterface::GetInstance().GetProcNameByPid(proc.pid_, procName)) {
-        HILOGD("is not an important proc, procName=%{public}s, pid_=%{public}d", procName.c_str(), proc.pid_);
-        return false;
-    }
+    std::string procName = proc.name_;
 
     HILOGD("pid_=%{public}d, procName=%{public}s", proc.pid_, procName.c_str());
     if (importantProcs.count(procName)) {

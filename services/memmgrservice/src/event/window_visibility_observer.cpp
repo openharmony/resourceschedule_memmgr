@@ -111,12 +111,12 @@ void WindowVisibilityObserver::UpdatePriorityForVisible(
         if (info.visibleWindowIds.size() > 0 && info.visible == false) {
             info.visible = true;
             ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-                SingleRequest({pair.first, info.uid, ""}, AppStateUpdateReason::VISIBLE));
+                SingleRequest({pair.first, info.uid, "", ""}, AppStateUpdateReason::VISIBLE));
         } else if (info.visibleWindowIds.size() == 0) {
             if (info.visible == true) {
                 info.visible = false;
                 ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-                    SingleRequest({pair.first, info.uid, ""}, AppStateUpdateReason::UN_VISIBLE));
+                    SingleRequest({pair.first, info.uid, "", ""}, AppStateUpdateReason::UN_VISIBLE));
             }
             toBeDeleted.push_back(pair.first);
         }

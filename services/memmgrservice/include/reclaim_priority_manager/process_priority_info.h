@@ -17,6 +17,7 @@
 #define OHOS_MEMORY_MEMMGR_PROCESS_PRIORITY_INFO_H
 
 #include <set>
+#include <string>
 #include <map>
 
 namespace OHOS {
@@ -25,15 +26,17 @@ constexpr int EXTENSION_STATUS_BIND_UNKOWN = 0;
 constexpr int EXTENSION_STATUS_FG_BIND = 1;
 constexpr int EXTENSION_STATUS_BG_BIND = 2;
 constexpr int EXTENSION_STATUS_NO_BIND = 3;
+const std::string DEFAULT_PROCESS_NAME = "";
 
 class ProcessPriorityInfo {
 public:
-    explicit ProcessPriorityInfo(pid_t pid, int bundleUid, int priority);
+    explicit ProcessPriorityInfo(pid_t pid, int bundleUid, int priority, const std::string &name = DEFAULT_PROCESS_NAME);
     ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess);
     ~ProcessPriorityInfo();
 
     int uid_;
     pid_t pid_;
+    std::string name_;
     int priority_;
     bool isVisible_;
     bool isRender_;
