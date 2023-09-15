@@ -196,7 +196,12 @@ int32_t MemMgrService::GetTotalMemory(int32_t &memSize)
 
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
+    auto saNameMapIter = saNameMap_.find(systemAbilityId);
+    if (saNameMapIter == saNameMap_.end()) {
+        HILOGE("systemAbilityId: %{public}d not find", systemAbilityId);
+    }
+    std::string systemAbilityName = saNameMapIter->second;
+    HILOGI("systemAbilityName: %{public}s add", systemAbilityName.c_str());
     MemMgrEventCenter::GetInstance().RetryRegisterEventObserver(systemAbilityId);
 }
 
@@ -215,7 +220,12 @@ int32_t MemMgrService::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWi
 
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    HILOGI("systemAbilityId: %{public}d remove", systemAbilityId);
+    auto saNameMapIter = saNameMap_.find(systemAbilityId);
+    if (saNameMapIter == saNameMap_.end()) {
+        HILOGE("systemAbilityId: %{public}d not find", systemAbilityId);
+    }
+    std::string systemAbilityName = saNameMapIter->second;
+    HILOGI("systemAbilityName: %{public}s remove", systemAbilityName.c_str());
     MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
 }
 

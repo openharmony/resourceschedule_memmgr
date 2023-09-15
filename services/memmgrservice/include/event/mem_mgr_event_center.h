@@ -55,6 +55,7 @@ public:
     void Dump(int fd);
     void RemoveEventObserver(int32_t systemAbilityId);
     void OnProcessDied(int pid);
+    void OnExtensionServiceDied();
 
 private:
     MemMgrEventCenter();
