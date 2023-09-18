@@ -86,7 +86,7 @@ static inline UpdateRequest CreateUpdateRequestForExtension(int callerPid, int c
 static inline UpdateRequest CreateUpdateRequest(int pid, int uid,
                             std::string bundleName, AppStateUpdateReason reason)
 {
-    return SingleRequest({pid, uid, bundleName}, reason);
+    return SingleRequest({pid, uid, "", bundleName}, reason);
 }
 
 HWTEST_F(ReclaimPriorityManagerTest, AddOsAccountInfo, TestSize.Level1)
