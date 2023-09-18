@@ -25,10 +25,11 @@ namespace {
 const std::string TAG = "ProcessPriorityInfo";
 } // namespace
 
-ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority)
+ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority, const std::string &name)
 {
     this->uid_ = bundleUid;
     this->pid_ = pid;
+    this->name_ = name;
     this->priority_ = priority;
     this->isVisible_ = false;
     this->isRender_ = false;
@@ -45,6 +46,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
 {
     this->uid_ = copyProcess.uid_;
     this->pid_ = copyProcess.pid_;
+    this->name_ = copyProcess.name_;
     this->priority_ = copyProcess.priority_;
     this->isVisible_ = copyProcess.isVisible_;
     this->isRender_ = copyProcess.isRender_;
