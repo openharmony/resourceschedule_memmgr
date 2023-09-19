@@ -116,6 +116,10 @@ void ReclaimPriorityManager::Dump(int fd)
     dprintf(fd, "priority list of all managed apps\n");
     dprintf(fd, "     uid                                            name   priority\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
+        if (bundlePtr == nullptr) {
+            dprintf(fd, "bundlePtr is nullptr.\n");
+            continue;
+        }
         dprintf(fd, "%8d %42s %5d %3d\n", bundlePtr->uid_, bundlePtr->name_.c_str(), bundlePtr->priority_,
             bundlePtr->GetProcsCount());
     }
@@ -127,6 +131,10 @@ void ReclaimPriorityManager::Dump(int fd)
                       connnectorpids               connnectoruids               processuids\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
         dprintf(fd, "|-----------------------------------------\n");
+        if (bundlePtr == nullptr) {
+            dprintf(fd, "bundlePtr is nullptr.\n");
+            continue;
+        }
         for (auto procEntry : bundlePtr->procs_) {
             ProcessPriorityInfo &proc = procEntry.second;
             dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d%d %30s\n",
@@ -1104,7 +1112,11 @@ bool ReclaimPriorityManager::UpdateAllPrioForOsAccountChanged(int accountId,
 
 void ReclaimPriorityManager::Reset()
 {
+    // add locks
     std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
+
+    HILOGI("clear totalBundlePrioSet(size: %{public}zu) and osAccountslnfoMap(size: %{public}zu) ",
+        totalBundlePrioSet_.size(), osAccountsInfoMap_.size());
     totalBundlePrioSet_.clear();
     osAccountsInfoMap_.clear();
 }
