@@ -30,14 +30,15 @@ const std::string DEFAULT_PROCESS_NAME = "";
 
 class ProcessPriorityInfo {
 public:
-    explicit ProcessPriorityInfo(pid_t pid, int bundleUid, int priority, const std::string &name = DEFAULT_PROCESS_NAME);
+    explicit ProcessPriorityInfo(pid_t pid, int bundleUid, int priority, bool isImportant = false);
     ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess);
     ~ProcessPriorityInfo();
 
     int uid_;
     pid_t pid_;
-    std::string name_;
     int priority_;
+    int priorityIfImportant_; // only enable when configured in xml, and should not be changed after read from xml
+    bool isImportant_; // true means important background, false means normal background
     bool isVisible_;
     bool isRender_;
     bool isFreground; // true means freground, false means background

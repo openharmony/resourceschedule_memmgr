@@ -67,8 +67,6 @@ void ReclaimPriorityManager::InitUpdateReasonStrMapping()
         "DIST_DEVICE_DISCONNECTED";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::BIND_EXTENSION)] = "BIND_EXTENSION";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::UNBIND_EXTENSION)] = "UNBIND_EXTENSION";
-    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::UPDATE_EXTENSION_PROCESS)] =
-        "UPDATE_EXTENSION_PROCESS";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::RENDER_CREATE_PROCESS)] =
         "RENDER_CREATE_PROCESS";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::VISIBLE)] = "VISIBLE";
@@ -473,13 +471,14 @@ bool ReclaimPriorityManager::HandleCreateProcess(ReqProc &target, int accountId,
         AddBundleInfoToSet(bundle);
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
-    
-    ProcessPriorityInfo proc(target.pid, target.uid, RECLAIM_PRIORITY_BACKGROUND, target.processName);
-    if (IsKillableSystemApp(bundle)) {
+
+    int priority = RECLAIM_PRIORITY_BACKGROUND;
+    bool isImportantProc = IsImportantProc(target.processName, priority);
+    ProcessPriorityInfo proc(target.pid, target.uid, priority, isImportantProc);
+    if (IsKillableSystemApp(bundle) && proc.priority_ > RECLAIM_PRIORITY_KILLABLE_SYSTEM) {
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
     }
     bundle->AddProc(proc);
-    CheckAndSetImportantApp(target.pid, bundle);
     UpdateBundlePriority(bundle);
     account->AddBundleToOsAccount(bundle);
     bool ret = ApplyReclaimPriority(bundle, target.pid, action);
@@ -746,34 +745,12 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         std::shared_ptr<BundlePriorityInfo> extensionBundle = extensionAccount->FindBundleById(extensionProcess.uid_);
         ProcessPriorityInfo &procExtensionUpdate = extensionBundle->FindProcByPid(extensionProcess.pid_);
         procExtensionUpdate.SetPriority(minExtensionPriority + deltaPriority);
-        CheckAndSetImportantApp(procExtensionUpdate.pid_, extensionBundle);
+        if (procExtensionUpdate.isImportant_) {
+            SetImportantProcPriority(procExtensionUpdate);
+        }
         UpdateBundlePriority(extensionBundle);
         OomScoreAdjUtils::WriteOomScoreAdjToKernel(procExtensionUpdate.pid_, procExtensionUpdate.priority_);
     }
-}
-
-bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
-{
-    int accountId = GetOsAccountLocalIdFromUid(bundleUid);
-    std::shared_ptr<AccountBundleInfo> accountPtr = FindOsAccountById(accountId);
-    if (accountPtr == nullptr || !accountPtr->HasBundle(bundleUid)) {
-        return false;
-    }   
-    std::shared_ptr<BundlePriorityInfo> bundlePtr = accountPtr->FindBundleById(bundleUid);
-    if (bundlePtr == nullptr) {
-        return false;
-    }
-    for (auto i = bundlePtr->procs_.begin(); i != bundlePtr->procs_.end(); ++i) {
-        UpdatePriorityByProcConnector(i->second);
-        int importPriority = RECLAIM_PRIORITY_BACKGROUND;
-        if (IsImportantProc(i->second, importPriority) && importPriority < i->second.priority_) {
-            HILOGD("%{public}d is an important background process, set process priority to %{public}d first",
-                i->second.pid_, importPriority);
-            i->second.SetPriority(importPriority);
-        }
-    }
-    UpdateBundlePriority(bundlePtr);
-    return true;
 }
 
 bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request)
@@ -792,10 +769,6 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
     if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
         request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
         return HandleExtensionProcess(request);
-    }
-
-    if (request.reason == AppStateUpdateReason::UPDATE_EXTENSION_PROCESS) {
-        return HandleUpdateExtensionBundle(request.caller.uid);
     }
 
     if (request.reason == AppStateUpdateReason::CREATE_PROCESS) {
@@ -832,12 +805,9 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
     return ApplyReclaimPriority(bundle, target.pid, action);
 }
 
-bool ReclaimPriorityManager::IsImportantProc(ProcessPriorityInfo proc, int &dstPriority)
+bool ReclaimPriorityManager::IsImportantProc(const std::string procName, int &dstPriority)
 {
     std::map<std::string, int> importantProcs = config_.GetImportantBgApps();
-    std::string procName = proc.name_;
-
-    HILOGD("pid_=%{public}d, procName=%{public}s", proc.pid_, procName.c_str());
     if (importantProcs.count(procName)) {
         dstPriority = importantProcs.at(procName);
         HILOGD("is an important proc, procName=%{public}s, importPriority=%{public}d", procName.c_str(), dstPriority);
@@ -846,21 +816,10 @@ bool ReclaimPriorityManager::IsImportantProc(ProcessPriorityInfo proc, int &dstP
     return false;
 }
 
-void ReclaimPriorityManager::CheckAndSetImportantApp(pid_t pid, std::shared_ptr<BundlePriorityInfo> bundle)
+void ReclaimPriorityManager::SetImportantProcPriority(ProcessPriorityInfo &proc)
 {
-    if (bundle == nullptr) {
-        HILOGD("bundle is nullptr");
-        return;
-    }
-
-    if (bundle->procs_.find(pid) != bundle->procs_.end()) {
-        int importPriority = RECLAIM_PRIORITY_BACKGROUND;
-        auto procPtr = bundle->procs_.find(pid);
-        if (IsImportantProc(procPtr->second, importPriority) && importPriority < procPtr->second.priority_) {
-            HILOGD("%{public}d is an important background process, set process priority to %{public}d first",
-                procPtr->second.pid_, importPriority);
-            procPtr->second.SetPriority(importPriority);
-        }
+    if (proc.priority_ > proc.priorityIfImportant_) {
+        proc.priority_ = proc.priorityIfImportant_;
     }
 }
 
@@ -942,7 +901,9 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         // is a plain background process
     }
 
-    CheckAndSetImportantApp(proc.pid_, bundle);
+    if (proc.isImportant_) {
+        SetImportantProcPriority(proc);
+    }
     UpdateBundlePriority(bundle);
     UpdatePriorityByProcForExtension(proc);
 }
