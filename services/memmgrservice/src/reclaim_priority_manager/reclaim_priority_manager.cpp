@@ -162,7 +162,10 @@ bool ReclaimPriorityManager::IsFrontApp(const std::string& pkgName, int32_t uid,
         return false;
     }
     std::vector<AppExecFwk::AppStateData> fgAppList;
-    appMgrProxy_->GetForegroundApplications(fgAppList);
+    if (appMgrProxy_->GetForegroundApplications(fgAppList) != 0) {
+        HILOGE("GetForegroundApplications failed");
+        return false;
+    }
     for (auto fgApp : fgAppList) {
         if (fgApp.bundleName == pkgName && fgApp.uid == uid) {
             return true;
