@@ -206,13 +206,12 @@ private:
     void AddOsAccountInfo(std::shared_ptr<AccountBundleInfo> account);
     bool IsKillableSystemApp(std::shared_ptr<BundlePriorityInfo> bundle);
     void NotifyKillableSystemAppsAdded(std::set<std::string> &newKillableApps);
-    void CheckAndSetImportantApp(pid_t pid, std::shared_ptr<BundlePriorityInfo> bundle);
-    bool IsImportantProc(ProcessPriorityInfo proc, int &dstPriority);
+    void SetImportantProcPriority(ProcessPriorityInfo &proc);
+    bool IsImportantProc(const std::string procName, int &dstPriority);
     bool UpdateExtensionStatusForCaller(UpdateRequest &request);
     bool UpdateExtensionStatusForTarget(UpdateRequest &request);
     void UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc);
     void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
-    bool HandleUpdateExtensionBundle(int bundleUid);
     void SetTimerForDiedProcessCheck(int64_t delayTime);
     void FilterDiedProcess();
     void HandleDiedProcessCheck();

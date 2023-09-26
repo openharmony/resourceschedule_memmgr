@@ -108,7 +108,7 @@ void ReclaimPriorityConfig::ParseReclaimPriorityImportantBgAppsConfig(const xmlN
             XmlHelper::SetStringParam(param, "procName", procName, "");
             XmlHelper::SetIntParam(param, "minPriority", minPriority, RECLAIM_PRIORITY_MAX + 1);
 
-            if (procName.size() == 0 || minPriority > RECLAIM_PRIORITY_MAX + 1) {
+            if (procName.size() == 0 || minPriority < RECLAIM_PRIORITY_MIN || minPriority > RECLAIM_PRIORITY_MAX + 1) {
                 HILOGE("read fail, ignore it!");
                 continue;
             }
