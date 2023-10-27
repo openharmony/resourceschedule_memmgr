@@ -101,7 +101,6 @@ private:
 
     public:
         AppStateSubscriberImpl(AppStateSubscriber &subscriber);
-        ~AppStateSubscriberImpl();
 
         /* *
          * @brief Called back when the subscriber is connected to Memory Manager Service.

@@ -35,7 +35,6 @@ AppStateSubscriber::~AppStateSubscriber()
 {
 #ifdef USE_PURGEABLE_MEMORY
     impl_->OnListenerDied();
-    delete impl_;
 #endif
 }
 
@@ -61,11 +60,6 @@ AppStateSubscriber::AppStateSubscriberImpl::AppStateSubscriberImpl(AppStateSubsc
     : subscriber_(subscriber)
 {
     recipient_ = new (std::nothrow) DeathRecipient(*this);
-}
-
-AppStateSubscriber::AppStateSubscriberImpl::~AppStateSubscriberImpl()
-{
-    delete recipient_;
 }
 
 void AppStateSubscriber::AppStateSubscriberImpl::OnConnected()
