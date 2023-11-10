@@ -765,6 +765,8 @@ bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request)
 
 bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
 {
+    // This function can only be called by UpdateReclaimPriority, otherwise it may deadlock.
+    std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     ReqProc target = request.target;
     int accountId = GetOsAccountLocalIdFromUid(target.uid);
     HILOGD("accountId=%{public}d", accountId);
