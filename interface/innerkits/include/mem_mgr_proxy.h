@@ -36,6 +36,7 @@ public:
     int32_t GetTotalMemory(int32_t &memSize) override;
 #endif
     int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) override;
+    int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) override;
 
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;

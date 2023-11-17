@@ -38,6 +38,7 @@ public:
     int32_t GetAvailableMemory();
     int32_t GetTotalMemory();
     int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo);
+    int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority);
 
 private:
     sptr<IMemMgr> GetMemMgrService();
