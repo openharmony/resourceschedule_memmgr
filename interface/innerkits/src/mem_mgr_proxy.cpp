@@ -14,6 +14,8 @@
  */
 
 #include "mem_mgr_proxy.h"
+
+#include "mem_mgr_constant.h"
 #include "memmgr_log.h"
 #include "parcel.h"
 
@@ -321,6 +323,37 @@ int32_t MemMgrProxy::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWind
         return IPC_PROXY_ERR;
     }
     return ret;
+}
+
+int32_t MemMgrProxy::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
+{
+    HILOGD("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid)) {
+        HILOGE("write pid failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_PRIORITY_BY_PID), data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+
+    int32_t curPriority = RECLAIM_PRIORITY_UNKNOWN + 1;
+    if (!reply.ReadInt32(curPriority)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    priority = curPriority;
+    return ERR_OK;
 }
 } // namespace Memory
 } // namespace OHOS

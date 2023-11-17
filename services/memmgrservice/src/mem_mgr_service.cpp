@@ -218,6 +218,29 @@ int32_t MemMgrService::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWi
     return 0;
 }
 
+int32_t MemMgrService::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
+{
+    HILOGI("called");
+    std::string path = KernelInterface::GetInstance().JoinPath("/proc/", std::to_string(pid), "/oom_score_adj");
+    std::string contentStr;
+    if (KernelInterface::GetInstance().ReadFromFile(path, contentStr) || contentStr.size() == 0) {
+        HILOGE("read %{public}s failed, content=[%{public}s]", path.c_str(), contentStr.c_str());
+        return -1;
+    }
+    HILOGD("read %{public}s succ, content=[%{public}s]", path.c_str(), contentStr.c_str());
+
+    try {
+        priority = std::stoi(contentStr);
+    } catch (std::out_of_range&) {
+        HILOGW("stoi() failed: out_of_range");
+        return -1;
+    } catch (std::invalid_argument&) {
+        HILOGW("stoi() failed: invalid_argument");
+        return -1;
+    }
+    return 0;
+}
+
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     auto saNameMapIter = saNameMap_.find(systemAbilityId);

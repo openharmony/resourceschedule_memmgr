@@ -209,5 +209,16 @@ HWTEST_F(InnerkitsTest, GetAvailableMemory_Test, TestSize.Level1)
     EXPECT_EQ(ret, -1);
 }
 #endif // USE_PURGEABLE_MEMORY
+
+HWTEST_F(InnerkitsTest, GetReclaimPriorityByPid_Test, TestSize.Level1)
+{
+    int32_t pid = 1;
+    int32_t priority = 1001;
+    int32_t ret = MemMgrClient::GetInstance().GetReclaimPriorityByPid(pid, priority);
+    int32_t error_num = 300;
+    EXPECT_EQ(ret, error_num);
+    EXPECT_EQ(priority, 1001);
+}
+
 }
 }
