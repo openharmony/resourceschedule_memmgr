@@ -54,6 +54,7 @@ public:
 #endif
 
     virtual int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) = 0;
+    virtual int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) = 0;
 };
 } // namespace Memory
 } // namespace OHOS
