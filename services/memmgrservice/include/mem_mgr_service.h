@@ -41,6 +41,7 @@ public:
     virtual int32_t GetTotalMemory(int32_t &memSize) override;
 #endif
     virtual int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) override;
+    virtual int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) override;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual int Dump(int fd, const std::vector<std::u16string> &args) override;

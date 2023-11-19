@@ -210,6 +210,17 @@ int32_t MemMgrClient::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWin
     return dps->OnWindowVisibilityChanged(MemMgrWindowInfo);
 }
 
+int32_t MemMgrClient::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
+{
+    HILOGD("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->GetReclaimPriorityByPid(pid, priority);
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");

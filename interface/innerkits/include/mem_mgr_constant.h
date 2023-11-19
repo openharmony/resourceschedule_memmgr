@@ -17,6 +17,7 @@
 #define OHOS_MEMORY_MEMMGR_INNERKITS_MEM_MGR_CONSTANT_H
 
 #include <string>
+#include <map>
 
 namespace OHOS {
 namespace Memory {

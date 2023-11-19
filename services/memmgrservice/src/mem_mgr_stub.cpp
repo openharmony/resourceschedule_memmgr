@@ -14,10 +14,12 @@
  */
 
 #include "mem_mgr_stub.h"
-#include "memmgr_log.h"
-#include "memmgr_config_manager.h"
+
+#include "ipc_skeleton.h"
 #include "kernel_interface.h"
 #include "low_memory_killer.h"
+#include "memmgr_log.h"
+#include "memmgr_config_manager.h"
 #include "parcel.h"
 
 namespace OHOS {
@@ -25,6 +27,7 @@ namespace Memory {
 namespace {
     const std::string TAG = "MemMgrStub";
     constexpr int MAX_PARCEL_SIZE = 100000;
+    constexpr int CAMERA_SERVICE_UID = 1047;
 }
 
 MemMgrStub::MemMgrStub()
@@ -51,6 +54,8 @@ MemMgrStub::MemMgrStub()
 #endif
     memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED)] =
         &MemMgrStub::HandleOnWindowVisibilityChanged;
+    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_PRIORITY_BY_PID)] =
+        &MemMgrStub::HandleGetReclaimPriorityByPid;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -244,6 +249,30 @@ int32_t MemMgrStub::HandleOnWindowVisibilityChanged(MessageParcel &data, Message
 
     int32_t ret = OnWindowVisibilityChanged(infos);
     if (!reply.WriteInt32(ret)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+bool MemMgrStub::IsCameraServiceCalling()
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    return callingUid == CAMERA_SERVICE_UID;
+}
+
+int32_t MemMgrStub::HandleGetReclaimPriorityByPid(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+
+    if (!IsCameraServiceCalling()) {
+        HILOGE("calling process has no permission, call failled");
+        return IPC_STUB_ERR;
+    }
+    int32_t pid = data.ReadUint32();
+    int32_t priority = RECLAIM_PRIORITY_UNKNOWN + 1;
+    int32_t ret = GetReclaimPriorityByPid(pid, priority);
+
+    if (!reply.WriteInt32(priority)) {
         return IPC_STUB_ERR;
     }
     return ret;
