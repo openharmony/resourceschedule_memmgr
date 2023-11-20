@@ -16,6 +16,8 @@
 
 #include "app_mem_info.h"
 #include "app_mgr_client.h"
+#include "if_system_ability_manager.h"
+#include "iservice_registry.h"
 #include "kernel_interface.h"
 #include "memmgr_config_manager.h"
 #include "memmgr_log.h"
@@ -100,29 +102,53 @@ void MemoryLevelManager::NotifyMemoryLevel(SystemMemoryInfo &info)
     DECLARE_UNIQUE_POINTER(AppExecFwk::AppMgrClient, appMgrClient_);
     MAKE_POINTER(appMgrClient_, unique, AppExecFwk::AppMgrClient, "make unique failed", return,
         /* no param */);
+    bool isNotifyMemoryLevelToSaMgr = false;
     switch (info.level) {
         case SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE: {
             // no need notify appMgrClient_
             break;
         }
         case SystemMemoryLevel::MEMORY_LEVEL_MODERATE: {
+            isNotifyMemoryLevelToSaMgr = true;
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_MODERATE);
             break;
         }
         case SystemMemoryLevel::MEMORY_LEVEL_LOW: {
+            isNotifyMemoryLevelToSaMgr = true;
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_LOW);
             break;
         }
         case SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: {
+            isNotifyMemoryLevelToSaMgr = true;
             appMgrClient_->NotifyMemoryLevel(AppExecFwk::MemoryLevel::MEMORY_LEVEL_CRITICAL);
             break;
         }
         default:
             return;
     }
+    if (isNotifyMemoryLevelToSaMgr) {
+        NotifyMemoryLevelToSystemAbilityManager();
+    }
 #ifdef USE_PURGEABLE_MEMORY
     PurgeableMemManager::GetInstance().NotifyMemoryLevel(info);
 #endif
+}
+
+void MemoryLevelManager::NotifyMemoryLevelToSystemAbilityManager()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        HILOGE("get system ability manager failed!");
+        return;
+    }
+
+    int32_t ret = systemAbilityManager->UnloadAllIdleSystemAbility();
+    if (ret != ERR_OK) {
+        HILOGE("notify system ability manager failed!");
+        return;
+    }
+    HILOGI("notify system ability manager succ!");
 }
 
 void MemoryLevelManager::TriggerMemoryLevelByDump(SystemMemoryInfo &info)
