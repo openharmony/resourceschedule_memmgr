@@ -44,6 +44,7 @@ private:
     bool GetEventHandler();
     bool CalcSystemMemoryLevel(SystemMemoryInfo &info);
     bool CalcReclaimAppList(std::vector<std::shared_ptr<AppEntity>> &appList);
+    void NotifyMemoryLevelToSystemAbilityManager();
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     bool initialized_ = false;
     long calledCount_ = 0;
