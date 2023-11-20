@@ -196,12 +196,7 @@ int32_t MemMgrService::GetTotalMemory(int32_t &memSize)
 
 void MemMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    auto saNameMapIter = saNameMap_.find(systemAbilityId);
-    if (saNameMapIter == saNameMap_.end()) {
-        HILOGE("systemAbilityId: %{public}d not find", systemAbilityId);
-    }
-    std::string systemAbilityName = saNameMapIter->second;
-    HILOGI("systemAbilityName: %{public}s add", systemAbilityName.c_str());
+    HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
     MemMgrEventCenter::GetInstance().RetryRegisterEventObserver(systemAbilityId);
 }
 
@@ -243,12 +238,7 @@ int32_t MemMgrService::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
 
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    auto saNameMapIter = saNameMap_.find(systemAbilityId);
-    if (saNameMapIter == saNameMap_.end()) {
-        HILOGE("systemAbilityId: %{public}d not find", systemAbilityId);
-    }
-    std::string systemAbilityName = saNameMapIter->second;
-    HILOGI("systemAbilityName: %{public}s remove", systemAbilityName.c_str());
+    HILOGI("systemAbilityId: %{public}d add", systemAbilityId);
     MemMgrEventCenter::GetInstance().RemoveEventObserver(systemAbilityId);
 }
 
