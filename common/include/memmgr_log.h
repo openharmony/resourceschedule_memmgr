@@ -20,11 +20,11 @@
 
 namespace OHOS {
 namespace Memory {
-static constexpr OHOS::HiviewDFX::HiLogLabel DP_LOG_LABEL = {
-    LOG_CORE,
-    0xD001799,
-    "MemMgr"
-};
+
+#undef LOG_TAG
+#define LOG_TAG "MemMgr"
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD001799
 
 #ifdef HILOGF
 #undef HILOGF
@@ -42,14 +42,11 @@ static constexpr OHOS::HiviewDFX::HiLogLabel DP_LOG_LABEL = {
 #undef HILOGD
 #endif
 
-#define DP_LOG(level, fmt, ...) \
-    HiviewDFX::HiLog::level(DP_LOG_LABEL, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
-
-#define HILOGF(fmt, ...) DP_LOG(Fatal, fmt, ##__VA_ARGS__)
-#define HILOGE(fmt, ...) DP_LOG(Error, fmt, ##__VA_ARGS__)
-#define HILOGW(fmt, ...) DP_LOG(Warn,  fmt, ##__VA_ARGS__)
-#define HILOGI(fmt, ...) DP_LOG(Info,  fmt, ##__VA_ARGS__)
-#define HILOGD(fmt, ...) DP_LOG(Debug, fmt, ##__VA_ARGS__)
+#define HILOGF(fmt, ...) HILOG_FATAL(LOG_CORE, fmt, ##__VA_ARGS__)
+#define HILOGE(fmt, ...) HILOG_ERROR(LOG_CORE, fmt, ##__VA_ARGS__)
+#define HILOGW(fmt, ...) HILOG_WARN(LOG_CORE,  fmt, ##__VA_ARGS__)
+#define HILOGI(fmt, ...) HILOG_INFO(LOG_CORE,  fmt, ##__VA_ARGS__)
+#define HILOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, fmt, ##__VA_ARGS__)
 } // namespace MemMgr
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEM_MGR_LOG_H
