@@ -35,6 +35,7 @@ ohos_shared_library("memmgrclient") {
     "src/app_state_subscriber.cpp",
     "src/bundle_priority_list.cpp",
     "src/mem_mgr_client.cpp",
+    "src/mem_mgr_constant.cpp",
     "src/mem_mgr_proxy.cpp",
     "src/mem_mgr_window_info.cpp",
   ]
