@@ -243,7 +243,11 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
 
     // format like:
     // 1 (init) S 0 0 0 0 -1 4210944 1 ...
-    std::string stat, statm, statPid, vss, rss;
+    std::string stat;
+    std::string statm;
+    std::string statPid;
+    std::string vss;
+    std::string rss;
     if (!ReadFromFile(statPath, stat)) {
         HILOGD("stat file error!");
         return false;
@@ -286,7 +290,8 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
 bool KernelInterface::GetProcNameByPid(int pid, std::string &name)
 {
     std::string statusPath = JoinPath("/proc/", std::to_string(pid), "/status");
-    std::string statusContent, nameTag;
+    std::string statusContent;
+    std::string nameTag;
     if (!ReadFromFile(statusPath, statusContent)) {
         HILOGE("status file [%{public}s] error!", statusPath.c_str());
         return false;
@@ -323,7 +328,8 @@ void KernelInterface::ReadZswapdPressureShow(std::map<std::string, std::string>&
         }
         std::string lineStr(line);
         std::istringstream is(lineStr);
-        std::string name, value;
+        std::string name;
+        std::string value;
         is >> name >> value;
         result.insert(std::make_pair(name, value));
 
@@ -474,7 +480,8 @@ bool KernelInterface::ReadSwapOutKBSinceKernelBoot(const std::string &path, cons
         if (tag == tagStr) {
             std::string value = lineStr.substr(i + 1);
             std::istringstream iss(value);
-            std::string sizeStr, unitStr;
+            std::string sizeStr;
+            std::string unitStr;
             iss >> sizeStr >> unitStr;
             try {
                 ret = std::strtoull(sizeStr.c_str(), nullptr, 10); // 10:Decimal
@@ -505,7 +512,8 @@ int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::stri
     }
     char *restPtr = nullptr;
     char *line = strtok_r(contentPtr, "\n", &restPtr);
-    std::string name, value;
+    std::string name;
+    std::string value;
     bool findTotalMem = false;
     do {
         for (size_t i = 0; i < strlen(line); i++) {
