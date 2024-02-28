@@ -855,7 +855,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
         if (connectorAccount == nullptr || !connectorAccount->HasBundle(connectorUid)) {
             minPriority = 0; // native
             continue;
-        }   
+        }
         std::shared_ptr<BundlePriorityInfo> connectorBundle = connectorAccount->FindBundleById(connectorUid);
         if (connectorBundle == nullptr) {
             return;
@@ -865,7 +865,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
             minPriority = connectorProc.priority_ < minPriority ? connectorProc.priority_ : minPriority;
         }
     }
-    proc.SetPriority(minPriority + 100);
+    proc.SetPriority(minPriority + 100); //raise the priority of the lowest-priority process by 100
 }
 
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
