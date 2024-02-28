@@ -169,37 +169,42 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
     return std::make_pair(minBufKB, minPrio);
 }
 
+struct PsiHdlInfo {
+    unsigned int curBuf;
+    int availBuf;
+    int freedBuf;
+    unsigned int minBuf;
+    unsigned int targetBuf;
+    unsigned int targetKillKb;
+    unsigned int currKillKb;
+    int minPrio;
+    int killCnt;
+};
+
 /* Low memory killer core function */
 void LowMemoryKiller::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount_);
-    unsigned int curBuf = 0;
-    int availBuf = 0;
-    int freedBuf = 0;
-    unsigned int minBuf = 0;
-    unsigned int targetBuf = 0;
-    unsigned int targetKillKb = 0;
-    unsigned int currKillKb = 0;
-    int minPrio = RECLAIM_PRIORITY_MAX + 1;
-    int killCnt = 0;
+    PsiHdlInfo psiHdlInfo = {0, 0, 0, 0, 0, 0, 0, RECLAIM_PRIORITY_MAX + 1, 0};
 
-    curBuf = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
-    HILOGE("[%{public}ld] current buffer = %{public}u KB", calledCount_, curBuf);
-    if (curBuf == MAX_BUFFER_KB) {
+    psiHdlInfo.curBuf = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
+    HILOGE("[%{public}ld] current buffer = %{public}u KB", calledCount_, psiHdlInfo.curBuf);
+    if (psiHdlInfo.curBuf == MAX_BUFFER_KB) {
         HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount_);
         return;
     }
 
-    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(curBuf, targetBuf, killLevel_);
-    minBuf = memPrioPair.first;
-    minPrio = memPrioPair.second;
-    if (curBuf > 0 && targetBuf > curBuf) {
-        targetKillKb = targetBuf - curBuf;
+    std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(psiHdlInfo.curBuf,
+        psiHdlInfo.targetBuf, killLevel_);
+    psiHdlInfo.minBuf = memPrioPair.first;
+    psiHdlInfo.minPrio = memPrioPair.second;
+    if (psiHdlInfo.curBuf > 0 && psiHdlInfo.targetBuf > psiHdlInfo.curBuf) {
+        psiHdlInfo.targetKillKb = psiHdlInfo.targetBuf - psiHdlInfo.curBuf;
     }
 
-    HILOGE("[%{public}ld] minPrio = %{public}d", calledCount_, minPrio);
+    HILOGE("[%{public}ld] minPrio = %{public}d", calledCount_, psiHdlInfo.minPrio);
 
-    if (minPrio < RECLAIM_PRIORITY_MIN || minPrio > RECLAIM_PRIORITY_MAX) {
+    if (psiHdlInfo.minPrio < RECLAIM_PRIORITY_MIN || psiHdlInfo.minPrio > RECLAIM_PRIORITY_MAX) {
         HILOGD("[%{public}ld] no minPrio, skiped!", calledCount_);
         return;
     }
@@ -207,29 +212,29 @@ void LowMemoryKiller::PsiHandlerInner()
     do {
         /* print process mem info in dmesg, 1 means it is limited by print interval. Ignore return val   */
         KernelInterface::GetInstance().EchoToPath(LMKD_DBG_TRIGGER_FILE_PATH.c_str(), "1");
-        if ((freedBuf = KillOneBundleByPrio(minPrio)) <= 0) {
-            HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount_, minPrio);
+        if ((psiHdlInfo.freedBuf = KillOneBundleByPrio(psiHdlInfo.minPrio)) <= 0) {
+            HILOGD("[%{public}ld] Noting to kill above score %{public}d!", calledCount_, psiHdlInfo.minPrio);
             goto out;
         }
-        currKillKb += (unsigned int)freedBuf;
-        killCnt++;
-        HILOGD("[%{public}ld] killCnt = %{public}d", calledCount_, killCnt);
+        psiHdlInfo.currKillKb += (unsigned int)psiHdlInfo.freedBuf;
+        psiHdlInfo.killCnt++;
+        HILOGD("[%{public}ld] killCnt = %{public}d", calledCount_, psiHdlInfo.killCnt);
 
-        availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
-        if (availBuf < 0 || availBuf >= MAX_BUFFER_KB) {
+        psiHdlInfo.availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
+        if (psiHdlInfo.availBuf < 0 || psiHdlInfo.availBuf >= MAX_BUFFER_KB) {
             HILOGE("[%{public}ld] get buffer failed, go out!", calledCount_);
             goto out;
         }
-        if ((unsigned int)availBuf >= targetBuf) {
+        if ((unsigned int)psiHdlInfo.availBuf >= psiHdlInfo.targetBuf) {
             killLevel_ = 0;
             goto out;
         }
-    } while (currKillKb < targetKillKb && killCnt < MAX_KILL_CNT_PER_EVENT);
+    } while (psiHdlInfo.currKillKb < psiHdlInfo.targetKillKb && psiHdlInfo.killCnt < MAX_KILL_CNT_PER_EVENT);
 
 out:
-    if (currKillKb > 0) {
+    if (psiHdlInfo.currKillKb > 0) {
         HILOGI("[%{public}ld] Reclaimed %{public}uK when currBuff %{public}uK below %{public}uK target %{public}uK",
-            calledCount_, currKillKb, curBuf, minBuf, targetBuf);
+            calledCount_, psiHdlInfo.currKillKb, psiHdlInfo.curBuf, psiHdlInfo.minBuf, psiHdlInfo.targetBuf);
     }
 }
 
