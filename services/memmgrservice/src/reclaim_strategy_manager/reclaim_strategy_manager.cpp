@@ -74,13 +74,13 @@ void ReclaimStrategyManager::InitProcessBeforeMemmgr()
         return;
     }
     unsigned int uid =  0;
-    unsigned int userId = 0;
+    int userId = 0;
     bool ret = false;
     for (auto pid : pids) {
         if (!KernelInterface::GetInstance().GetUidByPid(pid, uid)) {
             continue;
         }
-        userId = GET_OS_ACCOUNT_ID_BY_UID(uid);
+        userId = GetOsAccountIdByUid(static_cast<int>(uid));
         if (userId < VALID_USER_ID_MIN) { // invalid userId
             continue;
         }
