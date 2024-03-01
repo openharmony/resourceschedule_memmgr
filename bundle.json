@@ -32,12 +32,11 @@
           "samgr",
           "resource_management",
           "access_token",
-          "init",
-          "hitrace",
-          "image_framework",
-          "memory_utils"
+          "init"
         ],
-        "third_party": []
+        "third_party": [
+          "libxml2"
+        ]
       },
       "build": {
         "sub_component": [
