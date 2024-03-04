@@ -236,6 +236,43 @@ int32_t MemMgrService::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
     return 0;
 }
 
+
+int32_t MemMgrService::NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    if (processStateInfo.reason_ == ProcPriorityUpdateReason::START_ABILITY) {
+        HILOGD("callerpid=%{public}d,calleruid=%{public}d,pid=%{public}d,uid=%{public}d,reason=%{public}u",
+            processStateInfo.callerPid_, processStateInfo.callerUid_, processStateInfo.pid_, processStateInfo.uid_,
+            static_cast<uint32_t>(processStateInfo.reason_));
+        UpdateRequest request = CallerRequest({processStateInfo.callerPid_, processStateInfo.callerUid_, "", ""},
+            {processStateInfo.pid_, processStateInfo.uid_, "", ""}, AppStateUpdateReason::ABILITY_START);
+        if (!ReclaimPriorityManager::GetInstance().UpdateRecalimPrioritySyncWithLock(request)) {
+            HILOGE("NotifyProcessStateChangedSync <pid=%{public}d,uid=%{public}d,reason=%{public}u> failed",
+                processStateInfo.pid_, processStateInfo.uid_, static_cast<uint32_t>(processStateInfo.reason_));
+            return static_cast<int32_t>(MemMgrErrorCode::MEMMGR_SERVICE_ERR);
+        }
+    }
+    return 0;
+}
+
+int32_t MemMgrService::NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    if (processStateInfo.reason_ == ProcPriorityUpdateReason::START_ABILITY) {
+        HILOGD("callerpid=%{public}d,calleruid=%{public}d,pid=%{public}d,uid=%{public}d,reason=%{public}u",
+            processStateInfo.callerPid_, processStateInfo.callerUid_, processStateInfo.pid_, processStateInfo.uid_,
+            static_cast<uint32_t>(processStateInfo.reason_));
+        UpdateRequest request = CallerRequest({processStateInfo.callerPid_, processStateInfo.callerUid_, "", ""},
+            {processStateInfo.pid_, processStateInfo.uid_, "", ""}, AppStateUpdateReason::ABILITY_START);
+        if (!ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(request)) {
+            HILOGE("NotifyProcessStateChangedAsync <pid=%{public}d,uid=%{public}d,reason=%{public}u> failed",
+                processStateInfo.pid_, processStateInfo.uid_, static_cast<uint32_t>(processStateInfo.reason_));
+            return static_cast<int32_t>(MemMgrErrorCode::MEMMGR_SERVICE_ERR);
+        }
+    }
+    return 0;
+}
+
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);

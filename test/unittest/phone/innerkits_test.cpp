@@ -31,6 +31,7 @@ namespace Memory {
 using namespace testing;
 using namespace testing::ext;
 
+constexpr int IPC_STUB_ERR = 300;
 class AppStateSubscriberTest : public AppStateSubscriber {
 public:
     void OnConnected() override;
@@ -215,10 +216,28 @@ HWTEST_F(InnerkitsTest, GetReclaimPriorityByPid_Test, TestSize.Level1)
     int32_t pid = 1;
     int32_t priority = 1001;
     int32_t ret = MemMgrClient::GetInstance().GetReclaimPriorityByPid(pid, priority);
-    int32_t error_num = 300;
-    EXPECT_EQ(ret, error_num);
+    EXPECT_EQ(ret, IPC_STUB_ERR);
     EXPECT_EQ(priority, 1001);
 }
 
+HWTEST_F(InnerkitsTest, NotifyProcessStateChangedSync_Test, TestSize.Level1)
+{
+    MemMgrProcessStateInfo processStateInfo;
+    processStateInfo.pid_ = 1014;
+    processStateInfo.uid_ = 20100001;
+    processStateInfo.reason_ = ProcPriorityUpdateReason::START_ABILITY;
+    int32_t ret = MemMgrClient::GetInstance().NotifyProcessStateChangedSync(processStateInfo);
+    EXPECT_EQ(ret, IPC_STUB_ERR);
+}
+
+HWTEST_F(InnerkitsTest, NotifyProcessStateChangedAsync_Test, TestSize.Level1)
+{
+    MemMgrProcessStateInfo processStateInfo;
+    processStateInfo.pid_ = 1034;
+    processStateInfo.uid_ = 20300001;
+    processStateInfo.reason_ = ProcPriorityUpdateReason::START_ABILITY;
+    int32_t ret = MemMgrClient::GetInstance().NotifyProcessStateChangedAsync(processStateInfo);
+    EXPECT_EQ(ret, IPC_STUB_ERR);
+}
 }
 }

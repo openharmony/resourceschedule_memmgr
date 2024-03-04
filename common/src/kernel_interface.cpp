@@ -184,6 +184,12 @@ bool KernelInterface::IsDirExists(const std::string& path)
 
 int64_t KernelInterface::GetSystemCurTime()
 {
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
+int64_t KernelInterface::GetSystemTimeMs()
+{
     return std::chrono::duration_cast<std::chrono::seconds>
         (std::chrono::system_clock::now().time_since_epoch()).count();
 }

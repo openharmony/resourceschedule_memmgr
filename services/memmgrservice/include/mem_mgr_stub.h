@@ -47,6 +47,9 @@ private:
     int32_t HandleOnWindowVisibilityChanged(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetReclaimPriorityByPid(MessageParcel &data, MessageParcel &reply);
     bool IsCameraServiceCalling();
+    int32_t HandleNotifyProcessStateChangedSync(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleNotifyProcessStateChangedAsync(MessageParcel &data, MessageParcel &reply);
+    bool CheckCallingToken();
 
     using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, MemMgrFunc> memberFuncMap_;

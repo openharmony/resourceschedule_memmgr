@@ -15,6 +15,7 @@
 
 #include "mem_mgr_stub.h"
 
+#include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "kernel_interface.h"
 #include "low_memory_killer.h"
@@ -28,6 +29,7 @@ namespace {
     const std::string TAG = "MemMgrStub";
     constexpr int MAX_PARCEL_SIZE = 100000;
     constexpr int CAMERA_SERVICE_UID = 1047;
+    constexpr int FOUNDATION_UID = 5523;
 }
 
 MemMgrStub::MemMgrStub()
@@ -56,6 +58,10 @@ MemMgrStub::MemMgrStub()
         &MemMgrStub::HandleOnWindowVisibilityChanged;
     memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_PRIORITY_BY_PID)] =
         &MemMgrStub::HandleGetReclaimPriorityByPid;
+        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC)] =
+    &MemMgrStub::HandleNotifyProcessStateChangedSync;
+        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC)] =
+    &MemMgrStub::HandleNotifyProcessStateChangedAsync;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -273,6 +279,66 @@ int32_t MemMgrStub::HandleGetReclaimPriorityByPid(MessageParcel &data, MessagePa
     int32_t ret = GetReclaimPriorityByPid(pid, priority);
 
     if (!reply.WriteInt32(priority)) {
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+bool MemMgrStub::CheckCallingToken()
+{
+    Security::AccessToken::AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenFlag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+            return true;
+    }
+    return false;
+}
+
+bool IsFoundationCalling()
+{
+    return IPCSkeleton::GetCallingUid() == FOUNDATION_UID;
+}
+
+int32_t MemMgrStub::HandleNotifyProcessStateChangedSync(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+
+    if (!IsFoundationCalling()) {
+        HILOGE("calling process has no permission, call failed");
+        return IPC_STUB_ERR;
+    }
+    std::unique_ptr<MemMgrProcessStateInfo> processStateInfo(data.ReadParcelable<MemMgrProcessStateInfo>());
+    if (processStateInfo == nullptr) {
+        HILOGE("ReadParcelable<MemMgrProcessStateInfo> failed");
+        return IPC_STUB_ERR;
+    }
+
+    int32_t ret = NotifyProcessStateChangedSync(*processStateInfo);
+    if (!reply.WriteInt32(ret)) {
+        HILOGE("reply write failed");
+        return IPC_STUB_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrStub::HandleNotifyProcessStateChangedAsync(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+
+    if (!IsFoundationCalling()) {
+        HILOGE("calling process has no permission, call failed");
+        return IPC_STUB_ERR;
+    }
+    std::unique_ptr<MemMgrProcessStateInfo> processStateInfo(data.ReadParcelable<MemMgrProcessStateInfo>());
+    if (processStateInfo == nullptr) {
+        HILOGE("ReadParcelable<MemMgrProcessStateInfo> failed");
+        return IPC_STUB_ERR;
+    }
+
+    int32_t ret = NotifyProcessStateChangedAsync(*processStateInfo);
+    if (!reply.WriteInt32(ret)) {
+        HILOGE("reply write failed");
         return IPC_STUB_ERR;
     }
     return ret;

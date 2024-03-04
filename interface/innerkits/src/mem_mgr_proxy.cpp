@@ -355,5 +355,63 @@ int32_t MemMgrProxy::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
     priority = curPriority;
     return ERR_OK;
 }
+
+int32_t MemMgrProxy::NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteParcelable(&processStateInfo)) {
+        HILOGE("write data failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC), data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
+
+int32_t MemMgrProxy::NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    sptr<IRemoteObject> remote = Remote();
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteParcelable(&processStateInfo)) {
+        HILOGE("write data failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC), data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+        return error;
+    }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        HILOGE("read result failed");
+        return IPC_PROXY_ERR;
+    }
+    return ret;
+}
 } // namespace Memory
 } // namespace OHOS
