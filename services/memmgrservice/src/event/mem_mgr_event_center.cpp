@@ -367,7 +367,7 @@ void MemMgrEventCenter::RetryRegisterEventObserver(int32_t systemAbilityId)
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID || systemAbilityId == COMMON_EVENT_SERVICE_ABILITY_ID) {
         HandlerRegisterEvent(RegisterEvent::REG_COMMONOBS_EVENT);
     }
-    RegisterEventObserver();
+    HandlerRegisterEvent(RegisterEvent::REG_ALLOBS_EVENT);
 }
 
 } // namespace Memory
