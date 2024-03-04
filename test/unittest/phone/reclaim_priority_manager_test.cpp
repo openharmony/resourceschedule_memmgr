@@ -52,6 +52,11 @@ void ReclaimPriorityManagerTest::TearDown()
 {
 }
 
+static void Sleep(int second)
+{
+    sleep(second);
+}
+
 HWTEST_F(ReclaimPriorityManagerTest, InitTest, TestSize.Level1)
 {
     EXPECT_EQ(ReclaimPriorityManager::GetInstance().Init(), true);
@@ -727,5 +732,111 @@ HWTEST_F(ReclaimPriorityManagerTest, AppStateUpdateResonToStringTest, TestSize.L
     EXPECT_EQ(ptr, appState.updateReasonStrMapping_.end());
 }
 
+HWTEST_F(ReclaimPriorityManagerTest, UpdateRecalimPrioritySyncWithLockTest1, TestSize.Level1)
+{
+    ReclaimPriorityManager manager;
+    manager.Init();
+    std::string bundleName = "test1_for_ability_start_sync";
+    int32_t callerPid = -1;
+    int32_t callerUid = -1;
+    int32_t pid = 11667;
+    int32_t bundleUid = 20090001;
+    AppStateUpdateReason stateReason = AppStateUpdateReason::CREATE_PROCESS;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    manager.Dump(1);
+
+
+    int accountId = manager.GetOsAccountLocalIdFromUid(bundleUid);
+    std::shared_ptr<AccountBundleInfo> account = manager.FindOsAccountById(accountId);
+    bool hasBundle = account->HasBundle(bundleUid);
+    EXPECT_EQ(hasBundle, true);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+
+    stateReason = AppStateUpdateReason::BACKGROUND;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
+    manager.Dump(1);
+
+    stateReason = AppStateUpdateReason::ABILITY_START;
+    manager.UpdateRecalimPrioritySyncWithLock(CallerRequest({callerPid, callerUid, "", ""},
+        {pid, bundleUid, "", bundleName}, stateReason));
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    manager.Dump(1);
+
+    Sleep(15);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
+    manager.Dump(1);
+}
+
+HWTEST_F(ReclaimPriorityManagerTest, UpdateRecalimPrioritySyncWithLockTest2, TestSize.Level1)
+{
+    ReclaimPriorityManager manager;
+    manager.Init();
+    std::string bundleName = "test2_for_ability_start_sync";
+    int32_t callerPid = -1;
+    int32_t callerUid = -1;
+    int32_t pid = 11669;
+    int32_t bundleUid = 20290001;
+    AppStateUpdateReason stateReason = AppStateUpdateReason::CREATE_PROCESS;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    manager.Dump(1);
+
+    int accountId = manager.GetOsAccountLocalIdFromUid(bundleUid);
+    std::shared_ptr<AccountBundleInfo> account = manager.FindOsAccountById(accountId);
+    bool hasBundle = account->HasBundle(bundleUid);
+    EXPECT_EQ(hasBundle, true);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+
+    stateReason = AppStateUpdateReason::SUSPEND_DELAY_START;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
+    manager.Dump(1);
+
+    stateReason = AppStateUpdateReason::ABILITY_START;
+    manager.UpdateRecalimPrioritySyncWithLock(CallerRequest({callerPid, callerUid, "", ""},
+        {pid, bundleUid, "", bundleName}, stateReason));
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    manager.Dump(1);
+
+    Sleep(15);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BG_SUSPEND_DELAY);
+    manager.Dump(1);
+}
+
+HWTEST_F(ReclaimPriorityManagerTest, NotifyProcessStateChangedAsyncTest, TestSize.Level1)
+{
+    ReclaimPriorityManager manager;
+    manager.Init();
+    std::string bundleName = "test1_for_ability_start_async";
+    int32_t callerPid = -1;
+    int32_t callerUid = -1;
+    int32_t pid = 11998;
+    int32_t bundleUid = 20040004;
+    AppStateUpdateReason stateReason = AppStateUpdateReason::CREATE_PROCESS;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    manager.Dump(1);
+
+    int accountId = manager.GetOsAccountLocalIdFromUid(bundleUid);
+    std::shared_ptr<AccountBundleInfo> account = manager.FindOsAccountById(accountId);
+    bool hasBundle = account->HasBundle(bundleUid);
+    EXPECT_EQ(hasBundle, true);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+
+    stateReason = AppStateUpdateReason::BACKGROUND;
+    manager.UpdateReclaimPriorityInner(SingleRequest({pid, bundleUid, "", bundleName}, stateReason));
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
+    manager.Dump(1);
+
+    stateReason = AppStateUpdateReason::ABILITY_START;
+    manager.UpdateReclaimPriority(CallerRequest({callerPid, callerUid, "", ""},
+        {pid, bundleUid, "", bundleName}, stateReason));
+    Sleep(4);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_FOREGROUND);
+    manager.Dump(1);
+
+    Sleep(15);
+    EXPECT_EQ(bundle->priority_, RECLAIM_PRIORITY_BACKGROUND);
+    manager.Dump(1);
+}
 }
 }

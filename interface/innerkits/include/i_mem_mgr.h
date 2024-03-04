@@ -21,8 +21,9 @@
 #include "bundle_priority_list.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
-#include "memmgrservice_ipc_interface_code.h"
+#include "mem_mgr_process_state_info.h"
 #include "mem_mgr_window_info.h"
+#include "memmgrservice_ipc_interface_code.h"
 #ifdef USE_PURGEABLE_MEMORY
 #include "iapp_state_subscriber.h"
 #endif
@@ -55,6 +56,8 @@ public:
 
     virtual int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) = 0;
     virtual int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) = 0;
+    virtual int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo) = 0;
+    virtual int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo) = 0;
 };
 } // namespace Memory
 } // namespace OHOS

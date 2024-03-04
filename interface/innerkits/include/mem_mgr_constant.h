@@ -42,6 +42,10 @@ constexpr int RECLAIM_PRIORITY_BACKGROUND = 400;
 // unknown process priority
 constexpr int RECLAIM_PRIORITY_UNKNOWN = 1000;
 
+enum class MemMgrErrorCode {
+    MEMMGR_SERVICE_ERR = 190900,
+};
+
 const std::map<int, std::string> ReclaimPriorityMapping = {
     { RECLAIM_PRIORITY_SYSTEM, "System" },
     { RECLAIM_ONDEMAND_SYSTEM, "OnDemand_system" },

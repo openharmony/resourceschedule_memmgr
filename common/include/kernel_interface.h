@@ -76,6 +76,8 @@ public:
     bool GetUidByPid(unsigned int pid, unsigned int& uid);
     bool ReadSwapOutKBSinceKernelBoot(const std::string &path, const std::string &tagStr, unsigned long long &ret);
     int64_t GetSystemCurTime();
+    int64_t GetSystemTimeMs();
+
     int GetTotalBuffer();
     bool GetMemcgPids(const std::string &memcgPath, std::vector<int> &memcgPids);
     bool GetAllUserIds(std::vector<int> &userIds);

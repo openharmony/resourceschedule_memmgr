@@ -20,6 +20,8 @@
 #include <string>
 #include <map>
 
+#include "reclaim_strategy_constants.h"
+
 namespace OHOS {
 namespace Memory {
 constexpr int EXTENSION_STATUS_BIND_UNKOWN = 0;
@@ -62,6 +64,16 @@ public:
 
     std::string ProcsBindToMe();
     std::string ProcsBindFromMe();
+
+    bool IsAbilityStarting() const;
+    void SetIsAbilityStarting(bool isAbilityStarting); // use to set value of isAbilityStarting_
+
+    void SetStartingAbilityTime(int64_t time);
+    int64_t GetStartingAbilityTime() const;
+
+private:
+    bool isAbilityStarting_; // true means proc current is starting ability, false means not
+    int64_t startingAbilityTime_;
 };
 } // namespace Memory
 } // namespace OHOS
