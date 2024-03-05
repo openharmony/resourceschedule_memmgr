@@ -117,20 +117,15 @@ bool NandLifeController::Init()
         return false;
     }
 
-    // check total limit
-    if (CheckReachedTotalLimit()) {
-        SetTimer();
-        return false;
-    }
+    // start check loop
+    SetTimer();
 
-    // check daily limit
-    if (CheckReachedDailyLimit()) {
-        SetTimer();
+    // check limit
+    if (CheckReachedTotalLimit() || CheckReachedDailyLimit()) {
         return false;
     }
 
     OpenSwapOutTemporarily("pass all check when init");
-    SetTimer();
     return true;
 }
 
