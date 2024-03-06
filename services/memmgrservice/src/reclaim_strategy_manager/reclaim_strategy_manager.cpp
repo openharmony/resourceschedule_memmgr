@@ -80,7 +80,7 @@ void ReclaimStrategyManager::InitProcessBeforeMemmgr()
         if (!KernelInterface::GetInstance().GetUidByPid(pid, uid)) {
             continue;
         }
-        userId = GET_OS_ACCOUNT_ID_BY_UID(uid);
+        userId = GetOsAccountIdByUid(static_cast<int>(uid));
         if (userId < VALID_USER_ID_MIN) { // invalid userId
             continue;
         }

@@ -114,60 +114,38 @@ bool MemMgrEventCenter::RegisterEventObserver()
 
 void MemMgrEventCenter::HandlerRegisterEvent(int64_t registerEventId)
 {
-    // HILOGI("called");
-    switch (registerEventId)
-    {
-    case RegisterEvent::REG_ALLOBS_EVENT:
-        {
-            std::function<void()> RegisterEventObserverFunc =
-                            std::bind(&MemMgrEventCenter::RegisterEventObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterEventObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_MEMPRESSOBS_EVENT:
-        {
-            std::function<void()> RegisterMemoryPressureObserverFunc =
+    if (registerEventId == RegisterEvent::REG_ALLOBS_EVENT) {
+        std::function<void()> RegisterEventObserverFunc =
+                                std::bind(&MemMgrEventCenter::RegisterEventObserver, this);
+        regObsHandler_->PostImmediateTask(RegisterEventObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_MEMPRESSOBS_EVENT) {
+        std::function<void()> RegisterMemoryPressureObserverFunc =
                                 std::bind(&MemMgrEventCenter::RegisterMemoryPressureObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterMemoryPressureObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_APPOBS_EVENT:
-        {
-            std::function<void()> RegisterAppStateObserverFunc =
+        regObsHandler_->PostImmediateTask(RegisterMemoryPressureObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_APPOBS_EVENT) {
+        std::function<void()> RegisterAppStateObserverFunc =
                                 std::bind(&MemMgrEventCenter::RegisterAppStateObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterAppStateObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_EXTOBS_EVENT:
-        {
-            std::function<void()> RegisterExtConnObserverFunc =
+        regObsHandler_->PostImmediateTask(RegisterAppStateObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_EXTOBS_EVENT) {
+        std::function<void()> RegisterExtConnObserverFunc =
                                 std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterExtConnObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_ACCOUNTOBS_EVENT:
-        {
-            std::function<void()> RegisterAccountObserverFunc =
+        regObsHandler_->PostImmediateTask(RegisterExtConnObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_ACCOUNTOBS_EVENT) {
+        std::function<void()> RegisterAccountObserverFunc =
                                 std::bind(&MemMgrEventCenter::RegisterAccountObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterAccountObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_COMMONOBS_EVENT:
-        {
-            std::function<void()> RegisterCommonEventObserverFunc =
+        regObsHandler_->PostImmediateTask(RegisterAccountObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_COMMONOBS_EVENT) {
+        std::function<void()> RegisterCommonEventObserverFunc =
                                 std::bind(&MemMgrEventCenter::RegisterCommonEventObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterCommonEventObserverFunc);
-        }
-        break;
-    case RegisterEvent::REG_BGTASKOBS_EVENT:
-#ifdef CONFIG_BGTASK_MGR
-        {
-            std::function<void()> RegisterBgTaskObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
-            regObsHandler_->PostImmediateTask(RegisterBgTaskObserverFunc);
-        }
-        break;
-#endif
+        regObsHandler_->PostImmediateTask(RegisterCommonEventObserverFunc);
+    } else if (registerEventId == RegisterEvent::REG_BGTASKOBS_EVENT) {
+        #ifdef CONFIG_BGTASK_MGR
+            {
+                std::function<void()> RegisterBgTaskObserverFunc =
+                                    std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
+                regObsHandler_->PostImmediateTask(RegisterBgTaskObserverFunc);
+            }
+        #endif
     }
     return;
 }
