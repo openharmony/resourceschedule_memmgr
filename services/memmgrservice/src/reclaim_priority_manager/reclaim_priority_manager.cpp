@@ -578,7 +578,7 @@ bool ReclaimPriorityManager::HandleUpdateExtensionBundle(int bundleUid)
     std::shared_ptr<AccountBundleInfo> accountPtr = FindOsAccountById(accountId);
     if (accountPtr == nullptr || !accountPtr->HasBundle(bundleUid)) {
         return false;
-    }   
+    }
     std::shared_ptr<BundlePriorityInfo> bundlePtr = accountPtr->FindBundleById(bundleUid);
     if (bundlePtr == nullptr) {
         return false;
@@ -616,7 +616,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(const ReclaimHandleReque
     if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
                             request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
         bool ret = HandleExtensionProcess(request.callerPid, request.callerUid,
-                        request.callerBundleName, request.pid, request.uid, request.bundleName, request.reason);
+            request.callerBundleName, request.pid, request.uid, request.bundleName, request.reason);
         return ret;
     }
 
@@ -698,7 +698,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
         if (connectorAccount == nullptr || !connectorAccount->HasBundle(connectorUid)) {
             minPriority = 0; // native
             continue;
-        }   
+        }
         std::shared_ptr<BundlePriorityInfo> connectorBundle = connectorAccount->FindBundleById(connectorUid);
         if (connectorBundle == nullptr) {
             return;
@@ -708,7 +708,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
             minPriority = connectorProc.priority_ < minPriority ? connectorProc.priority_ : minPriority;
         }
     }
-    proc.SetPriority(minPriority + 100);
+    proc.SetPriority(minPriority + 100); //raise the priority of the lowest-priority process by 100
 }
 
 void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle,
@@ -732,12 +732,12 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
         UpdatePriorityByProcForExtension(proc);
     } else { // is a background process
         int bgPriority = RECLAIM_PRIORITY_BACKGROUND;
-        if(IsImportantApp(bundle, bgPriority)) {
+        if (IsImportantApp(bundle, bgPriority)) {
             HILOGD("%{public}d is a important background process, set process priority to %{public}d first",
-                proc.pid_, bgPriority); 
+                proc.pid_, bgPriority);
         } else {
             HILOGD("%{public}d is a background process, set process priority to %{public}d first",
-                    proc.pid_, bgPriority);        
+                proc.pid_, bgPriority);
         }
         proc.SetPriority(bgPriority);
         UpdatePriorityByProcForExtension(proc);
