@@ -42,11 +42,11 @@ namespace Memory {
 #undef HILOGD
 #endif
 
-#define HILOGF(fmt, ...) HILOG_FATAL(LOG_CORE, fmt, ##__VA_ARGS__)
-#define HILOGE(fmt, ...) HILOG_ERROR(LOG_CORE, fmt, ##__VA_ARGS__)
-#define HILOGW(fmt, ...) HILOG_WARN(LOG_CORE,  fmt, ##__VA_ARGS__)
-#define HILOGI(fmt, ...) HILOG_INFO(LOG_CORE,  fmt, ##__VA_ARGS__)
-#define HILOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, fmt, ##__VA_ARGS__)
+#define HILOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
+#define HILOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
+#define HILOGW(fmt, ...) HILOG_WARN(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
+#define HILOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
+#define HILOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
 } // namespace MemMgr
 } // namespace OHOS
 #endif // OHOS_MEMORY_MEMMGR_COMMON_INCLUDE_MEM_MGR_LOG_H
