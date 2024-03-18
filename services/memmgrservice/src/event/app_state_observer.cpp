@@ -14,6 +14,8 @@
  */
 
 #include "app_state_observer.h"
+#include <sstream>
+#include "kernel_interface.h"
 #include "mem_mgr_event_center.h"
 #include "memmgr_log.h"
 #include "reclaim_priority_manager.h"
@@ -26,6 +28,8 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "AppStateObserver";
+const std::string SLASH = "/";
+constexpr int RSS_THRESHOLD_RATIO = 80;
 }
 
 void AppStateObserver::OnForegroundApplicationChanged(const AppExecFwk::AppStateData &appStateData)
@@ -67,13 +71,19 @@ void AppStateObserver::OnProcessCreated(const AppExecFwk::ProcessData &processDa
 {
     int32_t renderUid = processData.renderUid;
     int uid = -1;
+    std::stringstream ss;
 
+    ss << KernelInterface::ROOT_PROC_PATH << SLASH << processData.pid << KernelInterface::RSS_THRESHOLD_PATH;
+    std::string path = ss.str();
+    int32_t rssThresoldMax = KernelInterface::GetInstance().GetTotalBuffer() * RSS_THRESHOLD_RATIO / 100;
+    std::string content = std::to_string(rssThresoldMax);
+    KernelInterface::GetInstance().EchoToPath(path.c_str(), content.c_str());
     if (renderUid != -1) {
         uid = renderUid;
     } else {
         uid = processData.uid;
     }
-    HILOGD("uid=%{public}d, pid=%{public}d, bundle=%{public}s", uid, processData.pid, processData.bundleName.c_str());
+    HILOGI("uid=%{public}d, pid=%{public}d, bundle=%{public}s", uid, processData.pid, processData.bundleName.c_str());
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
         SingleRequest(processData.pid, uid, processData.bundleName, AppStateUpdateReason::CREATE_PROCESS));
 }
