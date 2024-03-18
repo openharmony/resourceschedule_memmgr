@@ -39,6 +39,7 @@ IMPLEMENT_SINGLE_INSTANCE(KernelInterface);
 const std::string KernelInterface::ROOT_PROC_PATH = "/proc";
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
 const std::string KernelInterface::FILE_MEMCG_PROCS = "cgroup.procs";
+const std::string KernelInterface::RSS_THRESHOLD_PATH = "/rss_threshold";
 
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
