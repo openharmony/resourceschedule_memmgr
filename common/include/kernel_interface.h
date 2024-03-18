@@ -83,6 +83,7 @@ public:
     static const std::string ROOT_PROC_PATH;
     static const std::string MEMCG_BASE_PATH;
     static const std::string FILE_MEMCG_PROCS;
+    static const std::string RSS_THRESHOLD_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_PATH;
     static const std::string ZWAPD_PRESSURE_SHOW_BUFFER_SIZE;
     static const std::string MEMINFO_PATH;
