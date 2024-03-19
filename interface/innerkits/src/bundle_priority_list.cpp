@@ -20,6 +20,7 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemMgrClient";
+constexpr int MAX_PARCEL_SIZE = 1000;
 }
 
 int32_t BundlePriorityList::GetCount() const
@@ -98,6 +99,10 @@ BundlePriorityList* BundlePriorityList::Unmarshalling(Parcel &parcel)
 bool BundlePriorityList::ReadFromParcel(Parcel &parcel)
 {
     count_ = parcel.ReadInt32();
+    if (count_ < 0 || count_ > MAX_PARCEL_SIZE) {
+        count_ = 0;
+        return false;
+    }
     for (auto i = 0; i < count_; ++i) {
         int32_t uid = parcel.ReadInt32();
         std::string name;
