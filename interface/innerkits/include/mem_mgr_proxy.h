@@ -37,6 +37,8 @@ public:
 #endif
     int32_t OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo) override;
     int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) override;
+    int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo) override;
+    int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo) override;
 
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;

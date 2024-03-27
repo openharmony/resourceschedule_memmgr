@@ -140,6 +140,7 @@ public:
     using ProcInfoSet = std::set<ProcessPriorityInfo, ProcInfoCmpByPriority>;
     bool Init();
     bool UpdateReclaimPriority(UpdateRequest request);
+    bool UpdateRecalimPrioritySyncWithLock(const UpdateRequest &request);
     bool OsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
 
     inline bool Initailized()
@@ -175,7 +176,8 @@ private:
     std::string UNKOWN_REASON = "UNKOWN_REASON";
     ReclaimPriorityConfig config_;
     std::set<std::string> allKillableSystemApps_;
-    using ChangeProcFunc = void (ReclaimPriorityManager::*)(ProcessPriorityInfo &proc, AppAction &action);
+    using ChangeProcFunc = void (ReclaimPriorityManager::*)(ProcessPriorityInfo &proc, AppAction &action,
+        int64_t eventTime);
     std::map<AppStateUpdateReason, ChangeProcFunc> changeProcMapping_;
 
     ReclaimPriorityManager();
@@ -187,8 +189,8 @@ private:
     void GetAllKillableSystemApps();
     void GetKillableSystemAppsFromAms(std::set<std::string> &killableApps);
     void HandlePreStartedProcs();
-    bool UpdateReclaimPriorityInner(UpdateRequest request);
-    bool HandleExtensionProcess(UpdateRequest &request);
+    bool UpdateReclaimPriorityInner(UpdateRequest request, int64_t eventTime = INVALID_TIME);
+    bool HandleExtensionProcess(UpdateRequest &request, int64_t eventTime);
     bool OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool UpdateAllPrioForOsAccountChanged(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod);
     bool ApplyReclaimPriority(std::shared_ptr<BundlePriorityInfo> bundle, pid_t pid, AppAction action);
@@ -198,7 +200,7 @@ private:
     bool HandleTerminateProcess(ProcessPriorityInfo proc, std::shared_ptr<BundlePriorityInfo> bundle,
             std::shared_ptr<AccountBundleInfo> account);
     void HandleUpdateProcess(AppStateUpdateReason reason, std::shared_ptr<BundlePriorityInfo> bundle,
-            ProcessPriorityInfo &proc, AppAction &action);
+            ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
     void UpdatePriorityByProcStatus(std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc);
     bool HandleApplicationSuspend(std::shared_ptr<BundlePriorityInfo> bundle);
     std::shared_ptr<AccountBundleInfo> FindOsAccountById(int accountId);
@@ -209,7 +211,7 @@ private:
     void SetImportantProcPriority(ProcessPriorityInfo &proc);
     bool IsImportantProc(const std::string procName, int &dstPriority);
     bool UpdateExtensionStatusForCaller(UpdateRequest &request);
-    bool UpdateExtensionStatusForTarget(UpdateRequest &request);
+    bool UpdateExtensionStatusForTarget(UpdateRequest &request, int64_t eventTime);
     void UpdatePriorityByProcForExtension(ProcessPriorityInfo &proc);
     void UpdatePriorityByProcConnector(ProcessPriorityInfo &proc);
     void SetTimerForDiedProcessCheck(int64_t delayTime);
@@ -230,20 +232,38 @@ private:
 
     std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
 
-    void HandleForeground(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleBackground(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleEventStart(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleVisible(ProcessPriorityInfo &proc, AppAction &action);
-    void HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action);
+    void HandleForeground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleBackground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleEventStart(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleVisible(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+    void HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime);
+
+    // these methods below used to check ability start completely
+    bool HandleAbilityStart(const UpdateRequest &request, int64_t eventTime);
+    bool CheckSatifyAbilityStartCondition(const ProcessPriorityInfo &proc);
+    void CheckAbilityStartCompleted(pid_t pid, int32_t bundleUid, int32_t accountId);
+    void SetTimerForAbilityStartCompletedCheck(pid_t pid, int32_t bundleUid, int32_t accountId);
+    void RemoveTimerForAbilityStartCompletedCheck(const ProcessPriorityInfo &proc);
+    void FinishAbilityStartIfNeed(ProcessPriorityInfo &proc, AppStateUpdateReason reason, int64_t eventTime);
+    bool CheckAbilityStartNeedFinishInAdvance(const ProcessPriorityInfo &proc, AppStateUpdateReason reason,
+        int64_t eventTime);
+    bool CheckCurrentEventHappenedBeforeAbilityStart(const ProcessPriorityInfo &proc, AppStateUpdateReason reason,
+        int64_t eventTime);
+    bool NeedSkipEventBeforeAbilityStart(const ProcessPriorityInfo &proc, AppStateUpdateReason reason,
+        int64_t eventTime);
+    void AbilityStartingBegin(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle,
+        int64_t eventTime);
+    void AbilityStartingEnd(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle = nullptr,
+        bool isUpdatePriority = false);
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
