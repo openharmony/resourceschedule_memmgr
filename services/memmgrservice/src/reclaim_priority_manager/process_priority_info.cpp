@@ -41,6 +41,8 @@ ProcessPriorityInfo::ProcessPriorityInfo(pid_t pid, int bundleUid, int priority,
     this->isDistDeviceConnected = false;
     this->isExtension_ = false;
     this->extensionBindStatus = EXTENSION_STATUS_BIND_UNKOWN;
+    this->isAbilityStarting_ = false;
+    this->startingAbilityTime_ = INVALID_TIME;
 }
 
 ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
@@ -65,6 +67,9 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     for (auto &pair : copyProcess.procsBindFromMe_) {
         this->procsBindFromMe_.insert(std::make_pair(pair.first, pair.second));
     }
+
+    this->isAbilityStarting_ = copyProcess.isAbilityStarting_;
+    this->startingAbilityTime_ = copyProcess.startingAbilityTime_;
 }
 
 ProcessPriorityInfo::~ProcessPriorityInfo()
@@ -133,5 +138,26 @@ std::string ProcessPriorityInfo::ProcsBindFromMe()
     ss << "]";
     return ss.str();
 }
+
+bool ProcessPriorityInfo::IsAbilityStarting() const
+{
+    return isAbilityStarting_;
+}
+
+void ProcessPriorityInfo::SetIsAbilityStarting(bool isAbilityStarting)
+{
+    isAbilityStarting_ = isAbilityStarting;
+}
+
+void ProcessPriorityInfo::SetStartingAbilityTime(int64_t time)
+{
+    startingAbilityTime_ = time;
+}
+
+int64_t ProcessPriorityInfo::GetStartingAbilityTime() const
+{
+    return startingAbilityTime_;
+}
+
 } // namespace Memory
 } // namespace OHOS

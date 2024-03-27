@@ -33,6 +33,8 @@ enum class MemMgrInterfaceCode {
 #endif
         MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED = 10,
         MEM_MGR_GET_PRIORITY_BY_PID = 11,
+        MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC = 12,
+        MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC = 13,
 };
 
 enum class AppStateSubscriberInterfaceCode {

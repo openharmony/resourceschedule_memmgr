@@ -55,7 +55,8 @@ constexpr int RECLAIM_PRIORITY_MAX = 1000;
 const int USER_ID_SHIFT = 200000;
 #define GET_OS_ACCOUNT_ID_BY_UID(bundleUid) ((bundleUid) / USER_ID_SHIFT)
 
-const int IGNORE_PID = -1;
+constexpr int IGNORE_PID = -1;
+constexpr int INVALID_TIME = -1;
 
 enum class AppStateUpdateReason {
     CREATE_PROCESS = 0,
@@ -78,11 +79,16 @@ enum class AppStateUpdateReason {
     VISIBLE,
     UN_VISIBLE,
     RENDER_CREATE_PROCESS,
+    ABILITY_START,
 };
 
 enum class BundleState {
     STATE_DEFAULT = 0,
     STATE_WAITING_FOR_KILL,
+};
+
+enum class MemMgrErrorCode {
+    MEMMGR_SERVICE_ERR = 190900,
 };
 } // namespace Memory
 } // namespace OHOS

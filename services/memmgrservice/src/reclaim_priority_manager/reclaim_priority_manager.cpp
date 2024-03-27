@@ -23,6 +23,7 @@
 #include "memmgr_ptr_util.h"
 #include "multi_account_manager.h"
 #include "oom_score_adj_utils.h"
+#include "reclaim_priority_constants.h"
 #include "reclaim_strategy_manager.h"
 #include "render_process_info.h"
 #include "singleton.h"
@@ -35,6 +36,8 @@ const std::string TAG = "ReclaimPriorityManager";
 constexpr int TIMER_DIED_PROC_FAST_CHECK_MS = 10000;
 constexpr int TIMER_DIED_PROC_SLOW_CHECK_MS = 3 * 60 * 1000; // 3min
 constexpr int MAX_TOTALBUNDLESET_SIZE = 2000;
+
+constexpr int TIMER_ABILITY_START_CHECK_MS = 10 * 1000; // 10s
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
@@ -71,6 +74,7 @@ void ReclaimPriorityManager::InitUpdateReasonStrMapping()
         "RENDER_CREATE_PROCESS";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::VISIBLE)] = "VISIBLE";
     updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::UN_VISIBLE)] = "UN_VISIBLE";
+    updateReasonStrMapping_[static_cast<int32_t>(AppStateUpdateReason::ABILITY_START)] = "ABILITY_START";
 }
 
 std::string& ReclaimPriorityManager::AppStateUpdateResonToString(AppStateUpdateReason reason)
@@ -123,8 +127,8 @@ void ReclaimPriorityManager::Dump(int fd)
     }
     dprintf(fd, "-----------------------------------------------------------------\n\n");
 
-    dprintf(fd,
-        "priority list of all managed processes, status:(fg,visible,bgtask,trantask,evt,dist,extb,ext,render)\n");
+    dprintf(fd, "priority list of all managed processes, status:(fg,visible,bgtask,trantask,evt,dist,extb,ext,"
+        "render,startAbility)\n");
     dprintf(fd, "    pid       uid                                   bundle priority status\
                       connnectorpids               connnectoruids               processuids\n");
     for (auto bundlePtr : totalBundlePrioSet_) {
@@ -135,11 +139,12 @@ void ReclaimPriorityManager::Dump(int fd)
         }
         for (auto procEntry : bundlePtr->procs_) {
             ProcessPriorityInfo &proc = procEntry.second;
-            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d%d %30s\n",
+            dprintf(fd, "|%8d %8d %42s %5d %d%d%d%d%d%d%d%d%d%d %30s\n",
                 proc.pid_, bundlePtr->uid_, bundlePtr->name_.c_str(),
                 proc.priority_, proc.isFreground, proc.isVisible_, proc.isBackgroundRunning,
                 proc.isSuspendDelay, proc.isEventStart, proc.isDistDeviceConnected,
-                proc.extensionBindStatus, proc.isExtension_, proc.isRender_, proc.ProcsBindToMe().c_str());
+                proc.extensionBindStatus, proc.isExtension_, proc.isRender_,
+                proc.IsAbilityStarting(), proc.ProcsBindToMe().c_str());
         }
     }
     dprintf(fd, "-----------------------------------------------------------------\n");
@@ -383,9 +388,102 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(UpdateRequest request)
         HILOGE("has not been initialized_, skiped!");
         return false;
     }
+    int64_t eventTime = KernelInterface::GetInstance().GetSystemTimeMs();
     std::function<bool()> updateReclaimPriorityInnerFunc =
-                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, request);
-    return handler_->PostImmediateTask(updateReclaimPriorityInnerFunc);
+                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, request, eventTime);
+    if (request.reason == AppStateUpdateReason::ABILITY_START) {
+        return handler_->PostTask(updateReclaimPriorityInnerFunc, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    } else {
+        return handler_->PostTask(updateReclaimPriorityInnerFunc, 0, AppExecFwk::EventQueue::Priority::HIGH);
+    }
+}
+
+bool ReclaimPriorityManager::UpdateRecalimPrioritySyncWithLock(const UpdateRequest &request)
+{
+    if (!initialized_) {
+        HILOGE("has not been initialized_, skiped!");
+        return false;
+    }
+    // add lock
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+
+    if (request.reason == AppStateUpdateReason::ABILITY_START) {
+        int64_t eventTime = KernelInterface::GetInstance().GetSystemTimeMs();
+        return HandleAbilityStart(request, eventTime);
+    }
+    return true;
+}
+
+bool ReclaimPriorityManager::CheckSatifyAbilityStartCondition(const ProcessPriorityInfo &proc)
+{
+    // priority of process is less important than RECLAIM_PRIORITY_FOREGROUND
+    if (proc.priority_ > RECLAIM_PRIORITY_FOREGROUND) {
+        return true;
+    }
+    if (proc.priority_ < RECLAIM_PRIORITY_FOREGROUND) {
+        return false;
+    }
+    // process is starting ability
+    if (proc.IsAbilityStarting()) {
+        return true;
+    }
+    return false;
+}
+
+// add lock before use this function
+bool ReclaimPriorityManager::HandleAbilityStart(const UpdateRequest &request, int64_t eventTime)
+{
+    ReqProc target = request.target;
+    int accountId = GetOsAccountLocalIdFromUid(target.uid);
+    if (!IsProcExist(target.pid, target.uid, accountId)) {
+        HILOGE("process not exist and not to create it!!");
+        return false;
+    }
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(target.uid);
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(target.pid);
+
+    if (CheckSatifyAbilityStartCondition(proc)) {
+        AbilityStartingBegin(proc, bundle, eventTime);
+
+        // remove previous timer if proc is not first starting ability
+        RemoveTimerForAbilityStartCompletedCheck(proc);
+        HILOGD("SetTimerForAbilityStartCompletedCheck, add timer!");
+        SetTimerForAbilityStartCompletedCheck(proc.pid_, proc.uid_, accountId);
+    }
+
+    return true;
+}
+
+void ReclaimPriorityManager::SetTimerForAbilityStartCompletedCheck(pid_t pid, int32_t bundleUid, int32_t accountId)
+{
+    std::function<void()> timerFunc =
+        std::bind(&ReclaimPriorityManager::CheckAbilityStartCompleted, this, pid, bundleUid, accountId);
+        std::string taskName = std::to_string(pid) + AppStateUpdateResonToString(AppStateUpdateReason::ABILITY_START);
+    handler_->PostTask(timerFunc, taskName, TIMER_ABILITY_START_CHECK_MS, AppExecFwk::EventQueue::Priority::LOW);
+    HILOGI("set process<pid=%{public}d,uid=%{public}d> ability start check timer after %{public}d ms",
+        pid, bundleUid, TIMER_ABILITY_START_CHECK_MS);
+}
+
+void ReclaimPriorityManager::CheckAbilityStartCompleted(pid_t pid, int32_t bundleUid, int32_t accountId)
+{
+    // add lock
+    std::lock_guard<std::mutex> lock(totalBundlePrioSetLock_);
+
+    if (!IsProcExist(pid, bundleUid, accountId)) {
+        return;
+    }
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(bundleUid);
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
+
+    if (!proc.IsAbilityStarting()) {
+        HILOGD("check process<pid=%{public}d,uid=%{public}d,prio=%{public}d> : is not starting ability,"
+            " not handle!", proc.pid_, proc.uid_, proc.priority_);
+        return;
+    }
+
+    AbilityStartingEnd(proc, bundle, true);
 }
 
 sptr<AppExecFwk::IBundleMgr> GetBundleMgr()
@@ -517,7 +615,7 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
 void ReclaimPriorityManager::SetTimerForDiedProcessCheck(int64_t delayTime)
 {
     std::function<void()> timerFunc = std::bind(&ReclaimPriorityManager::HandleDiedProcessCheck, this);
-    handler_->PostTask(timerFunc, delayTime, AppExecFwk::EventQueue::Priority::HIGH);
+    handler_->PostTask(timerFunc, delayTime, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void ReclaimPriorityManager::FilterDiedProcess()
@@ -610,7 +708,7 @@ bool ReclaimPriorityManager::HandleApplicationSuspend(std::shared_ptr<BundlePrio
     return ret;
 }
 
-bool ReclaimPriorityManager::UpdateExtensionStatusForTarget(UpdateRequest &request)
+bool ReclaimPriorityManager::UpdateExtensionStatusForTarget(UpdateRequest &request, int64_t eventTime)
 {
     ReqProc caller = request.caller;
     ReqProc target = request.target;
@@ -639,7 +737,7 @@ bool ReclaimPriorityManager::UpdateExtensionStatusForTarget(UpdateRequest &reque
         proc.ProcUnBindToMe(caller.pid);
     }
     AppAction action = AppAction::OTHERS;
-    HandleUpdateProcess(request.reason, bundle, proc, action);
+    HandleUpdateProcess(request.reason, bundle, proc, action, eventTime);
     return ApplyReclaimPriority(bundle, target.pid, action);
 }
 
@@ -756,14 +854,14 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
     }
 }
 
-bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request)
+bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request, int64_t eventTime)
 {
     UpdateExtensionStatusForCaller(request);
-    return UpdateExtensionStatusForTarget(request);
+    return UpdateExtensionStatusForTarget(request, eventTime);
 }
 
 
-bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
+bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request, int64_t eventTime)
 {
     // This function can only be called by UpdateReclaimPriority, otherwise it may deadlock.
     std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
@@ -773,7 +871,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
 
     if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
         request.reason == AppStateUpdateReason::UNBIND_EXTENSION) {
-        return HandleExtensionProcess(request);
+        return HandleExtensionProcess(request, eventTime);
     }
 
     if (request.reason == AppStateUpdateReason::CREATE_PROCESS) {
@@ -781,8 +879,11 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
     }
 
     if (request.reason == AppStateUpdateReason::RENDER_CREATE_PROCESS) {
-        HILOGD("call HandleCreateProcess");
         return HandleCreateProcess(target, accountId, true);
+    }
+
+    if (request.reason == AppStateUpdateReason::ABILITY_START) {
+        return HandleAbilityStart(request, eventTime);
     }
 
     if (!IsProcExist(target.pid, target.uid, accountId)) {
@@ -805,7 +906,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request)
     if (request.reason == AppStateUpdateReason::PROCESS_TERMINATED) {
         return HandleTerminateProcess(proc, bundle, account);
     } else {
-        HandleUpdateProcess(request.reason, bundle, proc, action);
+        HandleUpdateProcess(request.reason, bundle, proc, action, eventTime);
     }
     return ApplyReclaimPriority(bundle, target.pid, action);
 }
@@ -913,78 +1014,83 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
     UpdatePriorityByProcForExtension(proc);
 }
 
-void ReclaimPriorityManager::HandleForeground(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleForeground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isFreground = true;
     action = AppAction::APP_FOREGROUND;
+    FinishAbilityStartIfNeed(proc, AppStateUpdateReason::FOREGROUND, eventTime);
 }
 
-void ReclaimPriorityManager::HandleBackground(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleBackground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isFreground = false;
     action = AppAction::APP_BACKGROUND;
+    FinishAbilityStartIfNeed(proc, AppStateUpdateReason::BACKGROUND, eventTime);
 }
 
-void ReclaimPriorityManager::HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleSuspendDelayStart(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isSuspendDelay = true;
 }
 
-void ReclaimPriorityManager::HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleSuspendDelayEnd(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isSuspendDelay = false;
 }
 
-void ReclaimPriorityManager::HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleBackgroundRunningStart(ProcessPriorityInfo &proc, AppAction &action,
+    int64_t eventTime)
 {
     proc.isBackgroundRunning = true;
 }
 
-void ReclaimPriorityManager::HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleBackgroundRunningEnd(ProcessPriorityInfo &proc, AppAction &action,
+    int64_t eventTime)
 {
     proc.isBackgroundRunning = false;
 }
 
-void ReclaimPriorityManager::HandleEventStart(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleEventStart(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isEventStart = true;
 }
 
-void ReclaimPriorityManager::HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleEventEnd(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isEventStart = false;
 }
 
-void ReclaimPriorityManager::HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleDistDeviceConnected(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isDistDeviceConnected = true;
 }
 
-void ReclaimPriorityManager::HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleDistDeviceDisconnected(ProcessPriorityInfo &proc, AppAction &action,
+    int64_t eventTime)
 {
     proc.isDistDeviceConnected = false;
 }
 
-void ReclaimPriorityManager::HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleBindExtension(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     if (proc.ExtensionConnectorsCount() > 0) {
         proc.extensionBindStatus = EXTENSION_STATUS_FG_BIND;
     }
 }
 
-void ReclaimPriorityManager::HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleUnbindExtension(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     if (proc.ExtensionConnectorsCount() == 0) {
         proc.extensionBindStatus = EXTENSION_STATUS_NO_BIND;
     }
 }
 
-void ReclaimPriorityManager::HandleVisible(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleVisible(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isVisible_ = true;
 }
 
-void ReclaimPriorityManager::HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action)
+void ReclaimPriorityManager::HandleUnvisible(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isVisible_ = false;
 }
@@ -1013,7 +1119,7 @@ void ReclaimPriorityManager::InitChangeProcMapping()
 
 
 void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
-    std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action)
+    std::shared_ptr<BundlePriorityInfo> bundle, ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     HILOGD("called, bundle[uid_=%{public}d,name=%{public}s,priority=%{public}d], proc[pid_=%{public}d, uid=%{public}d,"
         "isFreground=%{public}d, isBackgroundRunning=%{public}d, isSuspendDelay=%{public}d, isEventStart=%{public}d,"
@@ -1024,7 +1130,13 @@ void ReclaimPriorityManager::HandleUpdateProcess(AppStateUpdateReason reason,
     auto it = changeProcMapping_.find(reason);
     if (it != changeProcMapping_.end()) {
         auto changeProcPtr = it->second;
-        (this->*changeProcPtr)(proc, action);
+        (this->*changeProcPtr)(proc, action, eventTime);
+    }
+
+    if (NeedSkipEventBeforeAbilityStart(proc, reason, eventTime)) {
+        HILOGI("this event<pid=%{public}d,uid=%{public}d,reason=%{public}s> should execute befor startAbility event,\
+            skip update priority.", proc.pid_, proc.uid_, AppStateUpdateResonToString(reason).c_str());
+        return;
     }
     UpdatePriorityByProcStatus(bundle, proc);
 }
@@ -1087,5 +1199,77 @@ void ReclaimPriorityManager::Reset()
     osAccountsInfoMap_.clear();
 }
 
+bool ReclaimPriorityManager::CheckCurrentEventHappenedBeforeAbilityStart(const ProcessPriorityInfo &proc,
+    AppStateUpdateReason reason, int64_t eventTime)
+{
+    if (eventTime == INVALID_TIME) {
+        return false;
+    }
+    if (eventTime < proc.GetStartingAbilityTime()) {
+        return true;
+    }
+    return false;
+}
+
+void ReclaimPriorityManager::RemoveTimerForAbilityStartCompletedCheck(const ProcessPriorityInfo &proc)
+{
+    if (handler_ == nullptr) {
+        return;
+    }
+    handler_->RemoveTask(std::to_string(proc.pid_) +
+        AppStateUpdateResonToString(AppStateUpdateReason::ABILITY_START));
+}
+
+// set priority of proc to RECLAIM_PRIORITY_FOREGROUND when proc is starting ability
+void ReclaimPriorityManager::AbilityStartingBegin(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle,
+    int64_t eventTime)
+{
+    if (bundle == nullptr) {
+        return;
+    }
+    // set priority to RECLAIM_PRIORITY_FOREGROUND
+    proc.SetPriority(RECLAIM_PRIORITY_FOREGROUND);
+    proc.SetStartingAbilityTime(eventTime);
+    proc.SetIsAbilityStarting(true);
+
+    UpdateBundlePriority(bundle);
+    ApplyReclaimPriority(bundle, proc.pid_, AppAction::OTHERS);
+}
+
+void ReclaimPriorityManager::AbilityStartingEnd(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle,
+    bool isUpdatePriority)
+{
+    proc.SetIsAbilityStarting(false);
+
+    // update priority based on process's status if need
+    if (isUpdatePriority && bundle != nullptr) {
+        int32_t beforePriority = proc.priority_;
+        UpdatePriorityByProcStatus(bundle, proc);
+        ApplyReclaimPriority(bundle, proc.pid_, AppAction::OTHERS);
+        HILOGI("check process<pid=%{public}d,uid=%{public}d>, beforePrio=%{public}d, set currentPrio:%{public}d!",
+            proc.pid_, proc.uid_, beforePriority, proc.priority_);
+    }
+}
+
+void ReclaimPriorityManager::FinishAbilityStartIfNeed(ProcessPriorityInfo &proc, AppStateUpdateReason reason,
+    int64_t eventTime)
+{
+    if (CheckAbilityStartNeedFinishInAdvance(proc, reason, eventTime)) {
+        RemoveTimerForAbilityStartCompletedCheck(proc);
+        AbilityStartingEnd(proc);
+    }
+}
+
+bool ReclaimPriorityManager::CheckAbilityStartNeedFinishInAdvance(const ProcessPriorityInfo &proc,
+    AppStateUpdateReason reason, int64_t eventTime)
+{
+    return proc.IsAbilityStarting() && !CheckCurrentEventHappenedBeforeAbilityStart(proc, reason, eventTime);
+}
+
+bool ReclaimPriorityManager::NeedSkipEventBeforeAbilityStart(const ProcessPriorityInfo &proc,
+    AppStateUpdateReason reason, int64_t eventTime)
+{
+    return proc.IsAbilityStarting() && CheckCurrentEventHappenedBeforeAbilityStart(proc, reason, eventTime);
+}
 } // namespace Memory
 } // namespace OHOS

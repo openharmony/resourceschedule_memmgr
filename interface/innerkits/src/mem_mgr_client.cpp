@@ -221,6 +221,28 @@ int32_t MemMgrClient::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
     return dps->GetReclaimPriorityByPid(pid, priority);
 }
 
+int32_t MemMgrClient::NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->NotifyProcessStateChangedSync(processStateInfo);
+}
+
+int32_t MemMgrClient::NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo)
+{
+    HILOGD("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->NotifyProcessStateChangedAsync(processStateInfo);
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");
