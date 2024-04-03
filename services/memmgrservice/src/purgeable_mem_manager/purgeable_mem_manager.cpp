@@ -26,6 +26,7 @@
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "reclaim_priority_manager.h"
+#include "reclaim_strategy_manager.h"
 #include "system_memory_level_config.h"
 #include "purgeablemem_config.h"
  
@@ -50,6 +51,9 @@ PurgeableMemManager::PurgeableMemManager()
 
 bool PurgeableMemManager::GetEventHandler()
 {
+    if (!handler_) {
+        handler_ = ReclaimStrategyManager::GetInstance().GetEventHandler();
+    }
     if (!handler_) {
         MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
             AppExecFwk::EventRunner::Create());

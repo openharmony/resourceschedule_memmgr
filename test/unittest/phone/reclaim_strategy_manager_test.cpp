@@ -118,9 +118,9 @@ HWTEST_F(ReclaimStrategyManagerTest, NotifyAccountPriorityChangedTest, TestSize.
     EXPECT_EQ(KernelInterface::GetInstance().IsDirExists(memcgPath), false);
 }
 
-HWTEST_F(ReclaimStrategyManagerTest, GetEventHandlerTest, TestSize.Level1)
+HWTEST_F(ReclaimStrategyManagerTest, CreateEventHandlerTest, TestSize.Level1)
 {
-    EXPECT_EQ(ReclaimStrategyManager::GetInstance().GetEventHandler_(), true);
+    EXPECT_EQ(ReclaimStrategyManager::GetInstance().CreateEventHandler(), true);
 }
 
 HWTEST_F(ReclaimStrategyManagerTest, HandleProcessCreateTest, TestSize.Level1)
