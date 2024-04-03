@@ -36,13 +36,14 @@ public:
     {
         return initialized_;
     };
-
+    //this method is only used for class PurgeableMemManager
+    std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler() const;
 private:
     bool initialized_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
 
     ReclaimStrategyManager();
-    bool GetEventHandler_();
+    bool CreateEventHandler();
     void InitProcessBeforeMemmgr();
 
     // handle app and os user event
