@@ -38,7 +38,7 @@ bool ReclaimStrategyManager::Init()
 {
     initialized_ = false;
     do {
-        if (!GetEventHandler_()) {
+        if (!CreateEventHandler()) {
             break;
         }
         AvailBufferManager::GetInstance().Init();
@@ -57,13 +57,18 @@ bool ReclaimStrategyManager::Init()
     return initialized_;
 }
 
-bool ReclaimStrategyManager::GetEventHandler_()
+bool ReclaimStrategyManager::CreateEventHandler()
 {
     if (handler_ == nullptr) {
         MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
             AppExecFwk::EventRunner::Create());
     }
     return true;
+}
+
+std::shared_ptr<AppExecFwk::EventHandler> ReclaimStrategyManager::GetEventHandler() const
+{
+    return handler_;
 }
 
 void ReclaimStrategyManager::InitProcessBeforeMemmgr()
