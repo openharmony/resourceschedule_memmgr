@@ -20,6 +20,18 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
+extern "C" {
+    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId)
+    {
+        return OHOS::Memory::MemMgrClient::GetInstance().NotifyProcessStatus(pid, type, status, saId);
+    }
+
+    int32_t SetCritical(int32_t pid, bool critical, int32_t saId)
+    {
+        return OHOS::Memory::MemMgrClient::GetInstance().SetCritical(pid, critical, saId);
+    }
+}
+
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -241,6 +253,28 @@ int32_t MemMgrClient::NotifyProcessStateChangedAsync(const MemMgrProcessStateInf
         return -1;
     }
     return dps->NotifyProcessStateChangedAsync(processStateInfo);
+}
+
+int32_t MemMgrClient::NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId)
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->NotifyProcessStatus(pid, type, status, saId);
+}
+
+int32_t MemMgrClient::SetCritical(int32_t pid, bool critical, int32_t saId)
+{
+    HILOGI("called");
+    auto dps = GetMemMgrService();
+    if (dps == nullptr) {
+        HILOGE("MemMgrService is null");
+        return -1;
+    }
+    return dps->SetCritical(pid, critical, saId);
 }
 
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
