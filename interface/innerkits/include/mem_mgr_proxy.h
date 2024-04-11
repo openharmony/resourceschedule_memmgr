@@ -39,6 +39,8 @@ public:
     int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) override;
     int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo) override;
     int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo) override;
+    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId = -1) override;
+    int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1) override;
 
 private:
     static inline BrokerDelegator<MemMgrProxy> delegator_;

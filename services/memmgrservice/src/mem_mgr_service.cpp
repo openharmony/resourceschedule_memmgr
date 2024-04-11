@@ -273,6 +273,20 @@ int32_t MemMgrService::NotifyProcessStateChangedAsync(const MemMgrProcessStateIn
     return 0;
 }
 
+int32_t MemMgrService::NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int32_t saId)
+{
+    HILOGI("NotifyProcessStatus : pid=%{public}d,type=%{public}d,status=%{public}d,saId=%{public}d",
+            pid, type, status, saId);
+    return 0;
+}
+
+int32_t MemMgrService::SetCritical(int32_t pid, bool critical, int32_t saId)
+{
+    HILOGI("SetCritical : pid=%{public}d,critical=%{public}d,saId=%{public}d",
+            pid, critical, saId);
+    return 0;
+}
+
 void MemMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
     HILOGI("systemAbilityId: %{public}d add", systemAbilityId);

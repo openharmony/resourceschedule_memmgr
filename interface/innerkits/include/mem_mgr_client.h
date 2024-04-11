@@ -20,6 +20,11 @@
 #include "single_instance.h"
 #include "app_state_subscriber.h"
 
+extern "C" {
+    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId = -1);
+    int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1);
+}
+
 namespace OHOS {
 namespace Memory {
 class MemMgrClient {
@@ -41,6 +46,8 @@ public:
     int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority);
     int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo);
     int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo);
+    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId = -1);
+    int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1);
 
 private:
     sptr<IMemMgr> GetMemMgrService();
