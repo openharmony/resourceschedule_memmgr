@@ -275,7 +275,8 @@ int32_t MemMgrService::NotifyProcessStateChangedAsync(const MemMgrProcessStateIn
 
 int32_t MemMgrService::NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int32_t saId)
 {
-    HILOGI("NotProStatus:pid=%{public}d,type=%{public}d,status=%{public}d,saId=%{public}d", pid, type, status, saId);
+    HILOGI("NotifyProcessStatus:pid=%{public}d,type=%{public}d,status=%{public}d,saId=%{public}d",
+        pid, type, status, saId);
     return 0;
 }
 

@@ -35,8 +35,8 @@ enum class MemMgrInterfaceCode {
         MEM_MGR_GET_PRIORITY_BY_PID = 11,
         MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC = 12,
         MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC = 13,
-        MEM_MGR_NOTIFY_PROCESS_STATUS = 15,
-        MEM_MGR_SET_CRITICAL = 16,
+        MEM_MGR_NOTIFY_PROCESS_STATUS = 14,
+        MEM_MGR_SET_CRITICAL = 15,
 };
 
 enum class AppStateSubscriberInterfaceCode {
