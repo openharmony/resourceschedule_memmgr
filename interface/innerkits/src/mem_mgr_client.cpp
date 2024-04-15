@@ -21,12 +21,12 @@
 #include "system_ability_definition.h"
 
 extern "C" {
-    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId)
+    int32_t notify_process_status(int32_t pid, int32_t type, int32_t status, int saId)
     {
         return OHOS::Memory::MemMgrClient::GetInstance().NotifyProcessStatus(pid, type, status, saId);
     }
 
-    int32_t SetCritical(int32_t pid, bool critical, int32_t saId)
+    int32_t set_critical(int32_t pid, bool critical, int32_t saId)
     {
         return OHOS::Memory::MemMgrClient::GetInstance().SetCritical(pid, critical, saId);
     }
