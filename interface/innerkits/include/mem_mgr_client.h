@@ -21,8 +21,8 @@
 #include "app_state_subscriber.h"
 
 extern "C" {
-    int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId = -1);
-    int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1);
+    int32_t notify_process_status(int32_t pid, int32_t type, int32_t status, int saId = -1);
+    int32_t set_critical(int32_t pid, bool critical, int32_t saId = -1);
 }
 
 namespace OHOS {
