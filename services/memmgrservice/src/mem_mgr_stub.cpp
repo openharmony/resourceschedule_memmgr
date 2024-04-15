@@ -358,7 +358,7 @@ int32_t MemMgrStub::HandleNotifyProcessStatus(MessageParcel &data, MessageParcel
     int32_t pid = 0;
     int32_t type = 0;
     int32_t status = 0;
-    int32_t saId = 0;
+    int32_t saId = -1;
     if (!data.ReadInt32(pid) || !data.ReadInt32(type) || !data.ReadInt32(status) || !data.ReadInt32(saId)) {
         HILOGE("read params failed");
         return IPC_STUB_ERR;
@@ -379,7 +379,7 @@ int32_t MemMgrStub::HandleSetCritical(MessageParcel &data, MessageParcel &reply)
     }
     int32_t pid = 0;
     bool critical = false;
-    int32_t saId = 0;
+    int32_t saId = -1;
     if (!data.ReadInt32(pid) || !data.ReadBool(critical) || !data.ReadInt32(saId)) {
         HILOGE("read params failed");
         return IPC_STUB_ERR;
