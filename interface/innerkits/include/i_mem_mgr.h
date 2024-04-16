@@ -21,6 +21,7 @@
 #include "bundle_priority_list.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
+#include "iremote_proxy.h"
 #include "mem_mgr_process_state_info.h"
 #include "mem_mgr_window_info.h"
 #include "memmgrservice_ipc_interface_code.h"
@@ -58,6 +59,8 @@ public:
     virtual int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) = 0;
     virtual int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo) = 0;
     virtual int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo) = 0;
+    virtual int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int saId = -1) = 0;
+    virtual int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1) = 0;
 };
 } // namespace Memory
 } // namespace OHOS

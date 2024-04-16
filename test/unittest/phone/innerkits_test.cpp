@@ -239,5 +239,23 @@ HWTEST_F(InnerkitsTest, NotifyProcessStateChangedAsync_Test, TestSize.Level1)
     int32_t ret = MemMgrClient::GetInstance().NotifyProcessStateChangedAsync(processStateInfo);
     EXPECT_EQ(ret, IPC_STUB_ERR);
 }
+
+HWTEST_F(InnerkitsTest, NotifyProcessStatus_Test, TestSize.Level1)
+{
+    pid_t pid = 1035;
+    int type = 1;
+    int status = 1;
+    int saId = 1000;
+    int ret = MemMgrClient::GetInstance().NotifyProcessStatus(pid, type, status, saId);
+    EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(InnerkitsTest, SetCritical_Test, TestSize.Level1)
+{
+    pid_t pid = 1036;
+    int saId = 1000;
+    int ret = MemMgrClient::GetInstance().SetCritical(pid, true, saId);
+    EXPECT_EQ(ret, 0);
+}
 }
 }

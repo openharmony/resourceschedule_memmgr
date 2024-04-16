@@ -44,6 +44,8 @@ public:
     virtual int32_t GetReclaimPriorityByPid(int32_t pid, int32_t &priority) override;
     virtual int32_t NotifyProcessStateChangedSync(const MemMgrProcessStateInfo &processStateInfo) override;
     virtual int32_t NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo &processStateInfo) override;
+    virtual int32_t NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int32_t saId = -1) override;
+    virtual int32_t SetCritical(int32_t pid, bool critical, int32_t saId = -1) override;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual int Dump(int fd, const std::vector<std::u16string> &args) override;
