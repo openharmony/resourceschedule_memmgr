@@ -62,6 +62,10 @@ MemMgrStub::MemMgrStub()
     &MemMgrStub::HandleNotifyProcessStateChangedSync;
         memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC)] =
     &MemMgrStub::HandleNotifyProcessStateChangedAsync;
+        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATUS)] =
+    &MemMgrStub::HandleNotifyProcessStatus;
+        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SET_CRITICAL)] =
+    &MemMgrStub::HandleSetCritical;
 }
 
 MemMgrStub::~MemMgrStub()
@@ -342,6 +346,51 @@ int32_t MemMgrStub::HandleNotifyProcessStateChangedAsync(MessageParcel &data, Me
         return IPC_STUB_ERR;
     }
     return ret;
+}
+int32_t MemMgrStub::HandleNotifyProcessStatus(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+
+    if (!CheckCallingToken()) {
+        HILOGE("calling process has no permission, call failed");
+        return IPC_STUB_ERR;
+    }
+    int32_t pid = 0;
+    int32_t type = 0;
+    int32_t status = 0;
+    int32_t saId = -1;
+    if (!data.ReadInt32(pid) || !data.ReadInt32(type) || !data.ReadInt32(status) || !data.ReadInt32(saId)) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+
+    NotifyProcessStatus(pid, type, status, saId);
+
+    return 0;
+}
+
+int32_t MemMgrStub::HandleSetCritical(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("called");
+
+    if (!CheckCallingToken()) {
+        HILOGE("calling process has no permission, call failed");
+        return IPC_STUB_ERR;
+    }
+    int32_t pid = 0;
+    bool critical = false;
+    int32_t saId = -1;
+    if (!data.ReadInt32(pid) || !data.ReadBool(critical) || !data.ReadInt32(saId)) {
+        HILOGE("read params failed");
+        return IPC_STUB_ERR;
+    }
+    if (IPCSkeleton::GetCallingPid() != pid) {
+        return 0;
+    }
+
+    SetCritical(pid, critical, saId);
+
+    return 0;
 }
 } // namespace Memory
 } // namespace OHOS

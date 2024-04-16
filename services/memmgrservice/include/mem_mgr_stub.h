@@ -49,6 +49,8 @@ private:
     bool IsCameraServiceCalling();
     int32_t HandleNotifyProcessStateChangedSync(MessageParcel &data, MessageParcel &reply);
     int32_t HandleNotifyProcessStateChangedAsync(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleNotifyProcessStatus(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleSetCritical(MessageParcel &data, MessageParcel &reply);
     bool CheckCallingToken();
 
     using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);

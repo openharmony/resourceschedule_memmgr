@@ -413,5 +413,79 @@ int32_t MemMgrProxy::NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo
     }
     return ret;
 }
+
+int32_t MemMgrProxy::NotifyProcessStatus(int32_t pid, int32_t type, int32_t status, int32_t saId)
+{
+    HILOGD("called");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid)) {
+        HILOGE("write pid failed");
+        return ERR_INVALID_DATA;
+    }
+    if (!data.WriteInt32(type)) {
+        HILOGE("write type failed");
+        return ERR_INVALID_DATA;
+    }
+    if (!data.WriteInt32(status)) {
+        HILOGE("write status failed");
+        return ERR_INVALID_DATA;
+    }
+    if (!data.WriteInt32(saId)) {
+        HILOGE("write saId failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATUS), data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+    }
+    return ERR_OK;
+}
+
+int32_t MemMgrProxy::SetCritical(int32_t pid, bool critical, int32_t saId)
+{
+    HILOGD("called");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
+        HILOGE("write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteInt32(pid)) {
+        HILOGE("write pid failed");
+        return ERR_INVALID_DATA;
+    }
+    if (!data.WriteBool(critical)) {
+        HILOGE("write critical failed");
+        return ERR_INVALID_DATA;
+    }
+    if (!data.WriteInt32(saId)) {
+        HILOGE("write saId failed");
+        return ERR_INVALID_DATA;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(
+        static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SET_CRITICAL), data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("transact failed, error: %{public}d", error);
+    }
+    return ERR_OK;
+}
 } // namespace Memory
 } // namespace OHOS
