@@ -32,9 +32,7 @@
           "samgr",
           "resource_management",
           "access_token",
-          "init"
-        ],
-        "third_party": [
+          "init",
           "libxml2"
         ]
       },

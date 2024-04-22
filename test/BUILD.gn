@@ -20,16 +20,14 @@ module_output_path = "memmgrtest/"
 
 memmgr_service_configs = [ "${memmgr_service_path}:memory_memmgr_config" ]
 
-memmgr_deps = [
-  "${memmgr_service_path}:memmgrservice",
-  "//third_party/libxml2:xml2",
-]
+memmgr_deps = [ "${memmgr_service_path}:memmgrservice" ]
 
 memmgr_external_deps = [
   "c_utils:utils",
   "eventhandler:libeventhandler",
   "hilog:libhilog",
   "ipc:ipc_core",
+  "libxml2:libxml2",
   "memmgr:memmgrclient",
   "os_account:os_account_innerkits",
 ]
