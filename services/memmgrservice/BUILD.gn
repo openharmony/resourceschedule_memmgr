@@ -100,8 +100,6 @@ ohos_shared_library("memmgrservice") {
 
   configs = [ ":memory_memmgr_config" ]
 
-  deps = [ "//third_party/libxml2:libxml2" ]
-
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_context",
@@ -117,6 +115,7 @@ ohos_shared_library("memmgrservice") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "libxml2:libxml2",
     "memmgr:memmgrclient",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
