@@ -17,7 +17,9 @@
 
 #include "memory_level_constants.h"
 #include "memory_level_manager.h"
+#ifdef USE_PURGEABLE_MEMORY
 #include "purgeable_mem_manager.h"
+#endif
 
 namespace OHOS {
 namespace Memory {
