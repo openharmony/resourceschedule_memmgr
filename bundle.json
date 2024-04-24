@@ -33,7 +33,8 @@
           "resource_management",
           "access_token",
           "init",
-          "libxml2"
+          "libxml2",
+          "json"
         ]
       },
       "build": {
