@@ -24,7 +24,9 @@
 #include "memmgr_log.h"
 #include "memmgr_ptr_util.h"
 #include "memory_level_constants.h"
+#ifdef USE_PURGEABLE_MEMORY
 #include "purgeable_mem_manager.h"
+#endif
 
 namespace OHOS {
 namespace Memory {
