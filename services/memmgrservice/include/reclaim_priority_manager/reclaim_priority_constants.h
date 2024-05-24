@@ -53,7 +53,10 @@ constexpr int RECLAIM_PRIORITY_MIN = -1000;
 constexpr int RECLAIM_PRIORITY_MAX = 1000;
 
 const int USER_ID_SHIFT = 200000;
-#define GET_OS_ACCOUNT_ID_BY_UID(bundleUid) ((bundleUid) / USER_ID_SHIFT)
+inline int GetOsAccountIdByUid(int bundleUid)
+{
+    return (bundleUid / USER_ID_SHIFT);
+}
 
 constexpr int IGNORE_PID = -1;
 constexpr int INVALID_TIME = -1;

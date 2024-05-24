@@ -323,7 +323,8 @@ void PurgeableMemManager::ReclaimSubscriberAll()
     std::lock_guard<std::mutex> lockSubscriber(mutexSubscribers_);
     std::lock_guard<std::mutex> lockAppList(mutexAppList_);
     auto subscriberIter = appStateSubscribers_.begin();
-    int pid = -1, uid = -1;
+    int pid = -1;
+    int uid = -1;
     while (subscriberIter != appStateSubscribers_.end()) {
         HILOGI("do ForceReclaim");
         auto appListIter = appList_.begin();
@@ -701,7 +702,9 @@ void PurgeableMemManager::DumpSubscribers(const int fd)
 {
     HILOGD("enter!\n");
     std::lock_guard<std::mutex> lockAppList(mutexAppList_);
-    int32_t pid, uid, state;
+    int32_t pid;
+    int32_t uid;
+    int32_t state;
     auto appListIter = appList_.begin();
     while (appListIter != appList_.end()) {
         pid = appListIter->first;

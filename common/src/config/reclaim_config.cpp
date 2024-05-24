@@ -59,8 +59,11 @@ void ReclaimConfig::ParseConfig(const xmlNodePtr &rootNodePtr)
 
 void ReclaimConfig::SetZswapdParamConfig(std::map<std::string, std::string> &param)
 {
-    int minScore, maxScore;
-    unsigned int mem2zramRatio, zram2ufsRatio, refaultThreshold;
+    int minScore;
+    int maxScore;
+    unsigned int mem2zramRatio;
+    unsigned int zram2ufsRatio;
+    unsigned int refaultThreshold;
 
     XmlHelper::SetIntParam(param, "minScore", minScore, 0);
     XmlHelper::SetIntParam(param, "maxScore", maxScore, RECLAIM_PRIORITY_MAX);
