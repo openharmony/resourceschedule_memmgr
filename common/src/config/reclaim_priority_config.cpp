@@ -99,7 +99,6 @@ void ReclaimPriorityConfig::ParseReclaimPriorityImportantBgAppsConfig(const xmlN
         }
         std::string name = std::string(reinterpret_cast<const char *>(currNode->name));
         if (name.compare("importantBgApp") == 0) {
-            
             std::map<std::string, std::string> param;
             std::string procName;
             int minPriority;
