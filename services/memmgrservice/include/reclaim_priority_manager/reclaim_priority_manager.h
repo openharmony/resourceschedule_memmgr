@@ -267,7 +267,7 @@ private:
 
     static inline int GetOsAccountLocalIdFromUid(int bundleUid)
     {
-        return GET_OS_ACCOUNT_ID_BY_UID(bundleUid);
+        return GetOsAccountIdByUid(bundleUid);
     }
 };
 } // namespace Memory
