@@ -73,7 +73,8 @@ void AppStateObserver::OnProcessCreated(const AppExecFwk::ProcessData &processDa
         uid = processData.uid;
         reason = AppStateUpdateReason::CREATE_PROCESS;
     }
-    HILOGD("uid=%{public}d, pid=%{public}d, processName=%{public}s, bundle=%{public}s", uid, processData.pid, processData.processName.c_str(), processData.bundleName.c_str());
+    HILOGD("uid=%{public}d, pid=%{public}d, processName=%{public}s, bundle=%{public}s",
+        uid, processData.pid, processData.processName.c_str(), processData.bundleName.c_str());
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
         SingleRequest({processData.pid, uid, processData.processName, processData.bundleName}, reason));
 }
@@ -88,9 +89,11 @@ void AppStateObserver::OnProcessDied(const AppExecFwk::ProcessData &processData)
     } else {
         uid = processData.uid;
     }
-    HILOGD("uid=%{public}d, pid=%{public}d, processName=%{public}s, bundle=%{public}s", uid, processData.pid, processData.processName.c_str(), processData.bundleName.c_str());
+    HILOGD("uid=%{public}d, pid=%{public}d, processName=%{public}s, bundle=%{public}s",
+        uid, processData.pid, processData.processName.c_str(), processData.bundleName.c_str());
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriority(
-        SingleRequest({processData.pid, uid, processData.processName, processData.bundleName}, AppStateUpdateReason::PROCESS_TERMINATED));
+        SingleRequest({processData.pid, uid, processData.processName, processData.bundleName},
+            AppStateUpdateReason::PROCESS_TERMINATED));
     MemMgrEventCenter::GetInstance().OnProcessDied(processData.pid);
 }
 } // namespace Memory
