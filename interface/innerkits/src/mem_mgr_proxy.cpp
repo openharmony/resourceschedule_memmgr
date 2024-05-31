@@ -29,6 +29,10 @@ int32_t MemMgrProxy::GetBundlePriorityList(BundlePriorityList &bundlePrioList)
 {
     HILOGE("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -60,6 +64,10 @@ int32_t MemMgrProxy::NotifyDistDevStatus(int32_t pid, int32_t uid, const std::st
     HILOGI("called, pid=%{public}d, uid=%{public}d, name=%{public}s, connected=%{public}d", pid, uid, name.c_str(),
         connected);
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -90,6 +98,7 @@ int32_t MemMgrProxy::GetKillLevelOfLmkd(int32_t &killLevel)
     HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
+        HILOGE("remote is nullptr");
         return ERR_NULL_OBJECT;
     }
     MessageParcel data;
@@ -121,6 +130,10 @@ int32_t MemMgrProxy::RegisterActiveApps(int32_t pid, int32_t uid)
 {
     HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -150,6 +163,10 @@ int32_t MemMgrProxy::DeregisterActiveApps(int32_t pid, int32_t uid)
 {
     HILOGI("called, pid=%{public}d, uid=%{public}d", pid, uid);
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -183,6 +200,10 @@ int32_t MemMgrProxy::SubscribeAppState(const sptr<IAppStateSubscriber> &subscrib
         return ERR_NULL_OBJECT;
     }
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -216,6 +237,10 @@ int32_t MemMgrProxy::UnsubscribeAppState(const sptr<IAppStateSubscriber> &subscr
         return ERR_NULL_OBJECT;
     }
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -245,6 +270,10 @@ int32_t MemMgrProxy::GetAvailableMemory(int32_t &memSize)
 {
     HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -269,6 +298,10 @@ int32_t MemMgrProxy::GetTotalMemory(int32_t &memSize)
 {
     HILOGI("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -294,6 +327,10 @@ int32_t MemMgrProxy::OnWindowVisibilityChanged(const std::vector<sptr<MemMgrWind
 {
     HILOGD("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -329,6 +366,10 @@ int32_t MemMgrProxy::GetReclaimPriorityByPid(int32_t pid, int32_t &priority)
 {
     HILOGD("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -360,6 +401,10 @@ int32_t MemMgrProxy::NotifyProcessStateChangedSync(const MemMgrProcessStateInfo 
 {
     HILOGD("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -389,6 +434,10 @@ int32_t MemMgrProxy::NotifyProcessStateChangedAsync(const MemMgrProcessStateInfo
 {
     HILOGD("called");
     sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is nullptr");
+        return ERR_NULL_OBJECT;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
         HILOGE("write interface token failed");
@@ -420,7 +469,7 @@ int32_t MemMgrProxy::NotifyProcessStatus(int32_t pid, int32_t type, int32_t stat
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         HILOGE("remote is nullptr");
-        return ERR_INVALID_DATA;
+        return ERR_NULL_OBJECT;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
@@ -459,7 +508,7 @@ int32_t MemMgrProxy::SetCritical(int32_t pid, bool critical, int32_t saId)
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         HILOGE("remote is nullptr");
-        return ERR_INVALID_DATA;
+        return ERR_NULL_OBJECT;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(IMemMgr::GetDescriptor())) {
