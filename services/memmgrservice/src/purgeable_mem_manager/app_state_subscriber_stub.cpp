@@ -77,7 +77,9 @@ int32_t AppStateSubscriberStub::HandleOnDisconnected()
 
 int32_t AppStateSubscriberStub::HandleOnAppStateChanged(MessageParcel &data)
 {
-    int32_t pid, uid, state;
+    int32_t pid;
+    int32_t uid;
+    int32_t state;
     if (!data.ReadInt32(pid) || !data.ReadInt32(uid) || !data.ReadInt32(state)) {
         HILOGE("read pid, uid or new app state failed");
         return -1;
@@ -100,7 +102,8 @@ int32_t AppStateSubscriberStub::HandleOnTrim(MessageParcel &data)
 
 int32_t AppStateSubscriberStub::HandleForceReclaim(MessageParcel &data)
 {
-    int32_t pid, uid;
+    int32_t pid;
+    int32_t uid;
     if (!data.ReadInt32(pid) || !data.ReadInt32(uid)) {
         HILOGE("read pid or uid failed");
         return -1;
