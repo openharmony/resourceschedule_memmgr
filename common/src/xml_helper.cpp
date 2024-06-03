@@ -130,7 +130,7 @@ bool XmlHelper::ParseUnsignedLongLongContent(const xmlNodePtr &rootNodePtr, unsi
 }
 
 void XmlHelper::SetStringParam(std::map<std::string, std::string> &param,
-                                    std::string key, std::string &dst, std::string defaultValue)
+                               std::string key, std::string &dst, std::string defaultValue)
 {
     HILOGI("called");
     dst = defaultValue;
