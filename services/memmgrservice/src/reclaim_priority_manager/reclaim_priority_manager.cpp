@@ -434,7 +434,7 @@ bool ReclaimPriorityManager::CheckSatifyAbilityStartCondition(const ProcessPrior
 bool ReclaimPriorityManager::HandleAbilityStart(const UpdateRequest &request, int64_t eventTime)
 {
     ReqProc target = request.target;
-    int accountId = GetOsAccountLocalIdFromUid(target.uid);
+    int accountId = GetOsAccountIdByUid(target.uid);
     if (!IsProcExist(target.pid, target.uid, accountId)) {
         HILOGE("process not exist and not to create it!!");
         return false;
@@ -520,7 +520,7 @@ bool ReclaimPriorityManager::IsKillableSystemApp(std::shared_ptr<BundlePriorityI
 
     AppExecFwk::ApplicationInfo info;
     bool result = bmsPtr->GetApplicationInfo(bundle->name_.c_str(),
-        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountLocalIdFromUid(bundle->uid_), info);
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, GetOsAccountIdByUid(bundle->uid_), info);
     if (result) {
         HILOGD("appInfo<%{public}s,%{public}d><keepAlive=%{public}d, isSystemApp=%{public}d, isLauncherApp=%{public}d>",
             bundle->name_.c_str(), bundle->uid_, info.keepAlive, info.isSystemApp, info.isLauncherApp);
@@ -712,7 +712,7 @@ bool ReclaimPriorityManager::UpdateExtensionStatusForTarget(UpdateRequest &reque
 {
     ReqProc caller = request.caller;
     ReqProc target = request.target;
-    int accountId = GetOsAccountLocalIdFromUid(target.uid);
+    int accountId = GetOsAccountIdByUid(target.uid);
     if (!IsProcExist(target.pid, target.uid, accountId)) {
         HILOGE("process not exist and not to create it!!");
         return false;
@@ -745,7 +745,7 @@ bool ReclaimPriorityManager::UpdateExtensionStatusForCaller(UpdateRequest &reque
 {
     ReqProc caller = request.caller;
     ReqProc target = request.target;
-    int callerAccountId = GetOsAccountLocalIdFromUid(caller.uid);
+    int callerAccountId = GetOsAccountIdByUid(caller.uid);
     if (!IsProcExist(caller.pid, caller.uid, callerAccountId)) {
         HILOGE("caller process not exist and not to create it!!");
         return false;
@@ -783,7 +783,7 @@ void ReclaimPriorityManager::GetConnectedExtensionProc(const ProcessPriorityInfo
             if (isExtensionProcVisitedSet.count(pair.first)) {
                 continue;
             }
-            int accountId = GetOsAccountLocalIdFromUid(pair.second);
+            int accountId = GetOsAccountIdByUid(pair.second);
             if (!IsProcExist(pair.first, pair.second, accountId)) {
                 continue;
             }
@@ -800,7 +800,7 @@ void ReclaimPriorityManager::CalculateExtensionProcPrio(ProcInfoVec &procVec, Pr
     for (auto &extensionProc : procVec) {
         int32_t minExtensionPriority = RECLAIM_PRIORITY_BACKGROUND;
         for (const auto &connectorProcPair : extensionProc.procsBindToMe_) {
-            int accountId = GetOsAccountLocalIdFromUid(connectorProcPair.second);
+            int accountId = GetOsAccountIdByUid(connectorProcPair.second);
             if (!IsProcExist(connectorProcPair.first, connectorProcPair.second, accountId)) {
                 minExtensionPriority = 0;
                 continue;
@@ -824,7 +824,7 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
     for (const auto &extensionProcess : procSet) {
         int32_t minExtensionPriority = RECLAIM_PRIORITY_BACKGROUND;
         for (const auto &connectorProcPair : extensionProcess.procsBindToMe_) {
-            int accountId = GetOsAccountLocalIdFromUid(connectorProcPair.second);
+            int accountId = GetOsAccountIdByUid(connectorProcPair.second);
             if (!IsProcExist(connectorProcPair.first, connectorProcPair.second, accountId)) {
                 minExtensionPriority = 0;
                 continue;
@@ -837,7 +837,7 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
                 minExtensionPriority < procBindToMePrio ? minExtensionPriority : procBindToMePrio;
         }
 
-        int extensionAccountId = GetOsAccountLocalIdFromUid(extensionProcess.uid_);
+        int extensionAccountId = GetOsAccountIdByUid(extensionProcess.uid_);
         if (!IsProcExist(extensionProcess.pid_, extensionProcess.uid_, extensionAccountId)) {
             continue;
         }
@@ -866,7 +866,7 @@ bool ReclaimPriorityManager::UpdateReclaimPriorityInner(UpdateRequest request, i
     // This function can only be called by UpdateReclaimPriority, otherwise it may deadlock.
     std::lock_guard<std::mutex> setLock(totalBundlePrioSetLock_);
     ReqProc target = request.target;
-    int accountId = GetOsAccountLocalIdFromUid(target.uid);
+    int accountId = GetOsAccountIdByUid(target.uid);
     HILOGD("accountId=%{public}d", accountId);
 
     if (request.reason == AppStateUpdateReason::BIND_EXTENSION ||
@@ -951,7 +951,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcConnector(ProcessPriorityInfo &
     int minPriority = RECLAIM_PRIORITY_UNKNOWN;
     for (auto &pair : proc.procsBindFromMe_) {
         int32_t connectorUid = pair.second;
-        int connectorAccountId = GetOsAccountLocalIdFromUid(connectorUid);
+        int connectorAccountId = GetOsAccountIdByUid(connectorUid);
         std::shared_ptr<AccountBundleInfo> connectorAccount = FindOsAccountById(connectorAccountId);
         if (connectorAccount == nullptr || !connectorAccount->HasBundle(connectorUid)) {
             minPriority = 0; // native

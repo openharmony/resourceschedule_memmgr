@@ -264,11 +264,6 @@ private:
         int64_t eventTime);
     void AbilityStartingEnd(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle = nullptr,
         bool isUpdatePriority = false);
-
-    static inline int GetOsAccountLocalIdFromUid(int bundleUid)
-    {
-        return GET_OS_ACCOUNT_ID_BY_UID(bundleUid);
-    }
 };
 } // namespace Memory
 } // namespace OHOS
