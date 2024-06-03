@@ -173,17 +173,13 @@ std::pair<unsigned int, int> LowMemoryKiller::QueryKillMemoryPriorityPair(unsign
 void LowMemoryKiller::PsiHandlerInner()
 {
     HILOGD("[%{public}ld] called", ++calledCount_);
-    unsigned int curBuf = 0;
-    int availBuf = 0;
     int freedBuf = 0;
-    unsigned int minBuf = 0;
     unsigned int targetBuf = 0;
     unsigned int targetKillKb = 0;
     unsigned int currKillKb = 0;
-    int minPrio = RECLAIM_PRIORITY_MAX + 1;
     int killCnt = 0;
 
-    curBuf = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
+    unsigned int curBuf = static_cast<unsigned int>(KernelInterface::GetInstance().GetCurrentBuffer());
     HILOGE("[%{public}ld] current buffer = %{public}u KB", calledCount_, curBuf);
     if (curBuf == MAX_BUFFER_KB) {
         HILOGD("[%{public}ld] get buffer failed, skiped!", calledCount_);
@@ -191,8 +187,8 @@ void LowMemoryKiller::PsiHandlerInner()
     }
 
     std::pair<unsigned int, int> memPrioPair = QueryKillMemoryPriorityPair(curBuf, targetBuf, killLevel_);
-    minBuf = memPrioPair.first;
-    minPrio = memPrioPair.second;
+    unsigned int minBuf = memPrioPair.first;
+    int minPrio = memPrioPair.second;
     if (curBuf > 0 && targetBuf > curBuf) {
         targetKillKb = targetBuf - curBuf;
     }
@@ -215,7 +211,7 @@ void LowMemoryKiller::PsiHandlerInner()
         killCnt++;
         HILOGD("[%{public}ld] killCnt = %{public}d", calledCount_, killCnt);
 
-        availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
+        int availBuf = KernelInterface::GetInstance().GetCurrentBuffer();
         if (availBuf < 0 || availBuf >= MAX_BUFFER_KB) {
             HILOGE("[%{public}ld] get buffer failed, go out!", calledCount_);
             goto out;
