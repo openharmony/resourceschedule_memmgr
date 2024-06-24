@@ -100,9 +100,7 @@ void ReclaimStrategyManager::NotifyAppStateChanged(std::shared_ptr<ReclaimParam>
         HILOGE("has not been initialized_, skiped!");
         return;
     }
-    std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAppStateChanged_, this, reclaimPara);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, reclaimPara] { this->HandleAppStateChanged_(reclaimPara); });
 }
 
 bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam> reclaimPara)
@@ -118,11 +116,10 @@ bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam
     }
     HILOGI("%{public}s", reclaimPara->ToString().c_str());
     bool ret = false;
-    bool (ReclaimStrategyManager::*funcPtr)(std::shared_ptr<ReclaimParam>) = nullptr;
     switch (reclaimPara->action_) {
         case AppAction::CREATE_PROCESS_AND_APP:
         case AppAction::CREATE_PROCESS_ONLY: {
-            funcPtr = &ReclaimStrategyManager::HandleProcessCreate_;
+            HandleProcessCreate_(reclaimPara);
             break;
         }
         case AppAction::APP_DIED:
@@ -134,9 +131,6 @@ bool ReclaimStrategyManager::HandleAppStateChanged_(std::shared_ptr<ReclaimParam
         }
         default:
             break;
-    }
-    if (funcPtr != nullptr) {
-        ret = (this->*funcPtr)(reclaimPara);
     }
     reclaimPara.reset();
     return ret;
@@ -160,9 +154,7 @@ void ReclaimStrategyManager::NotifyAccountDied(int accountId)
                accountId, VALID_USER_ID_MIN);
         return;
     }
-    std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAccountDied_, this, accountId);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, accountId] { this->HandleAccountDied_(accountId); });
 }
 
 void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int priority)
@@ -176,9 +168,9 @@ void ReclaimStrategyManager::NotifyAccountPriorityChanged(int accountId, int pri
                accountId, VALID_USER_ID_MIN);
         return;
     }
-    std::function<bool()> func = std::bind(
-        &ReclaimStrategyManager::HandleAccountPriorityChanged_, this, accountId, priority);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, accountId, priority] {
+        this->HandleAccountPriorityChanged_(accountId, priority);
+    });
 }
 
 bool ReclaimStrategyManager::HandleAccountDied_(int accountId)

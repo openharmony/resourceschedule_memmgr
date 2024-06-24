@@ -77,8 +77,7 @@ void MultiAccountManager::Init()
             return;
         }
 
-        std::function<void()> initMultiAccountManagerFunc = std::bind(&MultiAccountManager::Init, this);
-        handler_->PostTask(initMultiAccountManagerFunc, SLEEP_TIME, AppExecFwk::EventQueue::Priority::LOW);
+        handler_->PostTask([this] { this->Init(); }, SLEEP_TIME, AppExecFwk::EventQueue::Priority::LOW);
         HILOGE("Manager initial failed, try again after 3s!, retryTimes = %{public}d/10", retryTimes_);
     }
 }

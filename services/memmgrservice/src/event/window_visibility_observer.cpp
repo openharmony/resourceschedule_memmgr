@@ -51,12 +51,12 @@ void WindowVisibilityObserver::OnProcessDied(int pid)
 }
 
 void WindowVisibilityObserver::UpdateWindowVisibilityPriority(
-    const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo)
+    const std::vector<sptr<MemMgrWindowInfo>> &memMgrWindowInfo)
 {
     HILOGD("called");
-    std::function<void()> UpdateWindowVisibilityPriorityInnerFunc =
-        std::bind(&WindowVisibilityObserver::UpdateWindowVisibilityPriorityInner, this, MemMgrWindowInfo);
-    handler_->PostImmediateTask(UpdateWindowVisibilityPriorityInnerFunc);
+    handler_->PostImmediateTask([this, memMgrWindowInfo] {
+        this->UpdateWindowVisibilityPriorityInner(memMgrWindowInfo);
+    });
 }
 
 void WindowVisibilityObserver::UpdateWindowVisibilityPriorityInner(
@@ -96,7 +96,7 @@ void WindowVisibilityObserver::UpdateWindowVisibilityPriorityInner(
     UpdatePriorityForVisible(windowVisibleMap_);
     if (windowVisibleMap_.size() >= 2048) { //2048: max process num
         if (handler_) {
-            handler_->PostImmediateTask(std::bind(&WindowVisibilityObserver::CheckMapSize, this, TRIGGER_BY_SIZE));
+            handler_->PostImmediateTask([this] { this->CheckMapSize(TRIGGER_BY_SIZE); });
         }
     }
 }
@@ -130,9 +130,9 @@ void WindowVisibilityObserver::UpdatePriorityForVisible(
 
 void WindowVisibilityObserver::SetTimer()
 {
-    std::function<void()> timerFunc_ = std::bind(&WindowVisibilityObserver::CheckMapSize, this, TRIGGER_BY_TIME);
     //set timer and call CheckMapSize each TIMER_PEROID_MIN min.
-    handler_->PostTask(timerFunc_, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
+    handler_->PostTask([this] { this->CheckMapSize(TRIGGER_BY_TIME); },
+        TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
     HILOGD("set timer after %{public}d mins", TIMER_PEROID_MIN);
 }
 

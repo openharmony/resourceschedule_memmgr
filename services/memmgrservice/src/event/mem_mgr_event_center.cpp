@@ -121,35 +121,21 @@ bool MemMgrEventCenter::RegisterEventObserver()
 void MemMgrEventCenter::HandlerRegisterEvent(int64_t registerEventId)
 {
     if (registerEventId == RegisterEvent::REG_ALLOBS_EVENT) {
-        std::function<void()> RegisterEventObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterEventObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterEventObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterEventObserver(); });
     } else if (registerEventId == RegisterEvent::REG_MEMPRESSOBS_EVENT) {
-        std::function<void()> RegisterMemoryPressureObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterMemoryPressureObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterMemoryPressureObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterMemoryPressureObserver(); });
     } else if (registerEventId == RegisterEvent::REG_APPOBS_EVENT) {
-        std::function<void()> RegisterAppStateObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterAppStateObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterAppStateObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterAppStateObserver(); });
     } else if (registerEventId == RegisterEvent::REG_EXTOBS_EVENT) {
-        std::function<void()> RegisterExtConnObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterExtConnObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterExtConnObserver(); });
     } else if (registerEventId == RegisterEvent::REG_ACCOUNTOBS_EVENT) {
-        std::function<void()> RegisterAccountObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterAccountObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterAccountObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterAccountObserver(); });
     } else if (registerEventId == RegisterEvent::REG_COMMONOBS_EVENT) {
-        std::function<void()> RegisterCommonEventObserverFunc =
-                                std::bind(&MemMgrEventCenter::RegisterCommonEventObserver, this);
-        regObsHandler_->PostImmediateTask(RegisterCommonEventObserverFunc);
+        regObsHandler_->PostImmediateTask([this] { this->RegisterCommonEventObserver(); });
     } else if (registerEventId == RegisterEvent::REG_BGTASKOBS_EVENT) {
         #ifdef CONFIG_BGTASK_MGR
             {
-                std::function<void()> RegisterBgTaskObserverFunc =
-                                    std::bind(&MemMgrEventCenter::RegisterBgTaskObserver, this);
-                regObsHandler_->PostImmediateTask(RegisterBgTaskObserverFunc);
+                regObsHandler_->PostImmediateTask([this] { this->RegisterBgTaskObserver(); });
             }
         #endif
     }
@@ -193,8 +179,8 @@ void MemMgrEventCenter::RegisterExtConnObserver()
         }
         HILOGE("register fail, ret = %{public}d", ret);
     }
-    std::function<void()> RegisterExtConnObserverFunc = std::bind(&MemMgrEventCenter::RegisterExtConnObserver, this);
-    regObsHandler_->PostTask(RegisterExtConnObserverFunc, EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    regObsHandler_->PostTask([this] { this->RegisterExtConnObserver(); },
+        EXTCONN_RETRY_TIME, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void MemMgrEventCenter::RegisterBgTaskObserver()
@@ -250,11 +236,9 @@ void MemMgrEventCenter::RegisterAccountObserver()
     }
 
     if (regAccountObsRetry_ < ACCOUNT_MAX_RETRY_TIMES) {
-        std::function<void()> RegisterAccountObserverFunc =
-            std::bind(&MemMgrEventCenter::RegisterAccountObserver, this);
         HILOGE("register fail, retCode = %{public}d, try again after 3s!, retryTimes=%{public}d/10",
             errCode, regAccountObsRetry_);
-        regObsHandler_->PostTask(RegisterAccountObserverFunc, ACCOUNT_RETRY_DELAY,
+        regObsHandler_->PostTask([this] { this->RegisterAccountObserver(); }, ACCOUNT_RETRY_DELAY,
             AppExecFwk::EventQueue::Priority::LOW); // 3000 means 3s
     }
 }
@@ -264,16 +248,16 @@ void MemMgrEventCenter::RegisterMemoryPressureObserver()
     HILOGI("called");
     MAKE_POINTER(memoryPressureObserver_, shared, MemoryPressureObserver, "make MemoryPressureObserver failed", return,
                  /* no param */);
-    std::function<void()> initFunc = std::bind(&MemoryPressureObserver::Init, memoryPressureObserver_);
-    regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
+    regObsHandler_->PostTask([this] { this->memoryPressureObserver_->Init(); },
+        10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
 void MemMgrEventCenter::RegisterKswapdObserver()
 {
     HILOGI("called");
     MAKE_POINTER(kswapdObserver_, shared, KswapdObserver, "make KswapdObserver failed", return, /* no param */);
-    std::function<void()> initFunc = std::bind(&KswapdObserver::Init, kswapdObserver_);
-    regObsHandler_->PostTask(initFunc, 10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
+    regObsHandler_->PostTask([this] { this->kswapdObserver_->Init(); },
+        10000, AppExecFwk::EventQueue::Priority::HIGH); // 10000 means 10s
 }
 
 MemMgrEventCenter::~MemMgrEventCenter()

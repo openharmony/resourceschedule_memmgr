@@ -235,8 +235,7 @@ void LowMemoryKiller::PsiHandler()
         HILOGE("is not initialized, return!");
         return;
     }
-    std::function<void()> func = std::bind(&LowMemoryKiller::PsiHandlerInner, this);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this] { this->PsiHandlerInner(); });
 }
 } // namespace Memory
 } // namespace OHOS

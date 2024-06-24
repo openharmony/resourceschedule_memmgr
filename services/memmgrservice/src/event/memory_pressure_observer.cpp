@@ -55,8 +55,7 @@ void MemoryPressureObserver::Init()
         return;
     }
     // call MainLoop at handler thread
-    std::function<void()> mainLoopFun = std::bind(&MemoryPressureObserver::MainLoop, this);
-    handler_->PostImmediateTask(mainLoopFun);
+    handler_->PostImmediateTask([this] { this->MainLoop(); });
     HILOGI("call MainLoop at handler thread");
 }
 
