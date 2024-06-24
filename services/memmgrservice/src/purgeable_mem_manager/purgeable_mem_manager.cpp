@@ -115,8 +115,7 @@ void PurgeableMemManager::AddSubscriber(const sptr<IAppStateSubscriber> &subscri
         HILOGE("subscriber is null");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::AddSubscriberInner, this, subscriber);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, subscriber] { this->AddSubscriberInner(subscriber); });
 }
 
 void PurgeableMemManager::RemoveSubscriberInner(const sptr<IAppStateSubscriber> &subscriber)
@@ -223,8 +222,7 @@ void PurgeableMemManager::RegisterActiveApps(int32_t pid, int32_t uid)
         HILOGE("is not initialized");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::RegisterActiveAppsInner, this, pid, uid);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, pid, uid] { this->RegisterActiveAppsInner(pid, uid); });
 }
 
 void PurgeableMemManager::DeregisterActiveAppsInner(int32_t pid, int32_t uid)
@@ -253,8 +251,7 @@ void PurgeableMemManager::DeregisterActiveApps(int32_t pid, int32_t uid)
         HILOGE("is not initialized");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::DeregisterActiveAppsInner, this, pid, uid);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, pid, uid] { this->DeregisterActiveAppsInner(pid, uid); });
 }
 
 void PurgeableMemManager::ChangeAppStateInner(int32_t pid, int32_t uid, int32_t state)
@@ -291,8 +288,7 @@ void PurgeableMemManager::ChangeAppState(int32_t pid, int32_t uid, int32_t state
         HILOGE("is not initialized");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::ChangeAppStateInner, this, pid, uid, state);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, pid, uid, state] { this->ChangeAppStateInner(pid, uid, state); });
 }
 
 void PurgeableMemManager::TrimAllSubscribers(const SystemMemoryLevel &level)
@@ -657,8 +653,7 @@ void PurgeableMemManager::NotifyMemoryLevel(const SystemMemoryInfo &info)
         HILOGE("is not initialized");
         return;
     }
-    std::function<void()> func = std::bind(&PurgeableMemManager::NotifyMemoryLevelInner, this, info);
-    handler_->PostImmediateTask(func);
+    handler_->PostImmediateTask([this, info] { this->NotifyMemoryLevelInner(info); });
 }
 
 bool PurgeableMemManager::ForceReclaimByDump(const DumpReclaimInfo &dumpInfo)
