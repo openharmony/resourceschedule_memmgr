@@ -34,43 +34,10 @@ namespace {
 
 MemMgrStub::MemMgrStub()
 {
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_BUNDLE_PRIORITY_LIST)] =
-        &MemMgrStub::HandleGetBunldePriorityList;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_DIST_DEV_STATUS)] =
-        &MemMgrStub::HandleNotifyDistDevStatus;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_KILL_LEVEL_OF_LMKD)] =
-        &MemMgrStub::HandleGetKillLevelOfLmkd;
-#ifdef USE_PURGEABLE_MEMORY
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_REGISTER_ACTIVE_APPS)] =
-        &MemMgrStub::HandleRegisterActiveApps;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_DEREGISTER_ACTIVE_APPS)] =
-        &MemMgrStub::HandleDeregisterActiveApps;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SUBSCRIBE_APP_STATE)] =
-        &MemMgrStub::HandleSubscribeAppState;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_UNSUBSCRIBE_APP_STATE)] =
-        &MemMgrStub::HandleUnsubscribeAppState;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_AVAILABLE_MEMORY)] =
-        &MemMgrStub::HandleGetAvailableMemory;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_TOTAL_MEMORY)] =
-        &MemMgrStub::HandleGetTotalMemory;
-#endif
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED)] =
-        &MemMgrStub::HandleOnWindowVisibilityChanged;
-    memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_PRIORITY_BY_PID)] =
-        &MemMgrStub::HandleGetReclaimPriorityByPid;
-        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC)] =
-    &MemMgrStub::HandleNotifyProcessStateChangedSync;
-        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC)] =
-    &MemMgrStub::HandleNotifyProcessStateChangedAsync;
-        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATUS)] =
-    &MemMgrStub::HandleNotifyProcessStatus;
-        memberFuncMap_[static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SET_CRITICAL)] =
-    &MemMgrStub::HandleSetCritical;
 }
 
 MemMgrStub::~MemMgrStub()
 {
-    memberFuncMap_.clear();
 }
 
 int MemMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -83,14 +50,48 @@ int MemMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
         return ERR_INVALID_STATE;
     }
 
-    auto itFunc = memberFuncMap_.find(code);
-    if (itFunc != memberFuncMap_.end()) {
-        auto memberFunc = itFunc->second;
-        if (memberFunc != nullptr) {
-            return (this->*memberFunc)(data, reply);
-        }
+    return OnRemoteRequestInner(code, data, reply, option);
+}
+
+int32_t MemMgrStub::OnRemoteRequestInner(uint32_t code,
+    MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    switch (code) {
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_BUNDLE_PRIORITY_LIST):
+            return HandleGetBunldePriorityList(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_DIST_DEV_STATUS):
+            return HandleNotifyDistDevStatus(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_KILL_LEVEL_OF_LMKD):
+            return HandleGetKillLevelOfLmkd(data, reply);
+#ifdef USE_PURGEABLE_MEMORY
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_REGISTER_ACTIVE_APPS):
+            return HandleRegisterActiveApps(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_DEREGISTER_ACTIVE_APPS):
+            return HandleDeregisterActiveApps(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SUBSCRIBE_APP_STATE):
+            return HandleSubscribeAppState(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_UNSUBSCRIBE_APP_STATE):
+            return HandleUnsubscribeAppState(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_AVAILABLE_MEMORY):
+            return HandleGetAvailableMemory(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_TOTAL_MEMORY):
+            return HandleGetTotalMemory(data, reply);
+#endif
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_ON_WINDOW_VISIBILITY_CHANGED):
+            return HandleOnWindowVisibilityChanged(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_GET_PRIORITY_BY_PID):
+            return HandleGetReclaimPriorityByPid(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_SYNC):
+            return HandleNotifyProcessStateChangedSync(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATE_CHANGED_ASYNC):
+            return HandleNotifyProcessStateChangedAsync(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_NOTIFY_PROCESS_STATUS):
+            return HandleNotifyProcessStatus(data, reply);
+        case static_cast<uint32_t>(MemMgrInterfaceCode::MEM_MGR_SET_CRITICAL):
+            return HandleSetCritical(data, reply);
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int32_t MemMgrStub::HandleGetBunldePriorityList(MessageParcel &data, MessageParcel &reply)

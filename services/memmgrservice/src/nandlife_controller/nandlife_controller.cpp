@@ -65,7 +65,6 @@ IMPLEMENT_SINGLE_INSTANCE(NandLifeController);
 
 NandLifeController::NandLifeController()
 {
-    timerFunc_ = std::bind(&NandLifeController::CheckSwapOut, this);
 }
 
 bool NandLifeController::Init()
@@ -219,7 +218,7 @@ bool NandLifeController::GetSwapOutKBSinceKernelBoot(unsigned long long &ret)
 void NandLifeController::SetTimer()
 {
     // set timer and call CheckSwapOut each TIMER_PEROID_MIN min.
-    handler_->PostTask(timerFunc_, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
+    handler_->PostTask([this] { this->CheckSwapOut(); }, TIMER_PEROID_MS, AppExecFwk::EventQueue::Priority::HIGH);
     HILOGI("[%{public}llu] set timer after %{public}d mins", iter_, TIMER_PEROID_MIN);
 }
 
