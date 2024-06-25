@@ -41,7 +41,7 @@ typedef struct ProcessWindowVisibilityInfo ProcessWindowVisibilityInfo;
 class WindowVisibilityObserver {
     DECLARE_SINGLE_INSTANCE_BASE(WindowVisibilityObserver);
 public:
-    void UpdateWindowVisibilityPriority(const std::vector<sptr<MemMgrWindowInfo>> &MemMgrWindowInfo);
+    void UpdateWindowVisibilityPriority(const std::vector<sptr<MemMgrWindowInfo>> &memMgrWindowInfo);
     void OnProcessDied(int pid);
 
 private:

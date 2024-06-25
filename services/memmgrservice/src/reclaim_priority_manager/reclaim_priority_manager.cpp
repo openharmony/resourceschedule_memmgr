@@ -389,8 +389,8 @@ bool ReclaimPriorityManager::UpdateReclaimPriority(UpdateRequest request)
         return false;
     }
     int64_t eventTime = KernelInterface::GetInstance().GetSystemTimeMs();
-    std::function<bool()> updateReclaimPriorityInnerFunc =
-                        std::bind(&ReclaimPriorityManager::UpdateReclaimPriorityInner, this, request, eventTime);
+    std::function<void()> updateReclaimPriorityInnerFunc =
+                        [this, request, eventTime] { this->UpdateReclaimPriorityInner(request, eventTime); };
     if (request.reason == AppStateUpdateReason::ABILITY_START) {
         return handler_->PostTask(updateReclaimPriorityInnerFunc, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     } else {
@@ -457,10 +457,10 @@ bool ReclaimPriorityManager::HandleAbilityStart(const UpdateRequest &request, in
 
 void ReclaimPriorityManager::SetTimerForAbilityStartCompletedCheck(pid_t pid, int32_t bundleUid, int32_t accountId)
 {
-    std::function<void()> timerFunc =
-        std::bind(&ReclaimPriorityManager::CheckAbilityStartCompleted, this, pid, bundleUid, accountId);
-        std::string taskName = std::to_string(pid) + AppStateUpdateResonToString(AppStateUpdateReason::ABILITY_START);
-    handler_->PostTask(timerFunc, taskName, TIMER_ABILITY_START_CHECK_MS, AppExecFwk::EventQueue::Priority::LOW);
+    std::string taskName = std::to_string(pid) + AppStateUpdateResonToString(AppStateUpdateReason::ABILITY_START);
+    handler_->PostTask(
+        [this, pid, bundleUid, accountId] { this->CheckAbilityStartCompleted(pid, bundleUid, accountId); },
+        taskName, TIMER_ABILITY_START_CHECK_MS, AppExecFwk::EventQueue::Priority::LOW);
     HILOGI("set process<pid=%{public}d,uid=%{public}d> ability start check timer after %{public}d ms",
         pid, bundleUid, TIMER_ABILITY_START_CHECK_MS);
 }
@@ -614,8 +614,7 @@ bool ReclaimPriorityManager::HandleTerminateProcess(ProcessPriorityInfo proc,
 
 void ReclaimPriorityManager::SetTimerForDiedProcessCheck(int64_t delayTime)
 {
-    std::function<void()> timerFunc = std::bind(&ReclaimPriorityManager::HandleDiedProcessCheck, this);
-    handler_->PostTask(timerFunc, delayTime, AppExecFwk::EventQueue::Priority::LOW);
+    handler_->PostTask([this] { this->HandleDiedProcessCheck(); }, delayTime, AppExecFwk::EventQueue::Priority::LOW);
 }
 
 void ReclaimPriorityManager::FilterDiedProcess()
@@ -1166,9 +1165,9 @@ bool ReclaimPriorityManager::OsAccountChanged(int accountId, AccountSA::OS_ACCOU
         HILOGE("invalid account id!");
         return false;
     }
-    std::function<bool()> osAccountChangedInnerFunc =
-        std::bind(&ReclaimPriorityManager::OsAccountChangedInner, this, accountId, switchMod);
-    return handler_->PostImmediateTask(osAccountChangedInnerFunc);
+    return handler_->PostImmediateTask([this, accountId, switchMod] {
+        this->OsAccountChangedInner(accountId, switchMod);
+    });
 }
 
 bool ReclaimPriorityManager::OsAccountChangedInner(int accountId, AccountSA::OS_ACCOUNT_SWITCH_MOD switchMod)

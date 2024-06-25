@@ -56,8 +56,7 @@ void KswapdObserver::Init()
     }
     // call MainLoop at handler thread
     if (handler_ != nullptr) {
-        std::function<void()> mainLoopFun = std::bind(&KswapdObserver::MainLoop, this);
-        handler_->PostImmediateTask(mainLoopFun);
+        handler_->PostImmediateTask([this] { this->MainLoop(); });
         HILOGD("call MainLoop at handler thread");
     }
 }

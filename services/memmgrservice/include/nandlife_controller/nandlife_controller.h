@@ -30,7 +30,6 @@ public:
 private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     NandLifeConfig config_;
-    std::function<void()> timerFunc_;
 
     unsigned long long DAILY_SWAP_OUT_QUOTA_KB;
     unsigned long long TOTAL_SWAP_OUT_QUOTA_KB;

@@ -52,9 +52,7 @@ private:
     int32_t HandleNotifyProcessStatus(MessageParcel &data, MessageParcel &reply);
     int32_t HandleSetCritical(MessageParcel &data, MessageParcel &reply);
     bool CheckCallingToken();
-
-    using MemMgrFunc = int32_t (MemMgrStub::*)(MessageParcel &data, MessageParcel &reply);
-    std::map<uint32_t, MemMgrFunc> memberFuncMap_;
+    int32_t OnRemoteRequestInner(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
 
     DISALLOW_COPY_AND_MOVE(MemMgrStub);
 };
