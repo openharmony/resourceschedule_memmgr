@@ -293,7 +293,10 @@ ohos_unittest("memory_level_manager_test") {
 ohos_unittest("low_memory_killer_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
-
+  defines = []
+  if (memmgr_hyperhold_memory) {
+    defines += [ "USE_HYPERHOLD_MEMORY" ]
+  }
   sources = [ "unittest/phone/low_memory_killer_test.cpp" ]
 
   deps = memmgr_deps
@@ -339,9 +342,11 @@ group("memmgr_unittest") {
     ":oom_score_adj_utils_test",
     ":purgeable_memory_manager_test",
     ":reclaim_priority_manager_test",
-    ":reclaim_strategy_manager_test",
     ":system_memory_level_config_test",
     ":user_memcg_test",
     ":xml_helper_test",
   ]
+  if (memmgr_hyperhold_memory) {
+   deps += [":reclaim_strategy_manager_test"]
+  }
 }
