@@ -51,9 +51,11 @@ PurgeableMemManager::PurgeableMemManager()
 
 bool PurgeableMemManager::GetEventHandler()
 {
+#ifdef USE_HYPERHOLD_MEMORY
     if (!handler_) {
         handler_ = ReclaimStrategyManager::GetInstance().GetEventHandler();
     }
+#endif
     if (!handler_) {
         MAKE_POINTER(handler_, shared, AppExecFwk::EventHandler, "failed to create event handler", return false,
             AppExecFwk::EventRunner::Create());

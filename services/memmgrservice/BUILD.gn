@@ -54,6 +54,9 @@ config("memory_memmgr_config") {
     defines += [ "USE_PURGEABLE_MEMORY" ]
     include_dirs += [ "include/purgeable_mem_manager/" ]
   }
+  if (memmgr_hyperhold_memory) {
+    defines += [ "USE_HYPERHOLD_MEMORY" ]
+  }
 }
 
 ohos_shared_library("memmgrservice") {

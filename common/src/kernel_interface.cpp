@@ -41,8 +41,13 @@ const std::string KernelInterface::ROOT_PROC_PATH = "/proc";
 const std::string KernelInterface::MEMCG_BASE_PATH = "/dev/memcg";
 const std::string KernelInterface::FILE_MEMCG_PROCS = "cgroup.procs";
 
+#ifdef USE_HYPERHOLD_MEMORY
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/dev/memcg/memory.zswapd_pressure_show";
 const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "buffer_size";
+#else
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_PATH = "/proc/meminfo";
+const std::string KernelInterface::ZWAPD_PRESSURE_SHOW_BUFFER_SIZE = "MemAvailable";
+#endif
 const std::string KernelInterface::MEMINFO_PATH = "/proc/meminfo";
 const std::string KernelInterface::FILE_PROC_STATUS = "status";
 const std::string KernelInterface::TOTAL_MEMORY = "MemTotal";
@@ -356,8 +361,13 @@ int KernelInterface::GetCurrentBuffer()
     ReadZswapdPressureShow(result);
     auto value = result.find(ZWAPD_PRESSURE_SHOW_BUFFER_SIZE);
     if (value != result.end()) {
+#ifdef USE_HYPERHOLD_MEMORY
         HILOGD("buffer_size=%{public}s MB", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
         return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str()) * KB_PER_MB;
+#else
+        HILOGD("buffer_size=%{public}s KB", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
+        return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
+#endif
     }
     return MAX_BUFFER_KB;
 }

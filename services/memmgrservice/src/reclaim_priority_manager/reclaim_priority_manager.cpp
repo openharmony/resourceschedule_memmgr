@@ -1151,7 +1151,9 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriority
     DECLARE_SHARED_POINTER(ReclaimParam, para);
     MAKE_POINTER(para, shared, ReclaimParam, "make ReclaimParam failed", return false,
         pid, bundle->uid_, bundle->name_, bundle->accountId_, bundle->priority_, action);
+#ifdef USE_HYPERHOLD_MEMORY
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
+#endif
     return OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundle);
 }
 
