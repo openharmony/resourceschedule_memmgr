@@ -347,6 +347,6 @@ group("memmgr_unittest") {
     ":xml_helper_test",
   ]
   if (memmgr_hyperhold_memory) {
-   deps += [":reclaim_strategy_manager_test"]
+  deps += [":reclaim_strategy_manager_test"]
   }
 }
