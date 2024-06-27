@@ -295,7 +295,7 @@ ohos_unittest("low_memory_killer_test") {
   configs = memmgr_service_configs
   defines = []
   if (memmgr_hyperhold_memory) {
-    defines += [ "USE_HYPERHOLD_MEMORY" ]
+  defines += [ "USE_HYPERHOLD_MEMORY" ]
   }
   sources = [ "unittest/phone/low_memory_killer_test.cpp" ]
 
