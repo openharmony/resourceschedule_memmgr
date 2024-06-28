@@ -20,14 +20,16 @@ module_output_path = "memmgrtest/"
 
 memmgr_service_configs = [ "${memmgr_service_path}:memory_memmgr_config" ]
 
-memmgr_deps = [ "${memmgr_service_path}:memmgrservice" ]
+memmgr_deps = [
+  "${memmgr_service_path}:memmgrservice",
+  "//third_party/libxml2:xml2",
+]
 
 memmgr_external_deps = [
   "c_utils:utils",
   "eventhandler:libeventhandler",
   "hilog:libhilog",
   "ipc:ipc_core",
-  "libxml2:libxml2",
   "memmgr:memmgrclient",
   "os_account:os_account_innerkits",
 ]
@@ -293,7 +295,11 @@ ohos_unittest("memory_level_manager_test") {
 ohos_unittest("low_memory_killer_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
-  
+  defines = []
+  if (memmgr_hyperhold_memory) {
+    defines += [ "USE_HYPERHOLD_MEMORY" ]
+  }
+
   sources = [ "unittest/phone/low_memory_killer_test.cpp" ]
 
   deps = memmgr_deps
@@ -339,9 +345,11 @@ group("memmgr_unittest") {
     ":oom_score_adj_utils_test",
     ":purgeable_memory_manager_test",
     ":reclaim_priority_manager_test",
-    ":reclaim_strategy_manager_test",
     ":system_memory_level_config_test",
     ":user_memcg_test",
     ":xml_helper_test",
   ]
+  if (memmgr_hyperhold_memory) {
+    deps += [ ":reclaim_strategy_manager_test" ]
+  }
 }
