@@ -295,7 +295,7 @@ ohos_unittest("memory_level_manager_test") {
 ohos_unittest("low_memory_killer_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
-  
+
   if (memmgr_hyperhold_memory) {
     defines += [ "USE_HYPERHOLD_MEMORY" ]
   }
