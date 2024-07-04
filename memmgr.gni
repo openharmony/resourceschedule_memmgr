@@ -32,4 +32,5 @@ declare_args() {
   }
 
   memmgr_purgeable_memory = false
+  memmgr_hyperhold_memory = false
 }

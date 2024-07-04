@@ -60,11 +60,13 @@ bool MemMgrService::Init()
     // init multiple account manager
     MultiAccountManager::GetInstance().Init();
 
+#ifdef USE_HYPERHOLD_MEMORY
     // init reclaim strategy manager
     if (!ReclaimStrategyManager::GetInstance().Init()) {
         HILOGE("ReclaimStrategyManager init failed");
         return false;
     }
+#endif
 
     // init event center, then managers above can work by event trigger
     if (!MemMgrEventCenter::GetInstance().Init()) {
@@ -72,8 +74,11 @@ bool MemMgrService::Init()
         return false;
     }
 
+#ifdef USE_HYPERHOLD_MEMORY
     // init nandlife controller
     NandLifeController::GetInstance().Init();
+#endif
+
     HILOGI("init successed");
     return true;
 }
