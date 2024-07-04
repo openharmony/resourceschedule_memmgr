@@ -79,14 +79,16 @@ HWTEST_F(LowMemoryKillerTest, PsiHandlerInnerTest, TestSize.Level1)
 
 HWTEST_F(LowMemoryKillerTest, KillOneBundleByPrioTest, TestSize.Level1)
 {
+    int userId = 234;
+#ifdef USE_HYPERHOLD_MEMORY
     int pid = 123;
     int appId = 111;
     std::string appName = "com.test";
-    int userId = 234;
     int score = 100;
     std::shared_ptr<ReclaimParam> para = std::make_shared<ReclaimParam>(pid, appId, appName, userId, score,
         AppAction::OTHERS);
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
+#endif
     int minPrio = 10;
     int ret = 1;
     ret = LowMemoryKiller::GetInstance().KillOneBundleByPrio(minPrio);

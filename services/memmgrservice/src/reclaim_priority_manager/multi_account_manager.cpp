@@ -109,7 +109,9 @@ bool MultiAccountManager::SetAccountPriority(int accountId, std::string accountN
 
     HILOGI("Set acccount priority succeed, accountId = %{public}d, old = %{public}d, new = %{public}d.",
            accountId, oldPriority, accountInfo->GetPriority());
+#ifdef USE_HYPERHOLD_MEMORY
     ReclaimStrategyManager::GetInstance().NotifyAccountPriorityChanged(accountId, accountInfo->GetPriority());
+#endif
     return true;
 }
 
@@ -244,7 +246,9 @@ bool MultiAccountManager::HandleAccountColdSwitch(std::vector<int> &switchedAcco
     for (int accountId : switchedAccountIds) {
         HILOGI("Account cold switch account = %{public}d.", accountId);
         KillProcessesOfAccount(accountId, osAccountsInfoMap_);
+#ifdef USE_HYPERHOLD_MEMORY
         ReclaimStrategyManager::GetInstance().NotifyAccountDied(accountId);
+#endif
     }
     return true;
 }
