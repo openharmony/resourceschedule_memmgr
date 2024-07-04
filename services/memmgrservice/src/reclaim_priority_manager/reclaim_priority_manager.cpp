@@ -1148,8 +1148,8 @@ bool ReclaimPriorityManager::ApplyReclaimPriority(std::shared_ptr<BundlePriority
         HILOGD("bundle is nullptr");
         return false;
     }
-#ifdef USE_HYPERHOLD_MEMORY    
-    DECLARE_SHARED_POINTER(ReclaimParam, para);   
+#ifdef USE_HYPERHOLD_MEMORY
+    DECLARE_SHARED_POINTER(ReclaimParam, para);
     MAKE_POINTER(para, shared, ReclaimParam, "make ReclaimParam failed", return false,
         pid, bundle->uid_, bundle->name_, bundle->accountId_, bundle->priority_, action);
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
