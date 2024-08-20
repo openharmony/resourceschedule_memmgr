@@ -56,6 +56,7 @@ protected:
 
 private:
     int32_t windowManagerUid_ = 5523;
+    bool AllowDump();
     bool Init();
 };
 } // namespace Memory
