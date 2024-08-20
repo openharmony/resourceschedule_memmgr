@@ -15,8 +15,10 @@
 
 #include "mem_mgr_service.h"
 
+#include <parameters.h>
 #include <unistd.h>
 
+#include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "low_memory_killer.h"
 #include "mem_mgr_event_center.h"
@@ -38,6 +40,8 @@ namespace OHOS {
 namespace Memory {
 namespace {
 const std::string TAG = "MemMgrService";
+const int32_t ENG_MODE = OHOS::system::GetIntParameter("const.debuggable", 0);
+const int32_t ERR_MEMMGR_PERMISSION_DENIED = -1;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(MemMgrService);
@@ -328,8 +332,26 @@ void ParseParams(const std::vector<std::string> &params,
     }
 }
 
+bool MemMgrService::AllowDump()
+{
+    if (ENG_MODE == 0) {
+        HILOGE("Not eng mode");
+        return false;
+    }
+    Security::AccessToken::AccessTokenID tokenId = IPCSkeleton::GetFirstTokenID();
+    int32_t ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenId, "ohos.permission.DUMP");
+    if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        HILOGE("CheckPermission failed");
+        return false;
+    }
+    return true;
+}
+
 int MemMgrService::Dump(int fd, const std::vector<std::u16string> &args)
 {
+    if (!AllowDump()) {
+        return ERR_MEMMGR_PERMISSION_DENIED;
+    }
     HILOGI("called");
     std::vector<std::string> params;
     for (auto &arg : args) {
