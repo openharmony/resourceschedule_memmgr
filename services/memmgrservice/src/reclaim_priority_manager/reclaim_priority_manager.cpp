@@ -857,36 +857,26 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
 
 int ReclaimPriorityManager::GetPriorityByProcStatus(ProcessPriorityInfo &proc)
 {
-    int tmpPriority = RECLAIM_PRIORITY_NO_BIND_EXTENSION;
+    int priority = RECLAIM_PRIORITY_UNKNOWN;
     if (proc.isFreground) {
-        if (proc.priority_ >= RECLAIM_PRIORITY_FOREGROUND) {
-            tmpPriority = RECLAIM_PRIORITY_FOREGROUND;
-        }
+        priority = RECLAIM_PRIORITY_FOREGROUND;
     } else if (proc.isVisible_) {
-        if (proc.priority_ >= RECLAIM_PRIORITY_VISIBLE) {
-            tmpPriority = RECLAIM_PRIORITY_VISIBLE;
-        }
+        priority = RECLAIM_PRIORITY_VISIBLE;
     } else if (proc.isSuspendDelay) {
-        if (proc.priority_ >= RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
-            tmpPriority = RECLAIM_PRIORITY_BG_SUSPEND_DELAY;
-        }
+        priority = RECLAIM_PRIORITY_BG_SUSPEND_DELAY;
     } else if (proc.isBackgroundRunning || proc.isEventStart) {
-        if (proc.priority_ >= RECLAIM_PRIORITY_BG_PERCEIVED) {
-            tmpPriority = RECLAIM_PRIORITY_BG_PERCEIVED;
-        }
+        priority = RECLAIM_PRIORITY_BG_PERCEIVED;
     } else if (proc.isDistDeviceConnected) {
-        if (proc.priority_ >= RECLAIM_PRIORITY_BG_DIST_DEVICE) {
-            tmpPriority = RECLAIM_PRIORITY_BG_DIST_DEVICE;
-        }
+        priority = RECLAIM_PRIORITY_BG_DIST_DEVICE;
     }
 
     if (proc.isImportant_) {
         if (proc.priority_ >= proc.priorityIfImportant_) {
-            tmpPriority = proc.priorityIfImportant_;
+            priority = proc.priorityIfImportant_;
         }
     }
 
-    return tmpPriority;
+    return priority;
 }
 
 bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request, int64_t eventTime)
