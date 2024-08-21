@@ -844,13 +844,49 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         std::shared_ptr<AccountBundleInfo> extensionAccount = FindOsAccountById(extensionAccountId);
         std::shared_ptr<BundlePriorityInfo> extensionBundle = extensionAccount->FindBundleById(extensionProcess.uid_);
         ProcessPriorityInfo &procExtensionUpdate = extensionBundle->FindProcByPid(extensionProcess.pid_);
-        procExtensionUpdate.SetPriority(minExtensionPriority + deltaPriority);
+        int priorityByState = GetPriorityByProcStatus(procExtensionUpdate);
+        int minPriority = priorityByState < (minExtensionPriority + deltaPriority) ? priorityByState : (minExtensionPriority + deltaPriority);
+        procExtensionUpdate.SetPriority(minPriority);
         if (procExtensionUpdate.isImportant_) {
             SetImportantProcPriority(procExtensionUpdate);
         }
         UpdateBundlePriority(extensionBundle);
         OomScoreAdjUtils::WriteOomScoreAdjToKernel(procExtensionUpdate.pid_, procExtensionUpdate.priority_);
     }
+}
+
+int ReclaimPriorityManager::GetPriorityByProcStatus(ProcessPriorityInfo &proc)
+{
+    int tmpPriority = RECLAIM_PRIORITY_NO_BIND_EXTENSION;
+    if (proc.isFreground) {
+        if (proc.priority_ >= RECLAIM_PRIORITY_FOREGROUND) {
+            tmpPriority = RECLAIM_PRIORITY_FOREGROUND;
+        }
+    } else if (proc.isVisible_) {
+        if (proc.priority_ >= RECLAIM_PRIORITY_VISIBLE) {
+            tmpPriority = RECLAIM_PRIORITY_VISIBLE;
+        }
+    } else if (proc.isSuspendDelay) {
+        if (proc.priority_ >= RECLAIM_PRIORITY_BG_SUSPEND_DELAY) {
+            tmpPriority = RECLAIM_PRIORITY_BG_SUSPEND_DELAY;
+        }
+    } else if (proc.isBackgroundRunning || proc.isEventStart) {
+        if (proc.priority_ >= RECLAIM_PRIORITY_BG_PERCEIVED) {
+            tmpPriority = RECLAIM_PRIORITY_BG_PERCEIVED;
+        }
+    } else if (proc.isDistDeviceConnected) {
+        if (proc.priority_ >= RECLAIM_PRIORITY_BG_DIST_DEVICE) {
+            tmpPriority = RECLAIM_PRIORITY_BG_DIST_DEVICE;
+        }
+    }
+
+    if (proc.isImportant_) {
+        if (proc.priority_ >= proc.priorityIfImportant_) {
+            tmpPriority = proc.priorityIfImportant_;
+        }
+    }
+
+    return tmpPriority;
 }
 
 bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request, int64_t eventTime)
