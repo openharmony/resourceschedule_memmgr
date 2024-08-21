@@ -869,19 +869,23 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdatePriorityByProcForExtensionTest, TestS
     ProcUpdateInfo target = {10019, 20010019, "com.ohos.exten_test.target"};
 
 
-    UpdateRequest request1 = CreateUpdateRequest(caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::CREATE_PROCESS);
-    UpdateRequest request2 = CreateUpdateRequest(target.pid, target.uid, target.bundleName, AppStateUpdateReason::CREATE_PROCESS);
+    UpdateRequest request1 = CreateUpdateRequest(
+        caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::CREATE_PROCESS);
+    UpdateRequest request2 = CreateUpdateRequest(
+        target.pid, target.uid, target.bundleName, AppStateUpdateReason::CREATE_PROCESS);
 
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
 
     int callerAccountId = GetOsAccountIdByUid(caller.uid);
-    std::shared_ptr<AccountBundleInfo> callerAccount = ReclaimPriorityManager::GetInstance().FindOsAccountById(callerAccountId);
+    std::shared_ptr<AccountBundleInfo> callerAccount =
+        ReclaimPriorityManager::GetInstance().FindOsAccountById(callerAccountId);
     std::shared_ptr<BundlePriorityInfo> callerBundle = callerAccount->FindBundleById(caller.uid);
     ProcessPriorityInfo &callerProc = callerBundle->FindProcByPid(caller.pid);
 
     int targetAccountId = GetOsAccountIdByUid(target.uid);
-    std::shared_ptr<AccountBundleInfo> targetAccount = ReclaimPriorityManager::GetInstance().FindOsAccountById(targetAccountId);
+    std::shared_ptr<AccountBundleInfo> targetAccount =
+        ReclaimPriorityManager::GetInstance().FindOsAccountById(targetAccountId);
     std::shared_ptr<BundlePriorityInfo> targetBundle = targetAccount->FindBundleById(target.uid);
     ProcessPriorityInfo &targetProc = targetBundle->FindProcByPid(target.pid);
     EXPECT_EQ(callerProc.priority_, RECLAIM_PRIORITY_BACKGROUND);
@@ -892,23 +896,28 @@ HWTEST_F(ReclaimPriorityManagerTest, UpdatePriorityByProcForExtensionTest, TestS
     EXPECT_EQ(callerProc.priority_, RECLAIM_PRIORITY_BACKGROUND);
     EXPECT_EQ(targetProc.priority_, RECLAIM_PRIORITY_NO_BIND_EXTENSION);
 
-    UpdateRequest request3 = CreateUpdateRequest(caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::FOREGROUND);
+    UpdateRequest request3 = CreateUpdateRequest(
+        caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::FOREGROUND);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request3);
     EXPECT_EQ(callerProc.priority_, RECLAIM_PRIORITY_FOREGROUND);
     EXPECT_EQ(targetProc.priority_, RECLAIM_PRIORITY_FG_BIND_EXTENSION);
 
-    UpdateRequest request4 = CreateUpdateRequest(target.pid, target.uid, target.bundleName, AppStateUpdateReason::FOREGROUND);
+    UpdateRequest request4 = CreateUpdateRequest(
+        target.pid, target.uid, target.bundleName, AppStateUpdateReason::FOREGROUND);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request4);
     EXPECT_EQ(callerProc.priority_, RECLAIM_PRIORITY_FOREGROUND);
     EXPECT_EQ(targetProc.priority_, RECLAIM_PRIORITY_FOREGROUND);
 
-    UpdateRequest request5 = CreateUpdateRequest(caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::BACKGROUND);
+    UpdateRequest request5 = CreateUpdateRequest(
+        caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::BACKGROUND);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request5);
     EXPECT_EQ(callerProc.priority_, RECLAIM_PRIORITY_BACKGROUND);
     EXPECT_EQ(targetProc.priority_, RECLAIM_PRIORITY_FOREGROUND);
 
-    UpdateRequest request6 = CreateUpdateRequest(caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
-    UpdateRequest request7 = CreateUpdateRequest(target.pid, target.uid, target.bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
+    UpdateRequest request6 = CreateUpdateRequest(
+        caller.pid, caller.uid, caller.bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
+    UpdateRequest request7 = CreateUpdateRequest(
+        target.pid, target.uid, target.bundleName, AppStateUpdateReason::PROCESS_TERMINATED);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request6);
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request7);
 }
