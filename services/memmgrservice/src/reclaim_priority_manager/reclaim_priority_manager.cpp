@@ -845,7 +845,8 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         std::shared_ptr<BundlePriorityInfo> extensionBundle = extensionAccount->FindBundleById(extensionProcess.uid_);
         ProcessPriorityInfo &procExtensionUpdate = extensionBundle->FindProcByPid(extensionProcess.pid_);
         int priorityByState = GetPriorityByProcStatus(procExtensionUpdate);
-        int minPriority = priorityByState < (minExtensionPriority + deltaPriority) ? priorityByState : (minExtensionPriority + deltaPriority);
+        int minPriority =
+            priorityByState < (minExtensionPriority + deltaPriority) ? priorityByState : (minExtensionPriority + deltaPriority);
         procExtensionUpdate.SetPriority(minPriority);
         if (procExtensionUpdate.isImportant_) {
             SetImportantProcPriority(procExtensionUpdate);
