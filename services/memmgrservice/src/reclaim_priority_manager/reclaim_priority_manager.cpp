@@ -856,9 +856,13 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
     }
 }
 
-int ReclaimPriorityManager::GetPriorityByProcStatus(ProcessPriorityInfo &proc)
+int ReclaimPriorityManager::GetPriorityByProcStatus(const ProcessPriorityInfo &proc)
 {
     int priority = RECLAIM_PRIORITY_UNKNOWN;
+
+    if (!proc.isFreground && !proc.isExtension_) {
+        priority = RECLAIM_PRIORITY_BACKGROUND;
+    }
     if (proc.isFreground) {
         priority = RECLAIM_PRIORITY_FOREGROUND;
     } else if (proc.isVisible_) {
