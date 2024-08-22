@@ -229,7 +229,7 @@ private:
     void AddBundleInfoToSet(std::shared_ptr<BundlePriorityInfo> bundle);
     void UpdateBundlePriority(std::shared_ptr<BundlePriorityInfo> bundle);
     void DeleteBundleInfoFromSet(std::shared_ptr<BundlePriorityInfo> bundle);
-    int GetPriorityByProcStatus(ProcessPriorityInfo &proc);
+    int GetPriorityByProcStatus(const ProcessPriorityInfo &proc);
 
     std::string& AppStateUpdateResonToString(AppStateUpdateReason reason);
 
