@@ -844,13 +844,44 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         std::shared_ptr<AccountBundleInfo> extensionAccount = FindOsAccountById(extensionAccountId);
         std::shared_ptr<BundlePriorityInfo> extensionBundle = extensionAccount->FindBundleById(extensionProcess.uid_);
         ProcessPriorityInfo &procExtensionUpdate = extensionBundle->FindProcByPid(extensionProcess.pid_);
-        procExtensionUpdate.SetPriority(minExtensionPriority + deltaPriority);
+        int priorityByState = GetPriorityByProcStatus(procExtensionUpdate);
+        int minPriorityFromMe = minExtensionPriority + deltaPriority;
+        int minPriority = priorityByState < minPriorityFromMe ? priorityByState : minPriorityFromMe;
+        procExtensionUpdate.SetPriority(minPriority);
         if (procExtensionUpdate.isImportant_) {
             SetImportantProcPriority(procExtensionUpdate);
         }
         UpdateBundlePriority(extensionBundle);
         OomScoreAdjUtils::WriteOomScoreAdjToKernel(procExtensionUpdate.pid_, procExtensionUpdate.priority_);
     }
+}
+
+int ReclaimPriorityManager::GetPriorityByProcStatus(const ProcessPriorityInfo &proc)
+{
+    int priority = RECLAIM_PRIORITY_UNKNOWN;
+
+    if (!proc.isFreground && !proc.isExtension_) {
+        priority = RECLAIM_PRIORITY_BACKGROUND;
+    }
+    if (proc.isFreground) {
+        priority = RECLAIM_PRIORITY_FOREGROUND;
+    } else if (proc.isVisible_) {
+        priority = RECLAIM_PRIORITY_VISIBLE;
+    } else if (proc.isSuspendDelay) {
+        priority = RECLAIM_PRIORITY_BG_SUSPEND_DELAY;
+    } else if (proc.isBackgroundRunning || proc.isEventStart) {
+        priority = RECLAIM_PRIORITY_BG_PERCEIVED;
+    } else if (proc.isDistDeviceConnected) {
+        priority = RECLAIM_PRIORITY_BG_DIST_DEVICE;
+    }
+
+    if (proc.isImportant_) {
+        if (proc.priority_ >= proc.priorityIfImportant_) {
+            priority = proc.priorityIfImportant_;
+        }
+    }
+
+    return priority;
 }
 
 bool ReclaimPriorityManager::HandleExtensionProcess(UpdateRequest &request, int64_t eventTime)
