@@ -56,6 +56,7 @@ ProcessPriorityInfo::ProcessPriorityInfo(const ProcessPriorityInfo &copyProcess)
     this->isRender_ = copyProcess.isRender_;
     this->isFreground = copyProcess.isFreground;
     this->isExtension_ = copyProcess.isExtension_;
+    this->hasUI_ = copyProcess.hasUI_;
     this->isBackgroundRunning = copyProcess.isBackgroundRunning;
     this->isSuspendDelay = copyProcess.isSuspendDelay;
     this->isEventStart = copyProcess.isEventStart;

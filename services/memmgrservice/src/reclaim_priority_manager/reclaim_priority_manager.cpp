@@ -844,9 +844,9 @@ void ReclaimPriorityManager::SetConnectExtensionProcPrio(const ProcInfoSet &proc
         std::shared_ptr<AccountBundleInfo> extensionAccount = FindOsAccountById(extensionAccountId);
         std::shared_ptr<BundlePriorityInfo> extensionBundle = extensionAccount->FindBundleById(extensionProcess.uid_);
         ProcessPriorityInfo &procExtensionUpdate = extensionBundle->FindProcByPid(extensionProcess.pid_);
-        int priorityByState = GetPriorityByProcStatus(procExtensionUpdate);
+        int priorityAsExtension = GetPriorityByProcStatus(procExtensionUpdate);
         int minPriorityFromMe = minExtensionPriority + deltaPriority;
-        int minPriority = priorityByState < minPriorityFromMe ? priorityByState : minPriorityFromMe;
+        int minPriority = priorityAsExtension < minPriorityFromMe ? priorityAsExtension : minPriorityFromMe;
         procExtensionUpdate.SetPriority(minPriority);
         if (procExtensionUpdate.isImportant_) {
             SetImportantProcPriority(procExtensionUpdate);
@@ -860,7 +860,7 @@ int ReclaimPriorityManager::GetPriorityByProcStatus(const ProcessPriorityInfo &p
 {
     int priority = RECLAIM_PRIORITY_UNKNOWN;
 
-    if (!proc.isFreground && !proc.isExtension_) {
+    if (!proc.isFreground && proc.hasUI_) {
         priority = RECLAIM_PRIORITY_BACKGROUND;
     }
     if (proc.isFreground) {
@@ -1047,6 +1047,7 @@ void ReclaimPriorityManager::UpdatePriorityByProcStatus(std::shared_ptr<BundlePr
 void ReclaimPriorityManager::HandleForeground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isFreground = true;
+    proc.hasUI_ = true;
     action = AppAction::APP_FOREGROUND;
     FinishAbilityStartIfNeed(proc, AppStateUpdateReason::FOREGROUND, eventTime);
 }
@@ -1054,6 +1055,7 @@ void ReclaimPriorityManager::HandleForeground(ProcessPriorityInfo &proc, AppActi
 void ReclaimPriorityManager::HandleBackground(ProcessPriorityInfo &proc, AppAction &action, int64_t eventTime)
 {
     proc.isFreground = false;
+    proc.hasUI_ = true;
     action = AppAction::APP_BACKGROUND;
     FinishAbilityStartIfNeed(proc, AppStateUpdateReason::BACKGROUND, eventTime);
 }
