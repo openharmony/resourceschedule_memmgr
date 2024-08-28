@@ -49,6 +49,7 @@ public:
     bool isEventStart;
     bool isDistDeviceConnected;
     bool isExtension_;
+    bool hasUI_ = false;
     int extensionBindStatus; // 0: unkown, 1:fg bind, 2:bg bind, 3:no bind
     std::map<int32_t, int32_t> procsBindToMe_;
     std::map<int32_t, int32_t> procsBindFromMe_;
