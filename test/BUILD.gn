@@ -32,8 +32,6 @@ memmgr_external_deps = [
   "os_account:os_account_innerkits",
 ]
 
-memmgr_public_deps = [ "//third_party/googletest:gtest_main" ]
-
 ohos_unittest("reclaim_priority_manager_test") {
   module_out_path = module_output_path
   configs = memmgr_service_configs
@@ -43,7 +41,6 @@ ohos_unittest("reclaim_priority_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -59,7 +56,6 @@ ohos_unittest("kernel_interface_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -75,7 +71,6 @@ ohos_unittest("memcg_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -91,7 +86,6 @@ ohos_unittest("user_memcg_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -107,7 +101,6 @@ ohos_unittest("memcg_mgr_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -123,7 +116,6 @@ ohos_unittest("multi_account_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -139,7 +131,6 @@ ohos_unittest("nandlife_controller_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -155,7 +146,6 @@ ohos_unittest("reclaim_strategy_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -171,7 +161,6 @@ ohos_unittest("innerkits_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -187,7 +176,6 @@ ohos_unittest("avail_buffer_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -203,7 +191,6 @@ ohos_unittest("memmgr_config_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -219,7 +206,6 @@ ohos_unittest("default_multi_account_strategy_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -235,7 +221,6 @@ ohos_unittest("oom_score_adj_utils_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -251,7 +236,6 @@ ohos_unittest("xml_helper_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -267,7 +251,6 @@ ohos_unittest("system_memory_level_config_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -283,7 +266,6 @@ ohos_unittest("memory_level_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -299,7 +281,6 @@ ohos_unittest("low_memory_killer_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
@@ -315,7 +296,6 @@ ohos_unittest("purgeable_memory_manager_test") {
   deps = memmgr_deps
   if (is_standard_system) {
     external_deps = memmgr_external_deps
-    public_deps = memmgr_public_deps
   }
 
   part_name = "memmgr"
