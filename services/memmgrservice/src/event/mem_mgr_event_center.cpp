@@ -280,7 +280,6 @@ void MemMgrEventCenter::UnregisterEventObserver()
         EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventObserver_);
     }
     if (appStateObserver_) {
-        delete appStateObserver_;
         appStateObserver_ = nullptr;
     }
     appMgrClient_ = nullptr;
