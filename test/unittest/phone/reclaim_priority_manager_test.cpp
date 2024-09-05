@@ -431,6 +431,26 @@ HWTEST_F(ReclaimPriorityManagerTest, GetBundlePrioSet, TestSize.Level1)
     ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
 }
 
+HWTEST_F(ReclaimPriorityManagerTest, CheckReclaimPriorityVisible, TestSize.Level1)
+{
+    int pid = 10020;
+    int uid = 20010020;
+    UpdateRequest request1 = CreateUpdateRequest(pid, uid,
+                                "com.ohos.reclaim_visible_test", AppStateUpdateReason::CREATE_PROCESS);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request1);
+
+    UpdateRequest request2 = CreateUpdateRequest(pid, uid,
+                                "com.ohos.reclaim_visible_test", AppStateUpdateReason::VISIBLE);
+    ReclaimPriorityManager::GetInstance().UpdateReclaimPriorityInner(request2);
+
+    int accountId = GetOsAccountIdByUid(uid);
+    std::shared_ptr<AccountBundleInfo> account = ReclaimPriorityManager::GetInstance().FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
+    ProcessPriorityInfo& proc = bundle->FindProcByPid(pid);
+    EXPECT_EQ(proc.priority_, RECLAIM_PRIORITY_VISIBLE);
+}
+
+
 HWTEST_F(ReclaimPriorityManagerTest, UpdateReclaimPriorityApplicationSuspend, TestSize.Level1)
 {
     int pid = 10016;
