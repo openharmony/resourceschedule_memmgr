@@ -70,6 +70,7 @@ HWTEST_F(ReclaimStrategyManagerTest, NotifyAppStateChangedTest, TestSize.Level1)
         AppAction::OTHERS);
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(para);
     ReclaimStrategyManager::GetInstance().NotifyAppStateChanged(nullptr);
+    EXPECT_NE(para, nullptr);
 }
 
 HWTEST_F(ReclaimStrategyManagerTest, NotifyAccountDiedTest, TestSize.Level1)
