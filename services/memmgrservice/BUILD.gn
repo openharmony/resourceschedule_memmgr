@@ -103,6 +103,7 @@ ohos_shared_library("memmgrservice") {
 
   configs = [ ":memory_memmgr_config" ]
 
+  deps = [ "${memgr_innerkits_path}:memmgrclient" ]
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_context",
@@ -121,7 +122,6 @@ ohos_shared_library("memmgrservice") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
     "libxml2:libxml2",
-    "memmgr:memmgrclient",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
