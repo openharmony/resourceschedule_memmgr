@@ -226,7 +226,7 @@ void MemMgrEventCenter::RegisterAccountObserver()
     HILOGI("called");
     regAccountObsRetry_++;
     AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
-    osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
+    osAccountSubscribeInfo.SetOsAccountSubscribeType(AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVATED);
     osAccountSubscribeInfo.SetName("MemMgrAccountActivedSubscriber");
     MAKE_POINTER(accountObserver_, shared, AccountObserver, "make unique failed", return, osAccountSubscribeInfo);
     ErrCode errCode = AccountSA::OsAccountManager::SubscribeOsAccount(accountObserver_);
