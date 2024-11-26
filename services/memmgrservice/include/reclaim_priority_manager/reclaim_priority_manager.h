@@ -264,6 +264,7 @@ private:
         int64_t eventTime);
     void AbilityStartingEnd(ProcessPriorityInfo &proc, std::shared_ptr<BundlePriorityInfo> bundle = nullptr,
         bool isUpdatePriority = false);
+    void CheckCreateProcPriorityDelay(pid_t pid, int uid);
 };
 } // namespace Memory
 } // namespace OHOS
