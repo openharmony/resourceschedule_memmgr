@@ -38,6 +38,7 @@ constexpr int TIMER_DIED_PROC_SLOW_CHECK_MS = 3 * 60 * 1000; // 3min
 constexpr int MAX_TOTALBUNDLESET_SIZE = 2000;
 
 constexpr int TIMER_ABILITY_START_CHECK_MS = 10 * 1000; // 10s
+constexpr int TIMER_DELAY_MS = 15 * 1000; // 15s
 }
 IMPLEMENT_SINGLE_INSTANCE(ReclaimPriorityManager);
 
@@ -344,6 +345,7 @@ std::shared_ptr<AccountBundleInfo> ReclaimPriorityManager::FindOsAccountById(int
 {
     auto iter = osAccountsInfoMap_.find(accountId);
     if (iter != osAccountsInfoMap_.end()) {
+        HILOGD("found the account info");
         return iter->second;
     }
     HILOGI("not found the account info");
@@ -546,6 +548,24 @@ void ReclaimPriorityManager::UpdateBundlePriority(std::shared_ptr<BundlePriority
     HILOGD("end----------------------------");
 }
 
+void ReclaimPriorityManager::CheckCreateProcPriorityDelay(pid_t pid, int uid)
+{
+    HILOGD("begin update.");
+
+    int accountId = GetOsAccountIdByUid(uid);
+    if (!IsProcExist(pid, uid, accountId)) {
+        HILOGD("process not exist, skip!");
+        return;
+    }
+
+    std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
+    ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
+    UpdatePriorityByProcStatus(bundle, proc);
+    ApplyReclaimPriority(bundle, proc.pid_, AppAction::OTHERS);
+    HILOGD("end update.");
+}
+
 bool ReclaimPriorityManager::HandleCreateProcess(ReqProc &target, int accountId, bool isRender)
 {
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
@@ -572,16 +592,24 @@ bool ReclaimPriorityManager::HandleCreateProcess(ReqProc &target, int accountId,
         AddBundleInfoToSet(bundle);
         action = AppAction::CREATE_PROCESS_AND_APP;
     }
-
-    int priority = RECLAIM_PRIORITY_BACKGROUND;
+    int priority = RECLAIM_PRIORITY_FOREGROUND;
     bool isImportantProc = IsImportantProc(target.processName, priority);
     ProcessPriorityInfo proc(target.pid, target.uid, priority, isImportantProc);
+    proc.isFreground = false;
     if (IsKillableSystemApp(bundle) && proc.priority_ > RECLAIM_PRIORITY_KILLABLE_SYSTEM) {
         proc.priority_ = RECLAIM_PRIORITY_KILLABLE_SYSTEM;
     }
     bundle->AddProc(proc);
     UpdateBundlePriority(bundle);
     account->AddBundleToOsAccount(bundle);
+    // set timer for process check
+    if (handler_ != nullptr) {
+        pid_t pid = target.pid;
+        int uid = target.uid;
+        HILOGD("set timer for process check\n");
+        handler_->PostTask([this, pid, uid] { this->CheckCreateProcPriorityDelay(pid, uid);},
+            TIMER_DELAY_MS, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    }
     bool ret = ApplyReclaimPriority(bundle, target.pid, action);
     HILOGI("create: bundleName=%{public}s, prio=%{public}d", target.bundleName.c_str(), bundle->priority_);
     return ret;
