@@ -27,6 +27,15 @@ extern "C" {
 
 namespace OHOS {
 namespace Memory {
+enum class MemoryTypeCode {
+    DMABUF = 0,
+};
+
+enum class MemoryStatusCode {
+    USED = 0,
+    UNUSED = 1,
+}
+
 class MemMgrClient {
     DECLARE_SINGLE_INSTANCE(MemMgrClient);
 
