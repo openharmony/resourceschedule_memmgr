@@ -34,7 +34,7 @@ enum class MemoryTypeCode {
 enum class MemoryStatusCode {
     USED = 0,
     UNUSED = 1,
-}
+};
 
 class MemMgrClient {
     DECLARE_SINGLE_INSTANCE(MemMgrClient);
