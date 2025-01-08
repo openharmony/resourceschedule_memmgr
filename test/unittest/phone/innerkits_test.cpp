@@ -257,5 +257,13 @@ HWTEST_F(InnerkitsTest, SetCritical_Test, TestSize.Level1)
     int ret = MemMgrClient::GetInstance().SetCritical(pid, true, saId);
     EXPECT_EQ(ret, 0);
 }
+
+HWTEST_F(InnerkitsTest, MemoryStatusChanged_Test, TestSize.Level1)
+{
+    int32_t pid = getpid();
+    int32_t ret = MemMgrClient::GetInstance().MemoryStatusChanged(pid,
+        static_cast<int32_t>(MemoryTypeCode::DMABUF), static_cast<int32_t>(MemoryStatusCode::USED));
+    EXPECT_EQ(ret, 0);
+}
 }
 }
