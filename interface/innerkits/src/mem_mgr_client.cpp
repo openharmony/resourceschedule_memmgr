@@ -277,6 +277,11 @@ int32_t MemMgrClient::SetCritical(int32_t pid, bool critical, int32_t saId)
     return dps->SetCritical(pid, critical, saId);
 }
 
+int32_t MemMgrClient::MemoryStatusChanged(int32_t pid, int32_t type, int32_t status)
+{
+    return 0;
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");
