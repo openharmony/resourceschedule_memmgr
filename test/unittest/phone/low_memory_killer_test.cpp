@@ -53,11 +53,6 @@ void LowMemoryKillerTest::TearDown()
 {
 }
 
-HWTEST_F(LowMemoryKillerTest, PsiHandlerTest, TestSize.Level1)
-{
-    LowMemoryKiller::GetInstance().PsiHandler();
-}
-
 HWTEST_F(LowMemoryKillerTest, QueryKillMemoryPriorityPairTest, TestSize.Level1)
 {
     unsigned int reta = 1;
@@ -70,11 +65,6 @@ HWTEST_F(LowMemoryKillerTest, QueryKillMemoryPriorityPairTest, TestSize.Level1)
     ret = LowMemoryKiller::GetInstance().QueryKillMemoryPriorityPair(currBufferKB, targetBufKB, killLevel);
     EXPECT_NE(ret.first, 1);
     EXPECT_NE(ret.second, 1);
-}
-
-HWTEST_F(LowMemoryKillerTest, PsiHandlerInnerTest, TestSize.Level1)
-{
-    LowMemoryKiller::GetInstance().PsiHandlerInner();
 }
 
 HWTEST_F(LowMemoryKillerTest, KillOneBundleByPrioTest, TestSize.Level1)
@@ -98,6 +88,8 @@ HWTEST_F(LowMemoryKillerTest, KillOneBundleByPrioTest, TestSize.Level1)
 
 HWTEST_F(LowMemoryKillerTest, GetEventHandlerTest, TestSize.Level1)
 {
+    LowMemoryKiller::GetInstance().PsiHandler();
+    LowMemoryKiller::GetInstance().PsiHandlerInner();
     bool ret = LowMemoryKiller::GetInstance().GetEventHandler();
     EXPECT_EQ(ret, true);
 }

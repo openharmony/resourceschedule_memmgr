@@ -53,34 +53,14 @@ void MemoryLevelManagerTest::TearDown()
 
 /**
  * @tc.name: SetModerate and GetModerate
- * @tc.desc: Test PsiHandler
- * @tc.desc: Test PsiHandler
- * @tc.type: FUNC
- */
-HWTEST_F(MemoryLevelManagerTest, PsiHandlerTest, TestSize.Level1)
-{
-    MemoryLevelManager::GetInstance().PsiHandler();
-}
-
-/**
- * @tc.name: SetModerate and GetModerate
- * @tc.desc: Test PsiHandlerInner
- * @tc.desc: Test PsiHandlerInner
- * @tc.type: FUNC
- */
-HWTEST_F(MemoryLevelManagerTest, PsiHandlerInnerTest, TestSize.Level1)
-{
-    MemoryLevelManager::GetInstance().PsiHandlerInner();
-}
-
-/**
- * @tc.name: SetModerate and GetModerate
  * @tc.desc: Test GetEventHandler
  * @tc.desc: Test GetEventHandler
  * @tc.type: FUNC
  */
 HWTEST_F(MemoryLevelManagerTest, GetEventHandlerTest, TestSize.Level1)
 {
+    MemoryLevelManager::GetInstance().PsiHandler();
+    MemoryLevelManager::GetInstance().PsiHandlerInner();
     bool ret = MemoryLevelManager::GetInstance().GetEventHandler();
     EXPECT_EQ(ret, true);
 }
