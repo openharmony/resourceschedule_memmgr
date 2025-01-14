@@ -57,6 +57,7 @@ void MultiAccountManagerTest::TearDown()
 HWTEST_F(MultiAccountManagerTest, InitTest, TestSize.Level1)
 {
     MultiAccountManager::GetInstance().Init();
+    EXPECT_EQ(MultiAccountManager::GetInstance().initialized_, true);
 }
 
 HWTEST_F(MultiAccountManagerTest, SetAccountPrority, TestSize.Level1)
@@ -110,7 +111,8 @@ HWTEST_F(MultiAccountManagerTest, AccountColdSwitch, TestSize.Level1)
     osAccountsInfoMap.insert(std::make_pair(account->id_, account));
 
     std::vector<int> switchedIds { accountId };
-    MultiAccountManager::GetInstance().HandleAccountColdSwitch(switchedIds, osAccountsInfoMap);
+    EXPECT_EQ(MultiAccountManager::GetInstance().
+        HandleAccountColdSwitch(switchedIds, osAccountsInfoMap), true);
 }
 
 HWTEST_F(MultiAccountManagerTest, AccountHotSwitch, TestSize.Level1)
