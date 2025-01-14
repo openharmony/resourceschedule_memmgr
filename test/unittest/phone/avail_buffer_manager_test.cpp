@@ -53,10 +53,10 @@ void AvailBufferManagerTest::TearDown()
 {
 }
 
-HWTEST_F(AvailBufferManagerTest, initTest, TestSize.Level1)
+HWTEST_F(AvailBufferManagerTest, InitTest, TestSize.Level1)
 {
     MemmgrConfigManager::GetInstance().Init();
-    AvailBufferManager::GetInstance().Init();
+    EXPECT_EQ(AvailBufferManager::GetInstance().Init(), true);
 }
 
 HWTEST_F(AvailBufferManagerTest, WriteAvailBufferToKernelTest, TestSize.Level1)
@@ -95,11 +95,6 @@ HWTEST_F(AvailBufferManagerTest, InitAvailBufferTest, TestSize.Level1)
     EXPECT_EQ(AvailBufferManager::GetInstance().zramEnable_, false);
     AvailBufferManager::GetInstance().InitAvailBuffer();
     EXPECT_EQ(AvailBufferManager::GetInstance().zramEnable_, true);
-}
-
-HWTEST_F(AvailBufferManagerTest, InitTest, TestSize.Level1)
-{
-    EXPECT_EQ(AvailBufferManager::GetInstance().Init(), true);
 }
 
 HWTEST_F(AvailBufferManagerTest, GetEventHandlerTest, TestSize.Level1)
