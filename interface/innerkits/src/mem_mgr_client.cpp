@@ -282,6 +282,11 @@ int32_t MemMgrClient::MemoryStatusChanged(int32_t pid, int32_t type, int32_t sta
     return 0;
 }
 
+int32_t MemMgrClient::SetDmabufUsage(int32_t fd, const std::string &usage)
+{
+    return 0;
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");
