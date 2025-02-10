@@ -306,5 +306,15 @@ sptr<IMemMgr> MemMgrClient::GetMemMgrService()
     dpProxy_ = iface_cast<IMemMgr>(object);
     return dpProxy_;
 }
+
+int32_t MemMgrClient::Reclaim(int32_t pid, int32_t fd)
+{
+    return 0;
+}
+
+int32_t MemMgrClient::Resume(int32_t pid, int32_t fd)
+{
+    return 0;
+}
 } // namespace Memory
 } // namespace OHOS
