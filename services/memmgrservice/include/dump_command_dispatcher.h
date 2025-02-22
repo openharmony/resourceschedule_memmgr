@@ -29,6 +29,7 @@ constexpr unsigned int RECLAIM_HEAP_ID_PARAM_SIZE = 2;
 constexpr unsigned int RECLAIM_ASHM_ID_PARAM_SIZE = 2;
 constexpr unsigned int RECLAIM_SUBSCRIBER_ID_PARAM_SIZE = 1;
 constexpr unsigned int FIRST_INDEX = 0;
+constexpr unsigned int TEST = 1;
 constexpr unsigned int SECOND_INDEX = 1;
 constexpr unsigned int THIRD_INDEX = 2;
 constexpr unsigned int APP_STATE_PARAM_SIZE = 3;
