@@ -42,7 +42,6 @@ extern "C" {
     }
 }
 
-
 namespace OHOS {
 namespace Memory {
 namespace {
