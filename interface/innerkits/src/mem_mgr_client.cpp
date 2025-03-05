@@ -30,6 +30,16 @@ extern "C" {
     {
         return OHOS::Memory::MemMgrClient::GetInstance().SetCritical(pid, critical, saId);
     }
+
+    int32_t reclaim(int32_t pid, int32_t fd)
+    {
+        return 0;
+    }
+
+    int32_t resume(int32_t pid, int32_t fd)
+    {
+        return 0;
+    }
 }
 
 namespace OHOS {
