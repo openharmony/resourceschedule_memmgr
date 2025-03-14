@@ -16,7 +16,7 @@ import("//build/ohos_var.gni")
 import("//build/test.gni")
 import("../memmgr.gni")
 
-module_output_path = "memmgrtest/"
+module_output_path = "memmgr/memmgr"
 
 memmgr_service_configs = [ "${memmgr_service_path}:memory_memmgr_config" ]
 
