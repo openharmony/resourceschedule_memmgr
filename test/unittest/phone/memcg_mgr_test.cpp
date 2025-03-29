@@ -130,7 +130,7 @@ HWTEST_F(MemcgMgrTest, GetMemcgSwapInfoTest, TestSize.Level1)
 
 HWTEST_F(MemcgMgrTest, GetMemcgMemInfoTest, TestSize.Level1)
 {
-    unsigned int memcgId = 123456u; // ensure it is a new ID
+    unsigned int memcgId = 100u;
     EXPECT_EQ(MemcgMgr::GetInstance().GetMemcgMemInfo(memcgId) == nullptr, true);
     EXPECT_EQ(MemcgMgr::GetInstance().AddUserMemcg(memcgId) != nullptr, true);
     EXPECT_EQ(MemcgMgr::GetInstance().GetMemcgMemInfo(memcgId) != nullptr, true);
