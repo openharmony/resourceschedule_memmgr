@@ -310,7 +310,6 @@ group("memmgr_unittest") {
     ":innerkits_test",
     ":kernel_interface_test",
     ":low_memory_killer_test",
-    ":memcg_mgr_test",
     ":memcg_test",
     ":memmgr_config_manager_test",
     ":memory_level_manager_test",
@@ -320,7 +319,6 @@ group("memmgr_unittest") {
     ":purgeable_memory_manager_test",
     ":reclaim_priority_manager_test",
     ":system_memory_level_config_test",
-    ":user_memcg_test",
     ":xml_helper_test",
   ]
   if (memmgr_hyperhold_memory) {
