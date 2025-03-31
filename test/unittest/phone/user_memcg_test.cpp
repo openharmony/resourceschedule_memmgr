@@ -67,7 +67,7 @@ HWTEST_F(UserMemcgTest, CreateMemcgTest, TestSize.Level1)
 
 HWTEST_F(UserMemcgTest, UpdateMemInfoFromKernelTest, TestSize.Level1)
 {
-    UserMemcg* memcg = new UserMemcg(userId_);
+    UserMemcg* memcg = new UserMemcg(100u);
     memcg->CreateMemcgDir();
     bool ret = memcg->UpdateMemInfoFromKernel();
     EXPECT_EQ(ret, true);
