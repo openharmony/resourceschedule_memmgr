@@ -32,6 +32,7 @@ ohos_fuzztest("MemmgrstubFuzzTest") {
     "c_utils:utils",
     "ipc:ipc_core",
     "memmgr:memmgrclient",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 }
