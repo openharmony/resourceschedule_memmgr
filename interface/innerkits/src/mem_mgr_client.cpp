@@ -297,6 +297,11 @@ int32_t MemMgrClient::SetDmabufUsage(int32_t fd, const std::string &usage)
     return 0;
 }
 
+int32_t MemMgrClient::SetDmabufInfo(int32_t fd, const std::string &info)
+{
+    return 0;
+}
+
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
 {
     HILOGI("called");
