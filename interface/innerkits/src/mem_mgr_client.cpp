@@ -42,6 +42,8 @@ extern "C" {
     }
 }
 
+#define DMA_BUF_SET_INFO _IOW(DMA_BUF_BASE, 4, const char *)
+
 namespace OHOS {
 namespace Memory {
 namespace {
