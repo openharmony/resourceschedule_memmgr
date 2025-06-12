@@ -42,8 +42,6 @@ extern "C" {
     }
 }
 
-#define DMA_BUF_SET_INFO _IOW(DMA_BUF_BASE, 4, const char *)
-
 namespace OHOS {
 namespace Memory {
 namespace {
@@ -301,10 +299,7 @@ int32_t MemMgrClient::SetDmabufUsage(int32_t fd, const std::string &usage)
 
 int32_t MemMgrClient::SetDmabufInfo(int32_t fd, const std::string &info)
 {
-    if (fd < 0) {
-        return -1;
-    }
-    return ioctl(fd, DMA_BUF_SET_INFO, info.c_str());
+    return 0;
 }
 
 sptr<IMemMgr> MemMgrClient::GetMemMgrService()
