@@ -61,7 +61,8 @@ public:
     int32_t SetDmabufUsage(int32_t fd, const std::string &usage);
     int32_t Reclaim(int32_t pid, int32_t fd);
     int32_t Resume(int32_t pid, int32_t fd);
-
+    int32_t SetDmabufInfo(int32_t fd, const std::string &info);
+    
 private:
     sptr<IMemMgr> GetMemMgrService();
     std::mutex mutex_;
