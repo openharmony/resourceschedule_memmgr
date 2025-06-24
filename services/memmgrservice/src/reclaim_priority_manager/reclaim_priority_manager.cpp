@@ -559,7 +559,17 @@ void ReclaimPriorityManager::CheckCreateProcPriorityDelay(pid_t pid, int uid)
     }
 
     std::shared_ptr<AccountBundleInfo> account = FindOsAccountById(accountId);
+    if (!account) {
+        HILOGE("account is null, skip update.");
+        return;
+    }
+
     std::shared_ptr<BundlePriorityInfo> bundle = account->FindBundleById(uid);
+    if (!bundle) {
+        HILOGE("bundle is null, skip update.");
+        return;
+    }
+    
     ProcessPriorityInfo &proc = bundle->FindProcByPid(pid);
     UpdatePriorityByProcStatus(bundle, proc);
     OomScoreAdjUtils::WriteOomScoreAdjToKernel(bundle);
