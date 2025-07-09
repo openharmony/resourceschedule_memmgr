@@ -38,7 +38,7 @@ enum class MemoryStatusCode {
 
 enum class DmabufRsInfo {
     INVALID = 0,
-    IMAGE_ON_TREE;
+    IMAGE_ON_TREE,
     IMAGE_ON_TREE_IN_ROOT,
     IMAGE_OFF_TREE_IN_ROOT,
     IMAGE_OFF_TREE,
