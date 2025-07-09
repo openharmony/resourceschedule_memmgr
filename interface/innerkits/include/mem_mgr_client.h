@@ -36,6 +36,19 @@ enum class MemoryStatusCode {
     UNUSED = 1,
 };
 
+enum class DmabufRsInfo {
+    INVALID = 0,
+    IMAGE_ON_TREE,
+    IMAGE_ON_TREE_IN_ROOT,
+    IMAGE_OFF_TREE_IN_ROOT,
+    IMAGE_OFF_TREE,
+
+    SURFACE_ON_TREE,
+    SURFACE_ON_TREE_IN_ROOT,
+    SURFACE_OFF_TREE_IN_ROOT,
+    SURFACE_OFF_TREE,
+};
+
 class MemMgrClient {
     DECLARE_SINGLE_INSTANCE(MemMgrClient);
 
@@ -61,7 +74,7 @@ public:
     int32_t SetDmabufUsage(int32_t fd, const std::string &usage);
     int32_t Reclaim(int32_t pid, int32_t fd);
     int32_t Resume(int32_t pid, int32_t fd);
-    int32_t SetDmabufInfo(int32_t fd, const std::string &info);
+    int32_t SetDmabufInfo(int32_t fd, DmabufRsInfo info);
     
 private:
     sptr<IMemMgr> GetMemMgrService();
