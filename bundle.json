@@ -1,76 +1,74 @@
 {
-  "name": "@ohos/memmgr",
-  "version": "3.1.0",
-  "description": "memory management",
-  "publishAs": "source",
-  "scripts": {},
-  "author": {},
-  "repository": "",
-  "license": "Apache License 2.0",
-  "segment": {
-    "destPath": "foundation/resourceschedule/memmgr"
-  },
-  "component": {
-    "name": "memmgr",
-    "subsystem": "resourceschedule",
-    "adapted_system_type": [
-      "standard"
-    ],
-    "rom": "1000KB",
-    "ram": "4316KB",
-    "deps": {
-      "components": [
-        "ipc",
-        "ability_base",
-        "bundle_framework",
-        "safwk",
-        "background_task_mgr",
-        "ability_runtime",
-        "os_account",
-        "common_event_service",
-        "eventhandler",
-        "hilog",
-        "c_utils",
-        "samgr",
-        "resource_management",
-        "access_token",
-        "init",
-        "libxml2",
-        "json"
-      ]
+    "name": "@ohos/memmgr",
+    "version": "3.1.0",
+    "description": "memory management",
+    "publishAs": "source",
+    "scripts": {},
+    "author": {},
+    "repository": "",
+    "license": "Apache License 2.0",
+    "segment": {
+      "destPath": "foundation/resourceschedule/memmgr"
     },
-    "build": {
-      "sub_component": [
-        "//foundation/resourceschedule/memmgr/sa_profile:memmgr_sa_profile",
-        "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
-        "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
-        "//foundation/resourceschedule/memmgr/profile:memmgr_config",
-        "//foundation/resourceschedule/memmgr/profile:memmgr.para",
-        "//foundation/resourceschedule/memmgr/profile:memmgr.para.dac"
-      ],
-      "inner_kits": [
-        {
-          "name": "//foundation/resourceschedule/memmgr/interface/innerkits:memmgrclient",
-          "header": {
-            "header_files": [
-              "mem_mgr_client.h",
-              "i_mem_mgr.h",
-              "mem_mgr_proxy.h",
-              "mem_mgr_constant.h"
-            ],
-            "header_base": "//foundation/resourceschedule/memmgr/interface/innerkits/include/"
+    "component": {
+      "name": "memmgr",
+      "subsystem": "resourceschedule",
+      "adapted_system_type": [ "standard" ],
+      "rom": "1000KB",
+      "ram": "4316KB",
+      "deps": {
+        "components": [
+          "ipc",
+          "ability_base",
+          "bundle_framework",
+          "safwk",
+          "background_task_mgr",
+          "ability_runtime",
+          "os_account",
+          "common_event_service",
+          "eventhandler",
+          "hilog",
+          "c_utils",
+          "samgr",
+          "resource_management",
+          "access_token",
+          "init",
+          "libxml2",
+          "json"
+        ]
+      },
+      "build": {
+        "sub_component": [
+            "//foundation/resourceschedule/memmgr/sa_profile:memmgr_sa_profile",
+            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice",
+            "//foundation/resourceschedule/memmgr/services/memmgrservice:memmgrservice_init",
+            "//foundation/resourceschedule/memmgr/profile:memmgr_config",
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para",
+            "//foundation/resourceschedule/memmgr/profile:memmgr.para.dac"
+        ],
+        "inner_kits": [
+          {
+            "name": "//foundation/resourceschedule/memmgr/interface/innerkits:memmgrclient",
+            "header": {
+              "header_files": [
+                "mem_mgr_client.h",
+                "i_mem_mgr.h",
+                "mem_mgr_proxy.h",
+                "mem_mgr_constant.h"
+              ],
+              "header_base": "//foundation/resourceschedule/memmgr/interface/innerkits/include/"
+            }
           }
-        }
-      ],
-      "test": [
-        "//foundation/resourceschedule/memmgr/test:memmgr_unittest",
-        "//foundation/resourceschedule/memmgr/test/fuzztest:memmgr_fuzztest",
-        "//foundation/resourceschedule/memmgr/test/fuzztest/mem_fuzzer:fuzztest"
+        ],
+        "test": [
+            "//foundation/resourceschedule/memmgr/test:memmgr_unittest",
+            "//foundation/resourceschedule/memmgr/test/fuzztest:memmgr_fuzztest",
+            "//foundation/resourceschedule/memmgr/test/fuzztest/mem_fuzzer:fuzztest"
+        ]
+      },
+      "features": [
+        "memmgr_purgeable_memory",
+        "memmgr_hyperhold_memory"
       ]
-    },
-    "features": [
-      "memmgr_purgeable_memory",
-      "memmgr_hyperhold_memory"
-    ]
+    }
   }
-}
