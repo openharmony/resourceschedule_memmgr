@@ -15,17 +15,17 @@
 -->
 <Memmgr>
   <availBufferConfig>
-      <availBuffer>300</availBuffer>
-      <minAvailBuffer>250</minAvailBuffer>
-      <highAvailBuffer>350</highAvailBuffer>
+      <availBuffer>100</availBuffer>
+      <minAvailBuffer>50</minAvailBuffer>
+      <highAvailBuffer>150</highAvailBuffer>
       <swapReserve>200</swapReserve>
   </availBufferConfig>
   <reclaimConfig>
     <ZswapdParam id="1">
         <minScore>0</minScore>
         <maxScore>1000</maxScore>
-        <mem2zramRatio>60</mem2zramRatio>
-        <zram2ufsRatio>10</zram2ufsRatio>
+        <mem2zramRatio>0</mem2zramRatio>
+        <zram2ufsRatio>0</zram2ufsRatio>
         <refaultThreshold>50</refaultThreshold>
     </ZswapdParam>
   </reclaimConfig>
