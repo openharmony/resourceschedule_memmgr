@@ -307,8 +307,9 @@ void ParseParams(const std::vector<std::string> &params,
     std::string tmpKey;
     std::vector<std::string> tmpValue;
     for (auto i = 0; i < params.size(); i++) {
-        if (params[i].empty())
+        if (params[i].empty()) {
             continue;
+        }
         if (params[i][0] == '-') {
             if (!tmpKey.empty()) {
                 keyValuesMapping[tmpKey] = tmpValue;
