@@ -42,6 +42,17 @@ public:
     MemMgrWindowInfo(uint32_t winId, int32_t pid, int32_t uid, bool visibility)
         : windowId_(winId), pid_(pid), uid_(uid), isVisible_(visibility) {};
     /**
+     * @brief Construct of MemMgrWindowInfo.
+     *
+     * @param winId Window id.
+     * @param pid Process id.
+     * @param uid User id.
+     * @param visibility True means window is visible, false means the opposite.
+     * @param lastUsedPosition Window display position.
+     */
+    MemMgrWindowInfo(uint32_t winId, int32_t pid, int32_t uid, bool visibility, std::string lastUsedPosition)
+        : windowId_(winId), pid_(pid), uid_(uid), isVisible_(visibility), lastUsedPosition_(lastUsedPosition) {};
+    /**
      * @brief Deconstruct of MemMgrWindowInfo.
      */
     ~MemMgrWindowInfo() = default;
@@ -65,6 +76,7 @@ public:
     int32_t pid_ {0};
     int32_t uid_ {0};
     bool isVisible_ {false};
+    std::string lastUsedPosition_ {""};
 };
 } // namespace Memory
 } // namespace OHOS
