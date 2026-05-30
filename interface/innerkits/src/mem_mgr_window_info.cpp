@@ -25,7 +25,8 @@ const std::string TAG = "MemMgrWindowInfo";
 bool MemMgrWindowInfo::Marshalling(Parcel &parcel) const
 {
     return parcel.WriteUint32(windowId_) && parcel.WriteInt32(pid_) &&
-           parcel.WriteInt32(uid_) && parcel.WriteBool(isVisible_);
+           parcel.WriteInt32(uid_) && parcel.WriteBool(isVisible_) &&
+           parcel.WriteString(lastUsedPosition_);
 }
 
 MemMgrWindowInfo* MemMgrWindowInfo::Unmarshalling(Parcel &parcel)
@@ -36,7 +37,8 @@ MemMgrWindowInfo* MemMgrWindowInfo::Unmarshalling(Parcel &parcel)
         return nullptr;
     }
     bool res = parcel.ReadUint32(memMgrWindowInfo->windowId_) && parcel.ReadInt32(memMgrWindowInfo->pid_) &&
-        parcel.ReadInt32(memMgrWindowInfo->uid_) && parcel.ReadBool(memMgrWindowInfo->isVisible_);
+        parcel.ReadInt32(memMgrWindowInfo->uid_) && parcel.ReadBool(memMgrWindowInfo->isVisible_) &&
+        parcel.ReadString(memMgrWindowInfo->lastUsedPosition_);
     if (!res) {
         delete memMgrWindowInfo;
         return nullptr;
