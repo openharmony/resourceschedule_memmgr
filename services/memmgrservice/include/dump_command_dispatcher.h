@@ -235,9 +235,18 @@ bool PurgeableMemoryDump(int fd, std::map<std::string, std::vector<std::string>>
             dprintf(fd, "params number is less than %{publid}d!\n", APP_STATE_PARAM_SIZE);
             return true;
         }
-        int32_t pid = std::stoi(appState[FIRST_INDEX]);
-        int32_t uid = std::stoi(appState[SECOND_INDEX]);
-        int32_t state = std::stoi(appState[THIRD_INDEX]);
+        int32_t pid;
+        int32_t uid;
+        int32_t state;
+        try {
+            pid = std::stoi(appState[FIRST_INDEX]);
+            uid = std::stoi(appState[SECOND_INDEX]);
+            state = std::stoi(appState[THIRD_INDEX]);
+        } catch (...) {
+            dprintf(fd, "stoi failed! appState: %s, %s, %s\n",
+                appState[FIRST_INDEX].c_str(), appState[SECOND_INDEX].c_str(), appState[THIRD_INDEX].c_str());
+            return true;
+        }
         PurgeableMemManager::GetInstance().ChangeAppState(pid, uid, state);
         return true;
     }
