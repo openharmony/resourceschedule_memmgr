@@ -111,6 +111,10 @@ int32_t MemMgrStub::HandleGetBunldePriorityList(MessageParcel &data, MessageParc
 
 int32_t MemMgrStub::HandleNotifyDistDevStatus(MessageParcel &data, MessageParcel &reply)
 {
+    if (!CheckCallingToken()) {
+        HILOGE("calling process has no permission, call failed");
+        return IPC_STUB_ERR;
+    }
     HILOGI("called");
     int32_t pid = 0;
     int32_t uid = 0;
