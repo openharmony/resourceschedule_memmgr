@@ -28,6 +28,7 @@
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "memmgr_log.h"
+#include "parse_proc_int.h"
 
 namespace OHOS {
 namespace Memory {
@@ -280,11 +281,9 @@ bool KernelInterface::GetPidProcInfo(struct ProcInfo &procInfo)
     }
     std::istringstream isStatm(statm);
     isStatm >> vss >> rss; // pages
-    int rssValue = 0;
-    try {
-        rssValue = std::stoi(rss);
-    } catch (...) {
-        HILOGE("stoi(%{public}s) failed!", rss.c_str());
+    int32_t rssValue = 0;
+    if (!ParseProcInt32(rss, rssValue)) {
+        HILOGE("parse rss (%{public}s) failed!", rss.c_str());
         return false;
     }
 
@@ -361,12 +360,21 @@ int KernelInterface::GetCurrentBuffer()
     ReadZswapdPressureShow(result);
     auto value = result.find(ZWAPD_PRESSURE_SHOW_BUFFER_SIZE);
     if (value != result.end()) {
+        int32_t buffer = 0;
+        if (!ParseProcInt32(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE], buffer)) {
+            HILOGE("invalid buffer_size %{public}s", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
+            return MAX_BUFFER_KB;
+        }
 #ifdef USE_HYPERHOLD_MEMORY
         HILOGD("buffer_size=%{public}s MB", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
-        return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str()) * KB_PER_MB;
+        if (buffer > INT_MAX / KB_PER_MB) {
+            HILOGE("buffer_size overflow %{public}d", buffer);
+            return MAX_BUFFER_KB;
+        }
+        return buffer * KB_PER_MB;
 #else
         HILOGD("buffer_size=%{public}s KB", result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
-        return atoi(result[ZWAPD_PRESSURE_SHOW_BUFFER_SIZE].c_str());
+        return buffer;
 #endif
     }
     return MAX_BUFFER_KB;
@@ -414,10 +422,11 @@ bool KernelInterface::GetAllProcPids(std::vector<unsigned int> &pids)
             // current dir OR parent dir
             continue;
         } else if (ptr->d_type == DT_DIR) {
-            int pid = atoi(ptr->d_name);
-            if (pid > 0) {
-                pids.push_back((unsigned int)pid);
+            int32_t pid = 0;
+            if (!ParseProcInt32(ptr->d_name, pid) || pid <= 0) {
+                continue;
             }
+            pids.push_back(static_cast<unsigned int>(pid));
         }
     }
     if (dir) {
@@ -442,12 +451,12 @@ bool KernelInterface::GetUidByPid(unsigned int pid, unsigned int& uid)
         HILOGD("re not match. %{public}s", content.c_str());
         return false;
     }
-    try {
-        uid = (unsigned int)std::stoi(res.str(1)); // 1: Uid index
-    } catch (...) {
-        HILOGE("stoi(%{public}s) failed", res.str(1).c_str());
+    int32_t parsedUid = 0;
+    if (!ParseProcInt32(res.str(1), parsedUid) || parsedUid < 0) { // 1: Uid index
+        HILOGE("parse uid (%{public}s) failed", res.str(1).c_str());
         return false;
     }
+    uid = static_cast<unsigned int>(parsedUid);
     return true;
 }
 
@@ -560,7 +569,12 @@ int KernelInterface::ParseMeminfo(const std::string &contentStr, const std::stri
             valueTemp = valueTemp + c;
         }
     }
-    return atoi(valueTemp.c_str());
+    int32_t parsed = 0;
+    if (!ParseProcInt32(valueTemp, parsed)) {
+        HILOGE("invalid meminfo value %{public}s", valueTemp.c_str());
+        return -1;
+    }
+    return parsed;
 }
 
 int KernelInterface::GetTotalBuffer()
@@ -588,11 +602,13 @@ bool KernelInterface::GetMemcgPids(const std::string &memcgPath, std::vector<int
     }
 
     memcgPids.clear();
-    int pid;
+    int32_t pid = 0;
     for (auto &it : strLines) {
-        try {
-            pid = stoi(it);
-        } catch (...) {
+        if (it.empty()) {
+            continue;
+        }
+        if (!ParseProcInt32(it, pid)) {
+            HILOGE("invalid memcg pid %{public}s", it.c_str());
             continue;
         }
         memcgPids.emplace_back(pid);
@@ -615,10 +631,11 @@ bool KernelInterface::GetAllUserIds(std::vector<int> &userIds)
             // current dir OR parent dir
             continue;
         } else if (ptr->d_type == DT_DIR) {
-            int userId = atoi(ptr->d_name);
-            if (userId > 0) {
-                userIds.push_back(userId);
+            int32_t userId = 0;
+            if (!ParseProcInt32(ptr->d_name, userId) || userId <= 0) {
+                continue;
             }
+            userIds.push_back(userId);
         }
     }
     if (dir) {
